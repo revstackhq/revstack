@@ -24,10 +24,6 @@ import {
   AsyncActionResult,
   PriceInput,
   Price,
-  Addon,
-  CreateAddonInput,
-  UpdateAddonInput,
-  DeleteAddonInput,
   ProductInput,
   Product,
 } from "@/types/models";
@@ -64,6 +60,7 @@ export abstract class BaseProvider implements IProvider {
   async listPayments(
     ctx: ProviderContext,
     pagination: PaginationOptions,
+    filters?: Record<string, any>,
   ): Promise<AsyncActionResult<PaginatedResult<Payment>>> {
     return this.notImplemented("listPayments");
   }
@@ -230,6 +227,7 @@ export abstract class BaseProvider implements IProvider {
   async listSubscriptions(
     ctx: ProviderContext,
     pagination: PaginationOptions,
+    filters?: Record<string, any>,
   ): Promise<AsyncActionResult<PaginatedResult<Subscription>>> {
     return this.notImplemented("listSubscriptions");
   }
@@ -245,6 +243,7 @@ export abstract class BaseProvider implements IProvider {
   async listCustomers(
     ctx: ProviderContext,
     pagination: PaginationOptions,
+    filters?: Record<string, any>,
   ): Promise<AsyncActionResult<PaginatedResult<Customer>>> {
     return this.notImplemented("listCustomers");
   }
@@ -268,6 +267,7 @@ export abstract class BaseProvider implements IProvider {
   async listProducts(
     ctx: ProviderContext,
     pagination: PaginationOptions,
+    filters?: Record<string, any>,
   ): Promise<AsyncActionResult<PaginatedResult<Product>>> {
     return this.notImplemented("listProducts");
   }
@@ -305,46 +305,8 @@ export abstract class BaseProvider implements IProvider {
     ctx: ProviderContext,
     productId: string,
     pagination: PaginationOptions,
+    filters?: Record<string, any>,
   ): Promise<AsyncActionResult<PaginatedResult<Price>>> {
     return this.notImplemented("listPrices");
-  }
-
-  // --- ADDONS (Optional Overrides) ---
-
-  async createAddon(
-    ctx: ProviderContext,
-    input: CreateAddonInput,
-  ): Promise<AsyncActionResult<string>> {
-    return this.notImplemented("createAddon");
-  }
-
-  async getAddon(
-    ctx: ProviderContext,
-    id: string,
-  ): Promise<AsyncActionResult<Addon>> {
-    return this.notImplemented("getAddon");
-  }
-
-  async updateAddon(
-    ctx: ProviderContext,
-    id: string,
-    input: UpdateAddonInput,
-  ): Promise<AsyncActionResult<string>> {
-    return this.notImplemented("updateAddon");
-  }
-
-  async deleteAddon(
-    ctx: ProviderContext,
-    input: DeleteAddonInput,
-  ): Promise<AsyncActionResult<boolean>> {
-    return this.notImplemented("deleteAddon");
-  }
-
-  async listAddons(
-    ctx: ProviderContext,
-    subscriptionId: string,
-    pagination: PaginationOptions,
-  ): Promise<AsyncActionResult<PaginatedResult<Addon>>> {
-    return this.notImplemented("listAddons");
   }
 }

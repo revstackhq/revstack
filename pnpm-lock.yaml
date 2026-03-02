@@ -40,7 +40,7 @@ importers:
         specifier: ^1.2.4
         version: 1.2.4(@types/react@19.2.14)(react@19.2.3)
       '@revstackhq/core':
-        specifier: workspace:0.0.0-dev-20260228064655
+        specifier: workspace:*
         version: link:../../packages/core
       '@tanstack/react-query':
         specifier: ^5.90.21

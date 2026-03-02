@@ -37,7 +37,7 @@ export const manifest: ProviderManifest = {
     payments: {
       supported: true,
       features: {
-        capture: true,
+        capture: false,
         disputes: true,
         partialRefunds: true,
         refunds: true,
@@ -48,8 +48,8 @@ export const manifest: ProviderManifest = {
       mode: "native",
       features: {
         cancellation: true,
-        pause: true,
-        resume: true,
+        pause: false,
+        resume: false,
         proration: true,
       },
     },

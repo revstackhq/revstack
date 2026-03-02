@@ -1,4 +1,4 @@
-// =============================================================================
+import { RevstackCurrency } from "@/types/models/currency";
 // CHECKOUT MODELS
 // =============================================================================
 
@@ -26,7 +26,7 @@ export type CheckoutSessionInput = {
     /** quantity */
     quantity: number;
     /** iso currency (e.g. USD) */
-    currency?: string;
+    currency?: RevstackCurrency;
     /** item image urls */
     images?: string[];
     /** external tax rates */

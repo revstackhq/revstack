@@ -53,6 +53,8 @@ export type PaginationOptions = {
   cursor?: string;
   /** external startingAfter cursor */
   startingAfter?: string;
+  /** external endingBefore cursor */
+  endingBefore?: string;
   /** page number */
   page?: number;
 };
@@ -64,4 +66,8 @@ export type PaginatedResult<T> = {
   hasMore: boolean;
   /** next page cursor */
   nextCursor?: string;
+  /** has previous flag */
+  hasPrevious?: boolean;
+  /** previous page cursor */
+  previousCursor?: string;
 };

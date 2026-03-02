@@ -1,3 +1,5 @@
+import { RevstackCurrency } from "@/types/models/currency";
+
 // =============================================================================
 // SUBSCRIPTION MODELS
 // =============================================================================
@@ -39,7 +41,7 @@ export type Subscription = {
   /** amount in the smallest currency unit */
   amount: number;
   /** iso currency (e.g. USD) */
-  currency: string;
+  currency: RevstackCurrency;
   /** billing interval */
   interval: "day" | "week" | "month" | "year";
 
@@ -101,6 +103,15 @@ export type CreateSubscriptionInput = {
 
   /** custom metadata */
   metadata?: Record<string, any>;
+
+  /** Just-In-Time creation payload if the provider cannot find the priceId */
+  jit?: {
+    name: string;
+    description?: string;
+    amount: number;
+    currency: RevstackCurrency;
+    interval: "day" | "week" | "month" | "year";
+  };
 };
 
 export type UpdateSubscriptionInput = {

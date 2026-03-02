@@ -1,4 +1,4 @@
-import { getClient } from "@/clients/factory";
+import { getClient } from "@/api/factory";
 import { manifest } from "@/manifest";
 import {
   AsyncActionResult,
@@ -26,10 +26,6 @@ import {
   Subscription,
   UninstallInput,
   UpdateCustomerInput,
-  Addon,
-  CreateAddonInput,
-  UpdateAddonInput,
-  DeleteAddonInput,
   WebhookResponse,
 } from "@revstackhq/providers-core";
 
@@ -227,6 +223,7 @@ export class StripeProvider extends BaseProvider {
   async listPayments(
     ctx: ProviderContext,
     pagination: PaginationOptions,
+    filters?: Record<string, any>,
   ): Promise<AsyncActionResult<PaginatedResult<Payment>>> {
     const client = getClient(ctx.config);
 
@@ -241,7 +238,7 @@ export class StripeProvider extends BaseProvider {
       };
     }
 
-    return client.listPayments(ctx, pagination);
+    return client.listPayments(ctx, pagination, filters);
   }
 
   // ===========================================================================
@@ -532,6 +529,7 @@ export class StripeProvider extends BaseProvider {
   async listSubscriptions(
     ctx: ProviderContext,
     pagination: PaginationOptions,
+    filters?: Record<string, any>,
   ): Promise<AsyncActionResult<PaginatedResult<Subscription>>> {
     const client = getClient(ctx.config);
 
@@ -546,7 +544,7 @@ export class StripeProvider extends BaseProvider {
       };
     }
 
-    return client.listSubscriptions(ctx, pagination);
+    return client.listSubscriptions(ctx, pagination, filters);
   }
 
   async updateSubscription(
@@ -573,6 +571,7 @@ export class StripeProvider extends BaseProvider {
   async listCustomers(
     ctx: ProviderContext,
     pagination: PaginationOptions,
+    filters?: Record<string, any>,
   ): Promise<AsyncActionResult<PaginatedResult<Customer>>> {
     const client = getClient(ctx.config);
 
@@ -587,7 +586,7 @@ export class StripeProvider extends BaseProvider {
       };
     }
 
-    return client.listCustomers(ctx, pagination);
+    return client.listCustomers(ctx, pagination, filters);
   }
 
   async setupPaymentMethod(
@@ -628,111 +627,5 @@ export class StripeProvider extends BaseProvider {
     }
 
     return client.createBillingPortalSession(ctx, input);
-  }
-
-  // ===========================================================================
-  // ADDONS
-  // ===========================================================================
-
-  async createAddon(
-    ctx: ProviderContext,
-    input: CreateAddonInput,
-  ): Promise<AsyncActionResult<string>> {
-    const client = getClient(ctx.config);
-
-    if (!client.createAddon) {
-      return {
-        data: null,
-        status: "failed",
-        error: {
-          code: RevstackErrorCode.NotImplemented,
-          message: "Create Addon not supported",
-        },
-      };
-    }
-
-    return client.createAddon(ctx, input);
-  }
-
-  async getAddon(
-    ctx: ProviderContext,
-    id: string,
-  ): Promise<AsyncActionResult<Addon>> {
-    const client = getClient(ctx.config);
-
-    if (!client.getAddon) {
-      return {
-        data: null,
-        status: "failed",
-        error: {
-          code: RevstackErrorCode.NotImplemented,
-          message: "Get Addon not supported",
-        },
-      };
-    }
-
-    return client.getAddon(ctx, id);
-  }
-
-  async updateAddon(
-    ctx: ProviderContext,
-    id: string,
-    input: UpdateAddonInput,
-  ): Promise<AsyncActionResult<string>> {
-    const client = getClient(ctx.config);
-
-    if (!client.updateAddon) {
-      return {
-        data: null,
-        status: "failed",
-        error: {
-          code: RevstackErrorCode.NotImplemented,
-          message: "Update Addon not supported",
-        },
-      };
-    }
-
-    return client.updateAddon(ctx, id, input);
-  }
-
-  async deleteAddon(
-    ctx: ProviderContext,
-    input: DeleteAddonInput,
-  ): Promise<AsyncActionResult<boolean>> {
-    const client = getClient(ctx.config);
-
-    if (!client.deleteAddon) {
-      return {
-        data: false,
-        status: "failed",
-        error: {
-          code: RevstackErrorCode.NotImplemented,
-          message: "Delete Addon not supported",
-        },
-      };
-    }
-
-    return client.deleteAddon(ctx, input);
-  }
-
-  async listAddons(
-    ctx: ProviderContext,
-    subscriptionId: string,
-    pagination: PaginationOptions,
-  ): Promise<AsyncActionResult<PaginatedResult<Addon>>> {
-    const client = getClient(ctx.config);
-
-    if (!client.listAddons) {
-      return {
-        data: null,
-        status: "failed",
-        error: {
-          code: RevstackErrorCode.NotImplemented,
-          message: "List Addons not supported",
-        },
-      };
-    }
-
-    return client.listAddons(ctx, subscriptionId, pagination);
   }
 }

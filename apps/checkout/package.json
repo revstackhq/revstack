@@ -1,7 +1,7 @@
 {
   "name": "@revstackhq/checkout",
-  "version": "0.1.0",
-  "private": true,
+  "version": "0.0.0",
+  "private": false,
   "scripts": {
     "dev": "next dev --port 3100",
     "build": "next build",
@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "@radix-ui/react-slot": "^1.2.4",
-    "@revstackhq/core": "workspace:0.0.0-dev-20260228064655",
+    "@revstackhq/core": "workspace:*",
     "@tanstack/react-query": "^5.90.21",
     "axios": "^1.13.6",
     "class-variance-authority": "^0.7.1",

@@ -1,3 +1,5 @@
+import { RevstackCurrency } from "@/types/models/currency";
+
 // =============================================================================
 // CATALOG MODELS — Products & Prices
 // =============================================================================
@@ -38,7 +40,7 @@ export type PriceInput = {
   /** amount in smallest currency unit (e.g., cents) */
   unitAmount: number;
   /** ISO currency code */
-  currency: string;
+  currency: RevstackCurrency;
   /** billing interval for recurring prices */
   interval?: "day" | "week" | "month" | "year";
   /** interval count (e.g., 2 for "every 2 months") */
@@ -57,7 +59,7 @@ export type Price = {
   /** amount in smallest currency unit */
   unitAmount: number;
   /** ISO currency code */
-  currency: string;
+  currency: RevstackCurrency;
   /** "one_time" or "recurring" */
   type: "one_time" | "recurring";
   /** billing interval (only for recurring) */

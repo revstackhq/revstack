@@ -1,4 +1,5 @@
 import { Address } from "@/types/models/shared";
+import { RevstackCurrency } from "@/types/models/currency";
 
 // =============================================================================
 // PAYMENT MODELS
@@ -54,7 +55,7 @@ export type Payment = {
   /** amount in cents */
   amount: number;
   /** iso currency (e.g. USD) */
-  currency: string;
+  currency: RevstackCurrency;
   /** normalized revstack status */
   status: PaymentStatus;
 
@@ -111,7 +112,7 @@ export type CreatePaymentInput = {
   /** amount in cents */
   amount: number;
   /** iso currency (e.g. USD) */
-  currency: string;
+  currency: RevstackCurrency;
   /** revstack customer id */
   customerId?: string;
   /** external payment method id */
@@ -126,6 +127,8 @@ export type CreatePaymentInput = {
   capture?: boolean;
   /** redirect return url */
   returnUrl?: string;
+  /** redirect cancel url */
+  cancelUrl?: string;
   /** billing address */
   billingAddress?: Address;
   /** shipping address */
@@ -134,6 +137,14 @@ export type CreatePaymentInput = {
   metadata?: Record<string, any>;
   /** provider specific options */
   providerOptions?: any;
+
+  /** Just-In-Time creation payload matching ad-hoc products gracefully */
+  jit?: {
+    name?: string;
+    description?: string;
+    amount: number;
+    currency: RevstackCurrency;
+  };
 };
 
 export type RefundPaymentInput = {

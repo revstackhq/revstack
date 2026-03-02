@@ -25,10 +25,6 @@ import {
   Product,
   PriceInput,
   Price,
-  Addon,
-  CreateAddonInput,
-  UpdateAddonInput,
-  DeleteAddonInput,
 } from "@/types/models";
 
 /**
@@ -85,6 +81,7 @@ export interface IPaymentFeature {
   listPayments?(
     ctx: ProviderContext,
     pagination: PaginationOptions,
+    filters?: Record<string, any>,
   ): Promise<AsyncActionResult<PaginatedResult<Payment>>>;
 
   /**
@@ -175,6 +172,7 @@ export interface ISubscriptionFeature {
   listSubscriptions?(
     ctx: ProviderContext,
     pagination: PaginationOptions,
+    filters?: Record<string, any>,
   ): Promise<AsyncActionResult<PaginatedResult<Subscription>>>;
 
   /**
@@ -287,6 +285,7 @@ export interface ICustomerFeature {
   listCustomers?(
     ctx: ProviderContext,
     pagination: PaginationOptions,
+    filters?: Record<string, any>,
   ): Promise<AsyncActionResult<PaginatedResult<Customer>>>;
 }
 
@@ -348,6 +347,7 @@ export interface ICatalogFeature {
   listProducts?(
     ctx: ProviderContext,
     pagination: PaginationOptions,
+    filters?: Record<string, any>,
   ): Promise<AsyncActionResult<PaginatedResult<Product>>>;
 
   /**
@@ -390,60 +390,8 @@ export interface ICatalogFeature {
     ctx: ProviderContext,
     productId: string,
     pagination: PaginationOptions,
+    filters?: Record<string, any>,
   ): Promise<AsyncActionResult<PaginatedResult<Price>>>;
-}
-
-/**
- * Interface for Subscription Add-ons (e.g. Extra Seats, Priority Support).
- * These are items attached to an existing subscription rather than standalone.
- */
-export interface IAddonFeature {
-  /**
-   * Adds a new add-on (extra recurring item) to an active subscription.
-   *
-   * @param ctx - The execution context.
-   * @param input - The subscription ID, price ID, and quantity.
-   */
-  createAddon?(
-    ctx: ProviderContext,
-    input: CreateAddonInput,
-  ): Promise<AsyncActionResult<string>>;
-
-  /**
-   * Retrieves an existing add-on by ID.
-   */
-  getAddon?(
-    ctx: ProviderContext,
-    id: string,
-  ): Promise<AsyncActionResult<Addon>>;
-
-  /**
-   * Updates an add-on (e.g. changing quantity or switching prices).
-   */
-  updateAddon?(
-    ctx: ProviderContext,
-    id: string,
-    input: UpdateAddonInput,
-  ): Promise<AsyncActionResult<string>>;
-
-  /**
-   * Removes an add-on from a subscription.
-   *
-   * Warning: Providers like Stripe do not allow a subscription to have zero items. If this is the last addon/item, the provider will throw an error. The orchestrator should catch this and call `cancelSubscription` instead.
-   */
-  deleteAddon?(
-    ctx: ProviderContext,
-    input: DeleteAddonInput,
-  ): Promise<AsyncActionResult<boolean>>;
-
-  /**
-   * Lists all add-ons attached to a specific subscription.
-   */
-  listAddons?(
-    ctx: ProviderContext,
-    subscriptionId: string,
-    pagination: PaginationOptions,
-  ): Promise<AsyncActionResult<PaginatedResult<Addon>>>;
 }
 
 /**
@@ -461,8 +409,7 @@ export interface IProvider
     ICheckoutFeature,
     ICustomerFeature,
     IPaymentMethodFeature,
-    ICatalogFeature,
-    IAddonFeature {
+    ICatalogFeature {
   // ==========================================================
   // METADATA (Required by Core at runtime)
   // ==========================================================
