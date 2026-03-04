@@ -8,6 +8,9 @@ import {
   CheckoutSessionResult,
   buildPagePagination,
   RevstackErrorCode,
+  CheckoutSessionInput,
+  LineItem,
+  getTrialDays,
 } from "@revstackhq/providers-core";
 import { mapPolarOrderToPayment } from "@/api/v1/mappers";
 import { getOrCreatePolar } from "@/api/v1/client";
@@ -29,11 +32,11 @@ export const createPayment = async (
   input: CreatePaymentInput,
   createCheckoutSession: (
     ctx: ProviderContext,
-    input: any,
+    input: CheckoutSessionInput,
   ) => Promise<AsyncActionResult<CheckoutSessionResult>>,
 ): Promise<AsyncActionResult<string>> => {
   try {
-    const polar = getOrCreatePolar(ctx.config.accessToken);
+    const polar = getOrCreatePolar(ctx);
 
     const resolvedLineItems = await Promise.all(
       input.lineItems.map(async (item) => {
@@ -43,6 +46,9 @@ export const createPayment = async (
               name: item.name,
               amount: item.amount,
               currency: item.currency,
+              trialInterval: item.trialInterval,
+              trialIntervalCount: item.trialIntervalCount,
+              description: item.description,
             },
           });
           return { priceId, quantity: item.quantity };
@@ -53,12 +59,7 @@ export const createPayment = async (
 
     const result = await createCheckoutSession(ctx, {
       mode: "payment",
-      customerId: input.customerId,
-      successUrl: input.returnUrl || "",
-      cancelUrl: input.cancelUrl || "",
-      metadata: input.metadata,
-      allowPromotionCodes:
-        input.allowPromotionCodes ?? input.providerOptions?.allowPromotionCodes,
+      ...input,
       lineItems: resolvedLineItems,
     });
 
@@ -87,7 +88,7 @@ export const getPayment = async (
   paymentId: string,
 ): Promise<AsyncActionResult<Payment>> => {
   try {
-    const polar = getOrCreatePolar(ctx.config.accessToken);
+    const polar = getOrCreatePolar(ctx);
     const order = await polar.orders.get({
       id: paymentId,
     });
@@ -118,7 +119,7 @@ export const listPayments = async (
   filters?: Record<string, any>,
 ): Promise<AsyncActionResult<PaginatedResult<Payment>>> => {
   try {
-    const polar = getOrCreatePolar(ctx.config.accessToken);
+    const polar = getOrCreatePolar(ctx);
     const targetPage =
       options?.page ||
       (options?.startingAfter && parseInt(options.startingAfter) + 1) ||
@@ -165,7 +166,7 @@ export const refundPayment = async (
   amount?: number,
 ): Promise<AsyncActionResult<string>> => {
   try {
-    const polar = getOrCreatePolar(ctx.config.accessToken);
+    const polar = getOrCreatePolar(ctx);
     // Polar requires explicit reason for refunds
     await polar.refunds.create({
       orderId: paymentId,

@@ -92,10 +92,8 @@ export type CreateSubscriptionInput = {
   returnUrl?: string;
   /** cancel url */
   cancelUrl?: string;
-  /** trial days */
-  trialDays?: number;
-  /** revstack discount id */
-  discountId?: string;
+  /** success url */
+  successUrl?: string;
   /** external promo code ID to apply automatically */
   promotionCodeId?: string;
   /** allow promo codes input box on the hosted checkout */
@@ -104,6 +102,10 @@ export type CreateSubscriptionInput = {
   automaticTax?: boolean;
   /** custom metadata */
   metadata?: Record<string, any>;
+  /** trial interval for subscription line items */
+  trialInterval?: "day" | "week" | "month" | "year";
+  /** trial interval count for subscription line items */
+  trialIntervalCount?: number;
   /** * The items to subscribe to.
    * JIT creation is handled natively here if a LineItem provides amount/interval instead of a priceId.
    */

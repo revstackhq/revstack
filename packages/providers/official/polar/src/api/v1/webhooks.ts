@@ -23,7 +23,7 @@ export const validateCredentials = async (
   }
 
   try {
-    const polar = getOrCreatePolar(ctx.config.accessToken as string);
+    const polar = getOrCreatePolar(ctx);
     await polar.organizations.list({});
     return { data: true, status: "success" };
   } catch {
@@ -43,7 +43,7 @@ export const setupWebhooks = async (
   ctx: ProviderContext,
   webhookUrl: string,
 ): Promise<AsyncActionResult<InstallResult>> => {
-  const polar = getOrCreatePolar(ctx.config.accessToken as string);
+  const polar = getOrCreatePolar(ctx);
 
   try {
     const events: WebhookEventType[] = [
@@ -138,7 +138,7 @@ export const removeWebhooks = async (
   ctx: ProviderContext,
   webhookId: string,
 ): Promise<AsyncActionResult<boolean>> => {
-  const polar = getOrCreatePolar(ctx.config.accessToken as string);
+  const polar = getOrCreatePolar(ctx);
   try {
     await polar.webhooks.deleteWebhookEndpoint({ id: webhookId });
     return { data: true, status: "success" };

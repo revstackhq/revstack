@@ -129,6 +129,8 @@ export type CreatePaymentInput = {
   returnUrl?: string;
   /** redirect cancel url */
   cancelUrl?: string;
+  /** success url */
+  successUrl?: string;
   /** billing address */
   billingAddress?: Address;
   /** shipping address */
@@ -143,10 +145,10 @@ export type CreatePaymentInput = {
 
   /** enable automatic tax calculation (e.g., Stripe Tax, Polar automatic tax) */
   automaticTax?: boolean;
-  /** allow promo codes input box on the hosted checkout */
-  allowPromotionCodes?: boolean;
   /** automatically apply a specific provider promotion code ID */
   promotionCodeId?: string;
+  /** allow promo codes input box on the hosted checkout */
+  allowPromotionCodes?: boolean;
 
   /** setup future usage for the payment method */
   setupFutureUsage?: boolean;

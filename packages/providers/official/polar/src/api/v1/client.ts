@@ -1,15 +1,13 @@
 import { Polar } from "@polar-sh/sdk";
+import { ProviderContext } from "@revstackhq/providers-core";
 
 let polarClient: Polar | null = null;
 
-export const getOrCreatePolar = (
-  accessToken: string,
-  testMode: boolean = false,
-): Polar => {
+export const getOrCreatePolar = (ctx: ProviderContext): Polar => {
   if (!polarClient) {
     polarClient = new Polar({
-      accessToken,
-      server: testMode ? "sandbox" : "production",
+      accessToken: ctx.config.accessToken,
+      server: ctx.isTestMode ? "sandbox" : "production",
     });
   }
   return polarClient;

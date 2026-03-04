@@ -7,6 +7,11 @@ import {
   BillingPortalResult,
   AsyncActionResult,
   RevstackCurrency,
+  CustomLineItem,
+  CheckoutSessionMode,
+  LineItem,
+  CatalogLineItem,
+  getTrialDays,
 } from "@revstackhq/providers-core";
 import Stripe from "stripe";
 import { getOrCreateClient, appendQueryParam } from "@/api/v1/client";
@@ -24,36 +29,37 @@ import { currencyMap } from "@/shared/currency-map";
  * @returns An array of thoroughly formatted native Stripe SessionCreateParams.LineItem objects.
  */
 function formatLineItems(
-  items: CheckoutSessionInput["lineItems"],
-  mode: CheckoutSessionInput["mode"],
+  items: LineItem[],
+  mode: CheckoutSessionMode,
 ): Stripe.Checkout.SessionCreateParams.LineItem[] {
   return items.map((item) => {
-    if (item.priceId) {
+    if ((item as CatalogLineItem).priceId) {
       return {
-        price: item.priceId,
+        price: (item as CatalogLineItem).priceId,
         quantity: item.quantity,
       };
     }
 
+    const customItem = item as CustomLineItem;
+
     const priceData: Stripe.Checkout.SessionCreateParams.LineItem.PriceData = {
-      currency: currencyMap[item.currency as RevstackCurrency] || "USD",
+      currency: currencyMap[customItem.currency as RevstackCurrency] || "USD",
       product_data: {
-        name: item.name || "Unknown",
-        description: item.description || undefined,
-        images: item.images || [],
+        name: customItem.name || "Unknown",
+        description: customItem.description || undefined,
+        images: customItem.images || [],
       },
-      unit_amount: item.amount,
-      tax_behavior: item.taxRates ? "exclusive" : "unspecified",
+      unit_amount: customItem.amount,
+      tax_behavior: "unspecified",
     };
 
-    if (mode === "subscription" && item.interval) {
-      priceData.recurring = { interval: item.interval };
+    if (mode === "subscription" && customItem.interval) {
+      priceData.recurring = { interval: customItem.interval };
     }
 
     return {
       price_data: priceData,
-      tax_rates: item.taxRates,
-      quantity: item.quantity,
+      quantity: customItem.quantity,
     };
   });
 }
@@ -118,7 +124,10 @@ export async function createCheckoutSession(
     } else if (input.mode === "subscription") {
       sessionParams.subscription_data = {
         metadata: input.metadata,
-        trial_period_days: input.trialDays || undefined,
+        trial_period_days:
+          input.trialInterval && input.trialIntervalCount
+            ? getTrialDays(input.trialInterval, input.trialIntervalCount)
+            : undefined,
       };
     }
 
@@ -174,8 +183,12 @@ export async function createBillingPortalSession(
     });
 
     return {
-      data: { url: session.url },
+      data: null,
       status: "success",
+      nextAction: {
+        type: "redirect",
+        url: session.url,
+      },
     };
   } catch (error: unknown) {
     const mapped = mapError(error);

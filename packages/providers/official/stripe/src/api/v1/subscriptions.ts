@@ -90,21 +90,19 @@ export async function createSubscription(
     ctx: ProviderContext,
     input: CheckoutSessionInput,
   ) => Promise<AsyncActionResult<CheckoutSessionResult>>,
-): Promise<AsyncActionResult<CheckoutSessionResult>> {
+): Promise<AsyncActionResult<string>> {
   try {
-    return await createCheckoutSession(ctx, {
+    const result = await createCheckoutSession(ctx, {
       mode: "subscription",
-      customerId: input.customerId,
-      successUrl: input.returnUrl,
-      cancelUrl: input.cancelUrl,
-      metadata: input.metadata,
-      allowPromotionCodes: input.allowPromotionCodes,
-      automaticTax: input.automaticTax,
-      customerEmail: input.customerEmail,
-      trialDays: input.trialDays,
-      lineItems: input.lineItems,
-      clientReferenceId: input.clientReferenceId,
+      ...input,
     });
+
+    return {
+      data: result.data?.id || null,
+      status: result.status,
+      nextAction: result.nextAction,
+      error: result.error,
+    };
   } catch (error: any) {
     if (error.isRevstackError)
       return { data: null, status: "failed", error: error.errorPayload };

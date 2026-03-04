@@ -11,6 +11,8 @@ import {
 import { getOrCreatePolar } from "@/api/v1/client";
 import { mapPolarCustomerToCustomer } from "@/api/v1/mappers";
 import { mapError } from "@/shared/error-map";
+import { countryMap } from "@/shared/country-map";
+import { CountryAlpha2Input } from "@polar-sh/sdk/models/components/addressinput.js";
 
 /**
  * Creates a new customer in Polar.
@@ -24,11 +26,23 @@ export const createCustomer = async (
   input: CreateCustomerInput,
 ): Promise<AsyncActionResult<string>> => {
   try {
-    const polar = getOrCreatePolar(ctx.config.accessToken);
+    const polar = getOrCreatePolar(ctx);
     const customer = await polar.customers.create({
       email: input.email,
-      name: input.name || undefined,
+      name: input.name,
       metadata: input.metadata || {},
+      billingAddress: input.address
+        ? {
+            line1: input.address.line1,
+            line2: input.address.line2,
+            city: input.address.city,
+            state: input.address.state,
+            postalCode: input.address.postalCode,
+            country: countryMap[
+              input.address.country as keyof typeof countryMap
+            ] as CountryAlpha2Input,
+          }
+        : undefined,
     });
 
     return {
@@ -57,7 +71,7 @@ export const updateCustomer = async (
   input: UpdateCustomerInput,
 ): Promise<AsyncActionResult<string>> => {
   try {
-    const polar = getOrCreatePolar(ctx.config.accessToken);
+    const polar = getOrCreatePolar(ctx);
     const customer = await polar.customers.update({
       id: customerId,
       customerUpdate: {
@@ -91,7 +105,7 @@ export const deleteCustomer = async (
   customerId: string,
 ): Promise<AsyncActionResult<boolean>> => {
   try {
-    const polar = getOrCreatePolar(ctx.config.accessToken);
+    const polar = getOrCreatePolar(ctx);
     await polar.customers.delete({
       id: customerId,
     });
@@ -120,7 +134,7 @@ export const getCustomer = async (
   customerId: string,
 ): Promise<AsyncActionResult<Customer>> => {
   try {
-    const polar = getOrCreatePolar(ctx.config.accessToken);
+    const polar = getOrCreatePolar(ctx);
     const customer = await polar.customers.get({
       id: customerId,
     });
@@ -151,7 +165,7 @@ export const listCustomers = async (
   filters?: Record<string, any>,
 ): Promise<AsyncActionResult<PaginatedResult<Customer>>> => {
   try {
-    const polar = getOrCreatePolar(ctx.config.accessToken);
+    const polar = getOrCreatePolar(ctx);
     const targetPage =
       options?.page ||
       (options?.startingAfter && parseInt(options.startingAfter) + 1) ||

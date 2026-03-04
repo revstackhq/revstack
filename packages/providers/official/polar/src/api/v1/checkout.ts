@@ -7,6 +7,7 @@ import {
   BillingPortalResult,
   AsyncActionResult,
   RevstackErrorCode,
+  CatalogLineItem,
 } from "@revstackhq/providers-core";
 import { getOrCreatePolar, appendQueryParam } from "@/api/v1/client";
 import { CheckoutCreate } from "@polar-sh/sdk/models/components/checkoutcreate.js";
@@ -24,14 +25,14 @@ export async function createCheckoutSession(
   ctx: ProviderContext,
   input: CheckoutSessionInput,
 ): Promise<AsyncActionResult<CheckoutSessionResult>> {
-  const polar = getOrCreatePolar(ctx.config.accessToken);
+  const polar = getOrCreatePolar(ctx);
 
   try {
-    const productIds: string[] = input.lineItems
+    const products: string[] = (input.lineItems as CatalogLineItem[])
       .filter((item) => item.priceId)
-      .map((item) => item.priceId as string);
+      .map((item) => item.priceId);
 
-    if (productIds.length === 0) {
+    if (products.length === 0) {
       return {
         data: null,
         status: "failed",
@@ -52,20 +53,25 @@ export async function createCheckoutSession(
         }
       });
     }
+
     if (ctx.traceId) {
       cleanMetadata.revstack_trace_id = ctx.traceId;
     }
 
     const sessionPayload: CheckoutCreate = {
-      products: productIds,
-      successUrl: appendQueryParam(
-        input.successUrl,
-        "session_id={CHECKOUT_SESSION_ID}",
-      ),
-      customerId: input.customerId || undefined,
+      products,
+      successUrl:
+        input.successUrl &&
+        appendQueryParam(input.successUrl, "session_id={CHECKOUT_SESSION_ID}"),
+      customerId: input.customerId,
       customerEmail: !input.customerId ? input.customerEmail : undefined,
-      allowDiscountCodes: input.allowPromotionCodes ?? true,
+      allowDiscountCodes: input.allowPromotionCodes,
       metadata: cleanMetadata,
+      allowTrial: input.mode === "subscription",
+      returnUrl: input.successUrl,
+      trialInterval: input.trialInterval,
+      trialIntervalCount: input.trialIntervalCount,
+      discountId: input.promotionCodeId,
     };
 
     const session = await polar.checkouts.create(sessionPayload);
@@ -75,7 +81,7 @@ export async function createCheckoutSession(
       status: "requires_action",
       nextAction: {
         type: "redirect",
-        url: session.url!,
+        url: `${session.url}?theme=dark`,
       },
     };
   } catch (error: unknown) {
@@ -100,7 +106,7 @@ export async function createBillingPortalSession(
   ctx: ProviderContext,
   input: BillingPortalInput,
 ): Promise<AsyncActionResult<BillingPortalResult>> {
-  const polar = getOrCreatePolar(ctx.config.accessToken);
+  const polar = getOrCreatePolar(ctx);
 
   try {
     const session = await polar.customerSessions.create({

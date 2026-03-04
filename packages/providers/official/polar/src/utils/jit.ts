@@ -14,7 +14,7 @@ import { Polar } from "@polar-sh/sdk";
  */
 export async function resolveJitProductId(
   client: Polar,
-  ctx: ProviderContext,
+  _ctx: ProviderContext,
   params: {
     priceId?: string;
     jit: {
@@ -23,6 +23,8 @@ export async function resolveJitProductId(
       interval?: string;
       amount: number;
       currency: string;
+      trialInterval?: "day" | "week" | "month" | "year";
+      trialIntervalCount?: number;
     };
   },
 ): Promise<string> {
@@ -54,14 +56,15 @@ export async function resolveJitProductId(
   const newProduct = await client.products.create({
     name: params.jit.name,
     description: params.jit.description,
-    organizationId: ctx.config.organizationId,
-    recurringInterval: params.jit.interval || undefined,
+    recurringInterval: params.jit.interval,
+    trialInterval: params.jit.trialInterval,
+    trialIntervalCount: params.jit.trialIntervalCount,
     prices: [
       {
         amountType: "fixed",
         priceAmount: params.jit.amount,
         priceCurrency: currencyMap[
-          params.jit.currency.toLowerCase() as keyof typeof currencyMap
+          params.jit.currency as keyof typeof currencyMap
         ] as PresentmentCurrency,
       },
     ],

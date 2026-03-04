@@ -371,6 +371,9 @@ runSmoke({
         customerId: realCustomerId,
         returnUrl: FIXTURES.returnUrl,
         cancelUrl: FIXTURES.cancelUrl,
+        successUrl: FIXTURES.successUrl,
+        trialInterval: "month",
+        trialIntervalCount: 1,
         lineItems: [
           {
             name: "Pro Plan",
@@ -437,18 +440,6 @@ runSmoke({
       return res;
     },
 
-    // CHECKOUT / BILLING PORTAL
-    createCheckoutSession: async (ctx) => {
-      const res = await provider.createCheckoutSession(ctx, {
-        customerId: FIXTURES.customerId,
-        lineItems: [{ priceId: FIXTURES.priceId, quantity: 1 }],
-        successUrl: FIXTURES.successUrl,
-        cancelUrl: FIXTURES.cancelUrl,
-        mode: "payment",
-      });
-      console.log("[createCheckoutSession]", res);
-      return res;
-    },
     createBillingPortalSession: async (ctx) => {
       const res = await provider.createBillingPortalSession(ctx, {
         customerId: FIXTURES.customerId,

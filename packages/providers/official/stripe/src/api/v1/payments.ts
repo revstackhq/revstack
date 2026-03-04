@@ -36,20 +36,18 @@ export async function createPayment(
     ctx: ProviderContext,
     input: CheckoutSessionInput,
   ) => Promise<AsyncActionResult<CheckoutSessionResult>>,
-): Promise<AsyncActionResult<CheckoutSessionResult>> {
-  return await createCheckoutSession(ctx, {
+): Promise<AsyncActionResult<string>> {
+  const result = await createCheckoutSession(ctx, {
     mode: "payment",
-    customerId: input.customerId,
-    successUrl: input.returnUrl,
-    cancelUrl: input.cancelUrl,
-    metadata: input.metadata,
-    allowPromotionCodes: input.allowPromotionCodes,
-    lineItems: input.lineItems,
-    automaticTax: input.automaticTax,
-    statementDescriptor: input.statementDescriptor,
-    setupFutureUsage: input.setupFutureUsage,
-    clientReferenceId: input.clientReferenceId,
+    ...input,
   });
+
+  return {
+    data: result.data?.id || null,
+    status: result.status,
+    nextAction: result.nextAction,
+    error: result.error,
+  };
 }
 
 /**

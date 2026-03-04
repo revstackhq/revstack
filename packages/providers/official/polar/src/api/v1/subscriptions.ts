@@ -11,6 +11,10 @@ import {
   CheckoutSessionResult,
   buildPagePagination,
   UpdateSubscriptionInput,
+  CheckoutSessionInput,
+  LineItem,
+  getTrialDays,
+  CustomLineItem,
 } from "@revstackhq/providers-core";
 
 import { resolveJitProductId } from "@/utils/jit";
@@ -29,37 +33,45 @@ export async function createSubscription(
   input: CreateSubscriptionInput,
   createCheckoutSession: (
     ctx: ProviderContext,
-    input: any,
+    input: CheckoutSessionInput,
   ) => Promise<AsyncActionResult<CheckoutSessionResult>>,
 ): Promise<AsyncActionResult<string>> {
   try {
-    const polar = getOrCreatePolar(ctx.config.accessToken);
+    const polar = getOrCreatePolar(ctx);
 
-    const resolvedLineItems = await Promise.all(
-      input.lineItems.map(async (item) => {
-        if ("amount" in item) {
-          const priceId = await resolveJitProductId(polar, ctx, {
-            jit: {
-              name: item.name,
-              amount: item.amount,
-              currency: item.currency,
-              interval: item.interval,
-            },
-          });
-          return { priceId, quantity: item.quantity };
-        }
-        return { priceId: item.priceId, quantity: item.quantity };
-      }),
+    const lineItems = input.lineItems as CustomLineItem[];
+
+    const totalAmount = lineItems.reduce(
+      (acc, item) => acc + item.amount * (item.quantity || 1),
+      0,
     );
+
+    const bundleName = lineItems
+      .map((i) => `${i.quantity || 1}x ${i.name}`)
+      .join(" + ");
+
+    const baseInterval = lineItems[0]?.interval;
+
+    const bundlePriceId = await resolveJitProductId(polar, ctx, {
+      jit: {
+        name: bundleName,
+        amount: totalAmount,
+        currency: lineItems[0]?.currency || "usd",
+        interval: baseInterval,
+        description: "Consolidated subscription bundle",
+        trialInterval: lineItems[0]?.trialInterval,
+        trialIntervalCount: lineItems[0]?.trialIntervalCount,
+      },
+    });
 
     const result = await createCheckoutSession(ctx, {
       mode: "subscription",
-      customerId: input.customerId,
-      successUrl: input.returnUrl || "",
-      cancelUrl: input.cancelUrl || "",
-      metadata: input.metadata,
-      allowPromotionCodes: input.allowPromotionCodes,
-      lineItems: resolvedLineItems,
+      ...input,
+      lineItems: [{ priceId: bundlePriceId, quantity: 1 }],
+      metadata: {
+        ...input.metadata,
+        order_id: input.clientReferenceId,
+      },
     });
 
     return {
@@ -87,7 +99,7 @@ export async function getSubscription(
   id: string,
 ): Promise<AsyncActionResult<Subscription>> {
   try {
-    const polar = getOrCreatePolar(ctx.config.accessToken);
+    const polar = getOrCreatePolar(ctx);
     const sub = await polar.subscriptions.get({ id });
     return {
       data: mapPolarSubscriptionToSubscription(sub),
@@ -115,7 +127,7 @@ export async function cancelSubscription(
   _reason?: string,
 ): Promise<AsyncActionResult<string>> {
   try {
-    const polar = getOrCreatePolar(ctx.config.accessToken);
+    const polar = getOrCreatePolar(ctx);
     const sub = await polar.subscriptions.revoke({ id });
 
     return {
@@ -197,7 +209,7 @@ export async function listSubscriptions(
   filters?: Record<string, any>,
 ): Promise<AsyncActionResult<PaginatedResult<Subscription>>> {
   try {
-    const polar = getOrCreatePolar(ctx.config.accessToken);
+    const polar = getOrCreatePolar(ctx);
     const targetPage =
       pagination.page ||
       (pagination.startingAfter && parseInt(pagination.startingAfter) + 1) ||
@@ -243,7 +255,7 @@ export async function updateSubscription(
   input: UpdateSubscriptionInput,
 ): Promise<AsyncActionResult<string>> {
   try {
-    const polar = getOrCreatePolar(ctx.config.accessToken);
+    const polar = getOrCreatePolar(ctx);
 
     const mainItem = input.lineItems?.find((item) => "priceId" in item);
 

@@ -1,6 +1,9 @@
-import { RevstackCurrency } from "@/types/models/currency";
+import { LineItem } from "@/types/models/shared";
 // CHECKOUT MODELS
 // =============================================================================
+
+export type CheckoutSessionMode = "payment" | "subscription" | "setup";
+export type CheckoutSessionBillingAddressCollection = "auto" | "required";
 
 export type CheckoutSessionInput = {
   /** revstack customer id */
@@ -17,42 +20,29 @@ export type CheckoutSessionInput = {
   /** statement descriptor */
   statementDescriptor?: string;
 
-  /** trial days */
-  trialDays?: number;
+  /** trial interval for subscription line items */
+  trialInterval?: "day" | "week" | "month" | "year";
+  /** trial interval count for subscription line items */
+  trialIntervalCount?: number;
 
   /** save payment method */
   setupFutureUsage?: boolean;
   /** checkout line items */
-  lineItems: {
-    /** external price id (when using an existing price, name/amount/currency are not required) */
-    priceId?: string;
-    /** item name */
-    name?: string;
-    /** item description */
-    description?: string;
-    /** unit amount in cents */
-    amount?: number;
-    /** quantity */
-    quantity: number;
-    /** iso currency (e.g. USD) */
-    currency?: RevstackCurrency;
-    /** item image urls */
-    images?: string[];
-    /** external tax rates */
-    taxRates?: string[];
-    /** recurring interval for subscription line items */
-    interval?: "day" | "week" | "month" | "year";
-  }[];
+  lineItems: LineItem[];
   /** success url */
   successUrl?: string;
   /** cancel url */
   cancelUrl?: string;
+  /** return url */
+  returnUrl?: string;
   /** billing address collection mode */
-  billingAddressCollection?: "auto" | "required";
+  billingAddressCollection?: CheckoutSessionBillingAddressCollection;
   /** checkout mode */
-  mode: "payment" | "subscription" | "setup";
+  mode: CheckoutSessionMode;
 
-  /** allow promo codes */
+  /** automatically apply a specific provider promotion code ID */
+  promotionCodeId?: string;
+  /** allow promo codes input box on the hosted checkout */
   allowPromotionCodes?: boolean;
 
   /** custom metadata */

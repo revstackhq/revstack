@@ -97,6 +97,11 @@ export type CustomLineItem = {
   images?: string[];
   /** recurring interval for subscription line items */
   interval?: "day" | "week" | "month" | "year";
+
+  /** trial interval for subscription line items */
+  trialInterval?: "day" | "week" | "month" | "year";
+  /** trial interval count for subscription line items */
+  trialIntervalCount?: number;
 };
 
 export type LineItem = CatalogLineItem | CustomLineItem;

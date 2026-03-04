@@ -12,4 +12,5 @@ export * from "@/context";
 export * from "@/lib/config-validator";
 export * from "@/utils/crypto";
 export * from "@/utils/pagination";
+export * from "@/utils/trial";
 export * from "@/smoke-runner";
