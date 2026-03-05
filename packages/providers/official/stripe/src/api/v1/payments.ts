@@ -7,17 +7,18 @@ import {
   RefundPaymentInput,
   Payment,
   PaginatedResult,
-  PaginationOptions,
   AsyncActionResult,
   buildCursorPagination,
   PaymentStatus,
-  RevstackCurrency,
   CheckoutSessionInput,
   CheckoutSessionResult,
+  normalizeCurrency,
+  GetPaymentInput,
+  ListPaymentsOptions,
+  CapturePaymentInput,
 } from "@revstackhq/providers-core";
 import Stripe from "stripe";
 import { getOrCreateClient } from "@/api/v1/client";
-import { currencyMap } from "@/shared/currency-map";
 
 /**
  * Executes a deferred payment creation through a Stripe Checkout Session flow.
@@ -62,9 +63,10 @@ export async function createPayment(
  */
 export async function getPayment(
   ctx: ProviderContext,
-  id: string,
+  input: GetPaymentInput,
 ): Promise<AsyncActionResult<Payment>> {
   const stripe = getOrCreateClient(ctx.config.apiKey);
+  let id = input.id;
 
   try {
     if (id.startsWith("cs_")) {
@@ -81,8 +83,10 @@ export async function getPayment(
           id: session.id,
           providerId: "stripe",
           externalId: session.id,
-          amount: session.amount_total || 0,
-          currency: currencyMap[session.currency as string] as RevstackCurrency,
+          amount: session.amount_total ?? 0,
+          currency: session.currency
+            ? normalizeCurrency(session.currency)
+            : "USD",
           status:
             session.status === "expired"
               ? PaymentStatus.Canceled
@@ -195,24 +199,23 @@ export async function refundPayment(
  */
 export async function listPayments(
   ctx: ProviderContext,
-  pagination: PaginationOptions,
-  filters?: Record<string, any>,
+  options: ListPaymentsOptions,
 ): Promise<AsyncActionResult<PaginatedResult<Payment>>> {
   const stripe = getOrCreateClient(ctx.config.apiKey);
 
   try {
     const params: Stripe.PaymentIntentListParams = {
-      limit: pagination.limit || 20,
+      limit: options.limit || 20,
       expand: ["data.latest_charge"],
-      ...filters,
+      ...options.filters,
     };
 
-    if (pagination.cursor) {
-      params.starting_after = pagination.cursor;
-    } else if (pagination.startingAfter) {
-      params.starting_after = pagination.startingAfter;
-    } else if (pagination.endingBefore) {
-      params.ending_before = pagination.endingBefore;
+    if (options.cursor) {
+      params.starting_after = options.cursor;
+    } else if (options.startingAfter) {
+      params.starting_after = options.startingAfter;
+    } else if (options.endingBefore) {
+      params.ending_before = options.endingBefore;
     }
 
     const result = await stripe.paymentIntents.list(params);
@@ -220,7 +223,7 @@ export async function listPayments(
       data: buildCursorPagination(
         result.data,
         result.has_more,
-        pagination,
+        options,
         mapStripePaymentToPayment,
       ),
       status: "success",
@@ -247,14 +250,13 @@ export async function listPayments(
  */
 export async function capturePayment(
   ctx: ProviderContext,
-  id: string,
-  amount?: number,
+  input: CapturePaymentInput,
 ): Promise<AsyncActionResult<string>> {
   const stripe = getOrCreateClient(ctx.config.apiKey);
 
   try {
-    const pi = await stripe.paymentIntents.capture(id, {
-      ...(amount ? { amount_to_capture: amount } : {}),
+    const pi = await stripe.paymentIntents.capture(input.id, {
+      ...(input.amount ? { amount_to_capture: input.amount } : {}),
     });
 
     return {

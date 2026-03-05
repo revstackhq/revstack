@@ -1,12 +1,12 @@
+import { SetupRequestFieldDefinition } from "@/manifest";
 import { RevstackError, RevstackErrorCode } from "@/types/errors";
-import { ConfigFieldDefinition } from "@/manifest";
 
 /**
  * normalize raw input against schema config
  */
 export function validateAndCastConfig(
   rawConfig: Record<string, any>,
-  schema: Record<string, ConfigFieldDefinition>
+  schema: Record<string, SetupRequestFieldDefinition>,
 ): Record<string, any> {
   const processedConfig: Record<string, any> = {};
 

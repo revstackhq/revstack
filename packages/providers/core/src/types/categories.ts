@@ -1,5 +1,6 @@
 export enum ProviderCategory {
   Card = "card",
+  MerchantOfRecord = "merchant_of_record",
   BankTransfer = "bank",
   Wallet = "wallet",
   Crypto = "crypto",
@@ -16,4 +17,5 @@ export const CATEGORY_LABELS: Record<ProviderCategory, string> = {
   [ProviderCategory.Cash]: "Cash Payment",
   [ProviderCategory.BuyNowPayLater]: "Buy Now, Pay Later",
   [ProviderCategory.Marketplace]: "Marketplace / Digital Goods",
+  [ProviderCategory.MerchantOfRecord]: "Merchant of Record",
 };

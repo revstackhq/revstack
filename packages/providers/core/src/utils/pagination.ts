@@ -1,4 +1,4 @@
-import { PaginationOptions, PaginatedResult } from "@/types/models";
+import { PaginatedResult, PaginationOptions } from "@/types/shared";
 
 export function buildCursorPagination<T extends { id: string }, U>(
   items: T[],

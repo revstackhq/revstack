@@ -4,7 +4,7 @@ export const manifest: ProviderManifest = {
   name: "Polar",
   slug: "polar",
   version: "1.0.0",
-  categories: [ProviderCategory.Card, ProviderCategory.Wallet],
+  categories: [ProviderCategory.MerchantOfRecord, ProviderCategory.Card],
   engine: {
     revstack: "^1.0.0",
     node: ">=18.0.0",
@@ -14,12 +14,47 @@ export const manifest: ProviderManifest = {
     logo: "https://cdn.jsdelivr.net/npm/@revstackhq/provider-polar/assets/logo-v2.svg",
   },
   status: "beta",
-  dashboardUrl: "https://polar.sh/dashboard",
+  links: {
+    dashboard: "https://polar.sh/dashboard",
+    support: "https://polar.sh/docs/support",
+    pricing: "https://polar.sh/resources/pricing",
+    documentation: "https://docs.revstack.dev/providers/polar",
+    setupGuide: "https://docs.revstack.dev/providers/polar/setup",
+  },
+  compliance: {
+    actsAsMoR: true,
+    calculatesTaxes: true,
+  },
   hidden: false,
   pricing: {
     model: "transactional",
     fees: "4% + 40¢ per transaction",
     url: "https://polar.sh/resources/pricing",
+  },
+  localization: {
+    customerCountries: ["*"],
+    merchantCountries: [
+      "US",
+      "CA",
+      "GB",
+      "DE",
+      "FR",
+      "ES",
+      "IT",
+      "JP",
+      "AU",
+      "NZ",
+    ],
+    processingCurrencies: ["USD", "CAD", "GBP", "EUR", "JPY", "AUD", "NZD"],
+    settlementCurrencies: ["USD", "CAD", "GBP", "EUR", "JPY", "AUD", "NZD"],
+  },
+  supportedPaymentMethods: ["card", "apple_pay", "google_pay", "amazon_pay"],
+  systemTraits: {
+    hasNativeIdempotency: false,
+    sandboxStrategy: "separate_credentials",
+    rateLimits: {
+      requestsPerSecond: 10,
+    },
   },
   capabilities: {
     customers: {
@@ -63,49 +98,46 @@ export const manifest: ProviderManifest = {
     },
   },
   author: "Revstack",
-  currencies: ["USD"],
   description:
     "Merchant of record specifically tailored for software and SaaS developers.",
-  documentationUrl: "https://docs.revstack.dev/providers/polar",
-  regions: ["*"],
   sandboxAvailable: true,
-  supportUrl: "https://polar.sh/docs/support",
-  configSchema: {
-    accessToken: {
-      label: "Access Token",
-      type: "password",
-      secure: true,
-      required: true,
-      description: "Polar Access Token",
-      pattern: "^polar_.*$",
-      errorMessage: "Must start with polar_",
+  setup: {
+    request: {
+      accessToken: {
+        label: "Access Token",
+        type: "password",
+        secure: true,
+        required: true,
+        description: "Polar Access Token",
+        pattern: "^polar_(test_)?[a-zA-Z0-9_]+$",
+        errorMessage: "Must start with polar_ or polar_test_",
+      },
+      organizationId: {
+        label: "Organization ID",
+        type: "text",
+        secure: false,
+        required: true,
+        description: "Polar Organization ID to process checkouts for.",
+      },
     },
-    organizationId: {
-      label: "Organization ID",
-      type: "text",
-      secure: false,
-      required: true,
-      description: "Polar Organization ID to process checkouts for.",
+    response: {
+      webhookSecret: {
+        secure: true,
+        description: "Webhook signing secret",
+      },
+      webhookEndpointId: {
+        secure: false,
+        description: "Webhook endpoint ID",
+      },
+      accessToken: {
+        secure: true,
+        description: "Polar Access Token",
+      },
+      organizationId: {
+        secure: false,
+        description: "Polar Organization ID",
+      },
     },
   },
-  dataSchema: {
-    webhookSecret: {
-      secure: true,
-      description: "Webhook signing secret",
-    },
-    webhookEndpointId: {
-      secure: false,
-      description: "Webhook endpoint ID",
-    },
-    accessToken: {
-      secure: true,
-      description: "Polar Access Token",
-    },
-    organizationId: {
-      secure: false,
-      description: "Polar Organization ID",
-    },
-  },
-
   paginationType: "page",
 };

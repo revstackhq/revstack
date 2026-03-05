@@ -2,8 +2,6 @@
 // SHARED TYPES
 // =============================================================================
 
-import { RevstackCurrency } from "@/types/models/currency";
-
 export type Address = {
   /** address line 1 */
   line1: string;
@@ -87,7 +85,7 @@ export type CustomLineItem = {
   /** unit amount in cents */
   amount: number;
   /** iso currency (e.g. USD) */
-  currency: RevstackCurrency;
+  currency: string;
   /** quantity to purchase */
   quantity: number;
 

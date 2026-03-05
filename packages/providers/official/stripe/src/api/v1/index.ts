@@ -3,7 +3,6 @@ import {
   ProviderContext,
   CreatePaymentInput,
   RefundPaymentInput,
-  PaginationOptions,
   CreateSubscriptionInput,
   UpdateSubscriptionInput,
   CheckoutSessionInput,
@@ -11,6 +10,19 @@ import {
   SetupPaymentMethodInput,
   CreateCustomerInput,
   UpdateCustomerInput,
+  GetPaymentInput,
+  ListPaymentsOptions,
+  CapturePaymentInput,
+  GetSubscriptionInput,
+  CancelSubscriptionInput,
+  PauseSubscriptionInput,
+  ResumeSubscriptionInput,
+  ListSubscriptionsOptions,
+  GetCustomerInput,
+  DeleteCustomerInput,
+  ListCustomersOptions,
+  DeletePaymentMethodInput,
+  ListPaymentMethodsOptions,
 } from "@revstackhq/providers-core";
 
 import * as payments from "@/api/v1/payments";
@@ -54,12 +66,12 @@ export class StripeClientV1 implements ProviderClient {
     return paymentMethods.setupPaymentMethod(ctx, input);
   }
 
-  listPaymentMethods(ctx: ProviderContext, customerId: string) {
-    return paymentMethods.listPaymentMethods(ctx, customerId);
+  listPaymentMethods(ctx: ProviderContext, options: ListPaymentMethodsOptions) {
+    return paymentMethods.listPaymentMethods(ctx, options);
   }
 
-  deletePaymentMethod(ctx: ProviderContext, id: string) {
-    return paymentMethods.deletePaymentMethod(ctx, id);
+  deletePaymentMethod(ctx: ProviderContext, input: DeletePaymentMethodInput) {
+    return paymentMethods.deletePaymentMethod(ctx, input);
   }
 
   // ===========================================================================
@@ -70,20 +82,20 @@ export class StripeClientV1 implements ProviderClient {
     return payments.createPayment(ctx, input, checkout.createCheckoutSession);
   }
 
-  getPayment(ctx: ProviderContext, id: string) {
-    return payments.getPayment(ctx, id);
+  getPayment(ctx: ProviderContext, input: GetPaymentInput) {
+    return payments.getPayment(ctx, input);
   }
 
   refundPayment(ctx: ProviderContext, input: RefundPaymentInput) {
     return payments.refundPayment(ctx, input);
   }
 
-  listPayments(ctx: ProviderContext, pagination: PaginationOptions) {
-    return payments.listPayments(ctx, pagination);
+  listPayments(ctx: ProviderContext, options: ListPaymentsOptions) {
+    return payments.listPayments(ctx, options);
   }
 
-  capturePayment(ctx: ProviderContext, id: string, amount?: number) {
-    return payments.capturePayment(ctx, id, amount);
+  capturePayment(ctx: ProviderContext, input: CapturePaymentInput) {
+    return payments.capturePayment(ctx, input);
   }
 
   // ===========================================================================
@@ -98,32 +110,28 @@ export class StripeClientV1 implements ProviderClient {
     );
   }
 
-  getSubscription(ctx: ProviderContext, id: string) {
-    return subscriptions.getSubscription(ctx, id);
+  getSubscription(ctx: ProviderContext, input: GetSubscriptionInput) {
+    return subscriptions.getSubscription(ctx, input);
   }
 
-  cancelSubscription(ctx: ProviderContext, id: string, reason?: string) {
-    return subscriptions.cancelSubscription(ctx, id, reason);
+  cancelSubscription(ctx: ProviderContext, input: CancelSubscriptionInput) {
+    return subscriptions.cancelSubscription(ctx, input);
   }
 
-  pauseSubscription(ctx: ProviderContext, id: string) {
-    return subscriptions.pauseSubscription(ctx, id);
+  pauseSubscription(ctx: ProviderContext, input: PauseSubscriptionInput) {
+    return subscriptions.pauseSubscription(ctx, input);
   }
 
-  resumeSubscription(ctx: ProviderContext, id: string) {
-    return subscriptions.resumeSubscription(ctx, id);
+  resumeSubscription(ctx: ProviderContext, input: ResumeSubscriptionInput) {
+    return subscriptions.resumeSubscription(ctx, input);
   }
 
-  listSubscriptions(ctx: ProviderContext, pagination: PaginationOptions) {
-    return subscriptions.listSubscriptions(ctx, pagination);
+  listSubscriptions(ctx: ProviderContext, options: ListSubscriptionsOptions) {
+    return subscriptions.listSubscriptions(ctx, options);
   }
 
-  updateSubscription(
-    ctx: ProviderContext,
-    id: string,
-    input: UpdateSubscriptionInput,
-  ) {
-    return subscriptions.updateSubscription(ctx, id, input);
+  updateSubscription(ctx: ProviderContext, input: UpdateSubscriptionInput) {
+    return subscriptions.updateSubscription(ctx, input);
   }
 
   // ===========================================================================
@@ -146,19 +154,19 @@ export class StripeClientV1 implements ProviderClient {
     return customers.createCustomer(ctx, input);
   }
 
-  updateCustomer(ctx: ProviderContext, id: string, input: UpdateCustomerInput) {
-    return customers.updateCustomer(ctx, id, input);
+  updateCustomer(ctx: ProviderContext, input: UpdateCustomerInput) {
+    return customers.updateCustomer(ctx, input);
   }
 
-  deleteCustomer(ctx: ProviderContext, id: string) {
-    return customers.deleteCustomer(ctx, id);
+  deleteCustomer(ctx: ProviderContext, input: DeleteCustomerInput) {
+    return customers.deleteCustomer(ctx, input);
   }
 
-  getCustomer(ctx: ProviderContext, id: string) {
-    return customers.getCustomer(ctx, id);
+  getCustomer(ctx: ProviderContext, input: GetCustomerInput) {
+    return customers.getCustomer(ctx, input);
   }
 
-  listCustomers(ctx: ProviderContext, pagination: PaginationOptions) {
-    return customers.listCustomers(ctx, pagination);
+  listCustomers(ctx: ProviderContext, options: ListCustomersOptions) {
+    return customers.listCustomers(ctx, options);
   }
 }

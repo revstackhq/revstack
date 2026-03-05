@@ -3,7 +3,6 @@ import {
   CreatePaymentInput,
   RefundPaymentInput,
   Payment,
-  PaginationOptions,
   PaginatedResult,
   CreateSubscriptionInput,
   UpdateSubscriptionInput,
@@ -20,6 +19,19 @@ import {
   InstallResult,
   AsyncActionResult,
   RevstackEvent,
+  GetPaymentInput,
+  ListPaymentsOptions,
+  CapturePaymentInput,
+  GetSubscriptionInput,
+  CancelSubscriptionInput,
+  PauseSubscriptionInput,
+  ResumeSubscriptionInput,
+  ListSubscriptionsOptions,
+  GetCustomerInput,
+  DeleteCustomerInput,
+  ListCustomersOptions,
+  ListPaymentMethodsOptions,
+  DeletePaymentMethodInput,
 } from "@revstackhq/providers-core";
 
 export interface ProviderClient {
@@ -44,7 +56,7 @@ export interface ProviderClient {
 
   getPayment?(
     ctx: ProviderContext,
-    id: string,
+    input: GetPaymentInput,
   ): Promise<AsyncActionResult<Payment>>;
 
   refundPayment?(
@@ -54,14 +66,12 @@ export interface ProviderClient {
 
   listPayments?(
     ctx: ProviderContext,
-    pagination: PaginationOptions,
-    filters?: Record<string, any>,
+    options: ListPaymentsOptions,
   ): Promise<AsyncActionResult<PaginatedResult<Payment>>>;
 
   capturePayment?(
     ctx: ProviderContext,
-    id: string,
-    amount?: number,
+    input: CapturePaymentInput,
   ): Promise<AsyncActionResult<string>>;
 
   createSubscription?(
@@ -71,36 +81,31 @@ export interface ProviderClient {
 
   getSubscription?(
     ctx: ProviderContext,
-    id: string,
+    input: GetSubscriptionInput,
   ): Promise<AsyncActionResult<Subscription>>;
 
   cancelSubscription?(
     ctx: ProviderContext,
-    id: string,
-    reason?: string,
+    input: CancelSubscriptionInput,
   ): Promise<AsyncActionResult<string>>;
 
   pauseSubscription?(
     ctx: ProviderContext,
-    id: string,
-    reason?: string,
+    input: PauseSubscriptionInput,
   ): Promise<AsyncActionResult<string>>;
 
   resumeSubscription?(
     ctx: ProviderContext,
-    id: string,
-    reason?: string,
+    input: ResumeSubscriptionInput,
   ): Promise<AsyncActionResult<string>>;
 
   listSubscriptions?(
     ctx: ProviderContext,
-    pagination: PaginationOptions,
-    filters?: Record<string, any>,
+    options: ListSubscriptionsOptions,
   ): Promise<AsyncActionResult<PaginatedResult<Subscription>>>;
 
   updateSubscription?(
     ctx: ProviderContext,
-    id: string,
     input: UpdateSubscriptionInput,
   ): Promise<AsyncActionResult<string>>;
 
@@ -126,34 +131,32 @@ export interface ProviderClient {
 
   updateCustomer(
     ctx: ProviderContext,
-    id: string,
     input: UpdateCustomerInput,
   ): Promise<AsyncActionResult<string>>;
 
   deleteCustomer?(
     ctx: ProviderContext,
-    id: string,
+    input: DeleteCustomerInput,
   ): Promise<AsyncActionResult<boolean>>;
 
   getCustomer?(
     ctx: ProviderContext,
-    id: string,
+    input: GetCustomerInput,
   ): Promise<AsyncActionResult<Customer>>;
 
   listPaymentMethods?(
     ctx: ProviderContext,
-    customerId: string,
+    options: ListPaymentMethodsOptions,
   ): Promise<AsyncActionResult<PaymentMethod[]>>;
 
   deletePaymentMethod?(
     ctx: ProviderContext,
-    id: string,
+    input: DeletePaymentMethodInput,
   ): Promise<AsyncActionResult<boolean>>;
 
   listCustomers?(
     ctx: ProviderContext,
-    pagination: PaginationOptions,
-    filters?: Record<string, any>,
+    options: ListCustomersOptions,
   ): Promise<AsyncActionResult<PaginatedResult<Customer>>>;
 
   verifyWebhookSignature(

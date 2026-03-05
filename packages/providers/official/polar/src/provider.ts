@@ -16,7 +16,6 @@ import {
   InstallInput,
   InstallResult,
   PaginatedResult,
-  PaginationOptions,
   Payment,
   PaymentMethod,
   ProviderContext,
@@ -27,6 +26,19 @@ import {
   UninstallInput,
   UpdateCustomerInput,
   WebhookResponse,
+  GetPaymentInput,
+  ListPaymentsOptions,
+  CapturePaymentInput,
+  GetSubscriptionInput,
+  CancelSubscriptionInput,
+  PauseSubscriptionInput,
+  ResumeSubscriptionInput,
+  ListSubscriptionsOptions,
+  GetCustomerInput,
+  DeleteCustomerInput,
+  ListCustomersOptions,
+  DeletePaymentMethodInput,
+  ListPaymentMethodsOptions,
 } from "@revstackhq/providers-core";
 
 export class PolarProvider extends BaseProvider {
@@ -182,7 +194,7 @@ export class PolarProvider extends BaseProvider {
 
   async getPayment(
     ctx: ProviderContext,
-    id: string,
+    input: GetPaymentInput,
   ): Promise<AsyncActionResult<Payment>> {
     const client = getClient(ctx.config);
 
@@ -197,7 +209,7 @@ export class PolarProvider extends BaseProvider {
       };
     }
 
-    return client.getPayment(ctx, id);
+    return client.getPayment(ctx, input);
   }
 
   async refundPayment(
@@ -222,8 +234,7 @@ export class PolarProvider extends BaseProvider {
 
   async listPayments(
     ctx: ProviderContext,
-    pagination: PaginationOptions,
-    filters?: Record<string, any>,
+    options: ListPaymentsOptions,
   ): Promise<AsyncActionResult<PaginatedResult<Payment>>> {
     const client = getClient(ctx.config);
 
@@ -238,7 +249,7 @@ export class PolarProvider extends BaseProvider {
       };
     }
 
-    return client.listPayments(ctx, pagination, filters);
+    return client.listPayments(ctx, options);
   }
 
   // ===========================================================================
@@ -267,7 +278,7 @@ export class PolarProvider extends BaseProvider {
 
   async getSubscription(
     ctx: ProviderContext,
-    id: string,
+    input: GetSubscriptionInput,
   ): Promise<AsyncActionResult<Subscription>> {
     const client = getClient(ctx.config);
 
@@ -282,13 +293,12 @@ export class PolarProvider extends BaseProvider {
       };
     }
 
-    return client.getSubscription(ctx, id);
+    return client.getSubscription(ctx, input);
   }
 
   async cancelSubscription(
     ctx: ProviderContext,
-    id: string,
-    reason?: string,
+    input: CancelSubscriptionInput,
   ): Promise<AsyncActionResult<string>> {
     const client = getClient(ctx.config);
 
@@ -303,13 +313,12 @@ export class PolarProvider extends BaseProvider {
       };
     }
 
-    return client.cancelSubscription(ctx, id, reason);
+    return client.cancelSubscription(ctx, input);
   }
 
   async pauseSubscription(
     ctx: ProviderContext,
-    id: string,
-    reason?: string,
+    input: PauseSubscriptionInput,
   ): Promise<AsyncActionResult<string>> {
     const client = getClient(ctx.config);
 
@@ -324,13 +333,12 @@ export class PolarProvider extends BaseProvider {
       };
     }
 
-    return client.pauseSubscription(ctx, id, reason);
+    return client.pauseSubscription(ctx, input);
   }
 
   async resumeSubscription(
     ctx: ProviderContext,
-    id: string,
-    reason?: string,
+    input: ResumeSubscriptionInput,
   ): Promise<AsyncActionResult<string>> {
     const client = getClient(ctx.config);
 
@@ -345,7 +353,7 @@ export class PolarProvider extends BaseProvider {
       };
     }
 
-    return client.resumeSubscription(ctx, id, reason);
+    return client.resumeSubscription(ctx, input);
   }
 
   // ===========================================================================
@@ -398,7 +406,6 @@ export class PolarProvider extends BaseProvider {
 
   async updateCustomer(
     ctx: ProviderContext,
-    id: string,
     input: UpdateCustomerInput,
   ): Promise<AsyncActionResult<string>> {
     const client = getClient(ctx.config);
@@ -414,12 +421,12 @@ export class PolarProvider extends BaseProvider {
       };
     }
 
-    return client.updateCustomer(ctx, id, input);
+    return client.updateCustomer(ctx, input);
   }
 
   async deleteCustomer(
     ctx: ProviderContext,
-    id: string,
+    input: DeleteCustomerInput,
   ): Promise<AsyncActionResult<boolean>> {
     const client = getClient(ctx.config);
 
@@ -434,12 +441,12 @@ export class PolarProvider extends BaseProvider {
       };
     }
 
-    return client.deleteCustomer(ctx, id);
+    return client.deleteCustomer(ctx, input);
   }
 
   async getCustomer(
     ctx: ProviderContext,
-    id: string,
+    input: GetCustomerInput,
   ): Promise<AsyncActionResult<Customer>> {
     const client = getClient(ctx.config);
 
@@ -454,7 +461,7 @@ export class PolarProvider extends BaseProvider {
       };
     }
 
-    return client.getCustomer(ctx, id);
+    return client.getCustomer(ctx, input);
   }
 
   // ===========================================================================
@@ -463,7 +470,7 @@ export class PolarProvider extends BaseProvider {
 
   async listPaymentMethods(
     ctx: ProviderContext,
-    customerId: string,
+    options: ListPaymentMethodsOptions,
   ): Promise<AsyncActionResult<PaymentMethod[]>> {
     const client = getClient(ctx.config);
 
@@ -478,12 +485,12 @@ export class PolarProvider extends BaseProvider {
       };
     }
 
-    return client.listPaymentMethods(ctx, customerId);
+    return client.listPaymentMethods(ctx, options);
   }
 
   async deletePaymentMethod(
     ctx: ProviderContext,
-    id: string,
+    input: DeletePaymentMethodInput,
   ): Promise<AsyncActionResult<boolean>> {
     const client = getClient(ctx.config);
 
@@ -498,7 +505,7 @@ export class PolarProvider extends BaseProvider {
       };
     }
 
-    return client.deletePaymentMethod(ctx, id);
+    return client.deletePaymentMethod(ctx, input);
   }
 
   // ===========================================================================
@@ -507,8 +514,7 @@ export class PolarProvider extends BaseProvider {
 
   async capturePayment(
     ctx: ProviderContext,
-    id: string,
-    amount?: number,
+    input: CapturePaymentInput,
   ): Promise<AsyncActionResult<string>> {
     const client = getClient(ctx.config);
 
@@ -523,13 +529,12 @@ export class PolarProvider extends BaseProvider {
       };
     }
 
-    return client.capturePayment(ctx, id, amount);
+    return client.capturePayment(ctx, input);
   }
 
   async listSubscriptions(
     ctx: ProviderContext,
-    pagination: PaginationOptions,
-    filters?: Record<string, any>,
+    options: ListSubscriptionsOptions,
   ): Promise<AsyncActionResult<PaginatedResult<Subscription>>> {
     const client = getClient(ctx.config);
 
@@ -544,12 +549,11 @@ export class PolarProvider extends BaseProvider {
       };
     }
 
-    return client.listSubscriptions(ctx, pagination, filters);
+    return client.listSubscriptions(ctx, options);
   }
 
   async updateSubscription(
     ctx: ProviderContext,
-    id: string,
     input: UpdateSubscriptionInput,
   ): Promise<AsyncActionResult<string>> {
     const client = getClient(ctx.config);
@@ -565,13 +569,12 @@ export class PolarProvider extends BaseProvider {
       };
     }
 
-    return client.updateSubscription(ctx, id, input);
+    return client.updateSubscription(ctx, input);
   }
 
   async listCustomers(
     ctx: ProviderContext,
-    pagination: PaginationOptions,
-    filters?: Record<string, any>,
+    options: ListCustomersOptions,
   ): Promise<AsyncActionResult<PaginatedResult<Customer>>> {
     const client = getClient(ctx.config);
 
@@ -586,7 +589,7 @@ export class PolarProvider extends BaseProvider {
       };
     }
 
-    return client.listCustomers(ctx, pagination, filters);
+    return client.listCustomers(ctx, options);
   }
 
   async setupPaymentMethod(

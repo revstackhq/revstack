@@ -4,13 +4,14 @@ import {
   PaginatedResult,
   Payment,
   ProviderContext,
-  PaginationOptions,
   CheckoutSessionResult,
   buildPagePagination,
   RevstackErrorCode,
   CheckoutSessionInput,
-  LineItem,
-  getTrialDays,
+  GetPaymentInput,
+  RefundPaymentInput,
+  ListPaymentsOptions,
+  CapturePaymentInput,
 } from "@revstackhq/providers-core";
 import { mapPolarOrderToPayment } from "@/api/v1/mappers";
 import { getOrCreatePolar } from "@/api/v1/client";
@@ -39,7 +40,7 @@ export const createPayment = async (
     const polar = getOrCreatePolar(ctx);
 
     const resolvedLineItems = await Promise.all(
-      input.lineItems.map(async (item) => {
+      input.lineItems.map(async (item: any) => {
         if ("amount" in item) {
           const priceId = await resolveJitProductId(polar, ctx, {
             jit: {
@@ -85,12 +86,12 @@ export const createPayment = async (
  */
 export const getPayment = async (
   ctx: ProviderContext,
-  paymentId: string,
+  input: GetPaymentInput,
 ): Promise<AsyncActionResult<Payment>> => {
   try {
     const polar = getOrCreatePolar(ctx);
     const order = await polar.orders.get({
-      id: paymentId,
+      id: input.id,
     });
 
     return {
@@ -115,8 +116,7 @@ export const getPayment = async (
  */
 export const listPayments = async (
   ctx: ProviderContext,
-  options?: PaginationOptions & { customerId?: string },
-  filters?: Record<string, any>,
+  options: ListPaymentsOptions,
 ): Promise<AsyncActionResult<PaginatedResult<Payment>>> => {
   try {
     const polar = getOrCreatePolar(ctx);
@@ -132,7 +132,7 @@ export const listPayments = async (
       customerId: options?.customerId,
       limit,
       page: targetPage,
-      ...filters,
+      ...options?.filters,
     });
 
     return {
@@ -162,21 +162,20 @@ export const listPayments = async (
  */
 export const refundPayment = async (
   ctx: ProviderContext,
-  paymentId: string,
-  amount?: number,
+  input: RefundPaymentInput,
 ): Promise<AsyncActionResult<string>> => {
   try {
     const polar = getOrCreatePolar(ctx);
     // Polar requires explicit reason for refunds
     await polar.refunds.create({
-      orderId: paymentId,
-      amount: amount || 0, // If 0, polar throws an error, which is correct (refunds must have amount > 1)
+      orderId: input.paymentId,
+      amount: input.amount || 0, // If 0, polar throws an error, which is correct (refunds must have amount > 1)
       reason: "customer_request",
     });
 
     // We must fetch the order again to get updated totalRefunded
     const order = await polar.orders.get({
-      id: paymentId,
+      id: input.paymentId,
     });
 
     return {
@@ -201,8 +200,7 @@ export const refundPayment = async (
  */
 export const capturePayment = async (
   _ctx: ProviderContext,
-  _paymentId: string,
-  _amount?: number,
+  _input: CapturePaymentInput,
 ): Promise<AsyncActionResult<string>> => {
   return {
     data: null,

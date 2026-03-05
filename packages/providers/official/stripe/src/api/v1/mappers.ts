@@ -1,12 +1,11 @@
-import { currencyMap } from "@/shared/currency-map";
 import {
   Address,
   Customer,
+  normalizeCurrency,
   Payment,
   PaymentMethod,
   PaymentMethodDetails,
   PaymentStatus,
-  RevstackCurrency,
   Subscription,
   SubscriptionStatus,
 } from "@revstackhq/providers-core";
@@ -16,6 +15,32 @@ import Stripe from "stripe";
 interface StripeSubscriptionWithPeriods extends Stripe.Subscription {
   current_period_start?: number;
   current_period_end?: number;
+}
+
+/**
+ * Evaluates the raw Stripe Subscription object to determine the true lifecycle status.
+ * Specifically intercepts Stripe's `pause_collection` behavior, which Stripe leaves as 'active',
+ * but Revstack normalizes to 'paused' for better merchant UX.
+ *
+ * @param sub - The raw Stripe Subscription object.
+ * @returns The standardized Revstack SubscriptionStatus.
+ */
+function getNormalizedStatus(sub: Stripe.Subscription): SubscriptionStatus {
+  if (sub.pause_collection) {
+    return SubscriptionStatus.Paused;
+  }
+
+  const statusMap: Record<string, SubscriptionStatus> = {
+    active: SubscriptionStatus.Active,
+    past_due: SubscriptionStatus.PastDue,
+    canceled: SubscriptionStatus.Canceled,
+    trialing: SubscriptionStatus.Trialing,
+    incomplete: SubscriptionStatus.Incomplete,
+    incomplete_expired: SubscriptionStatus.IncompleteExpired,
+    unpaid: SubscriptionStatus.Unpaid,
+  };
+
+  return statusMap[sub.status] || SubscriptionStatus.Incomplete;
 }
 
 export function mapStripeStatusToPaymentStatus(status: string): PaymentStatus {
@@ -69,9 +94,7 @@ export function mapStripePaymentToPayment(pi: Stripe.PaymentIntent): Payment {
     externalId: pi.id,
     amount: pi.amount,
     amountRefunded,
-    currency: currencyMap[
-      pi.currency as keyof typeof currencyMap
-    ] as RevstackCurrency,
+    currency: normalizeCurrency(pi.currency, "uppercase"),
     status: mapStripeStatusToPaymentStatus(pi.status),
     customerId: typeof pi.customer === "string" ? pi.customer : pi.customer?.id,
     createdAt: new Date(pi.created * 1000).toISOString(),
@@ -80,42 +103,77 @@ export function mapStripePaymentToPayment(pi: Stripe.PaymentIntent): Payment {
   };
 }
 
+/**
+ * Transforms a raw Stripe Subscription into a normalized Revstack Subscription payload.
+ * * Note: This mapper omits `id` and `planId`. The Provider Adapter's job is purely to translate
+ * external data. Your database layer (Prisma/Supabase) is responsible for injecting internal
+ * UUIDs and resolving the correct internal Plan ID before saving.
+ *
+ * @param sub - The raw Stripe Subscription object fetched from the API or a Webhook.
+ * @returns A normalized payload ready to be enriched with internal IDs and persisted.
+ */
 export function mapStripeSubscriptionToSubscription(
   rawSub: Stripe.Subscription,
 ): Subscription {
   const sub = rawSub as StripeSubscriptionWithPeriods;
-  const price = sub.items.data[0]?.price;
+  // Safely aggregate the total amount across all subscription items (vital for B2B multi-item pricing)
+  const totalAmount = sub.items.data.reduce((acc, item) => {
+    const itemAmount = item.price?.unit_amount || 0;
+    const quantity = item.quantity || 1;
+    return acc + itemAmount * quantity;
+  }, 0);
 
-  // safe fallbacks: current_period fields aren't in the SDK types but exist at runtime
+  // Extract the main billing interval, defaulting to 'month' as a fallback
+  const mainInterval = sub.items.data[0]?.price?.recurring?.interval || "month";
+
+  // Safely extract the current period start and end timestamps
   const periodStartTs =
-    sub.current_period_start ?? sub.start_date ?? sub.created;
+    sub.current_period_start ||
+    sub.items.data[0]?.current_period_start ||
+    sub.start_date ||
+    sub.created;
+
+  // Safely extract the current period end timestamp
   const periodEndTs =
-    sub.current_period_end ?? sub.billing_cycle_anchor ?? sub.created;
+    sub.current_period_end ||
+    sub.items.data[0]?.current_period_end ||
+    sub.billing_cycle_anchor ||
+    sub.created;
 
   return {
-    id: sub.id,
     providerId: "stripe",
-    externalId: sub.id,
-    status: mapStripeSubStatusToSubscriptionStatus(sub.status),
+    id: sub.id,
+    priceId: sub.items.data[0]?.price?.id,
+    status: getNormalizedStatus(sub),
 
-    amount: price?.unit_amount || 0,
-    currency: currencyMap[
-      sub.currency as keyof typeof currencyMap
-    ] as RevstackCurrency,
-    interval: (price?.recurring?.interval as any) || "month",
+    amount: totalAmount,
+    currency: normalizeCurrency(sub.currency, "uppercase"),
+    interval: mainInterval,
 
     customerId:
-      typeof sub.customer === "string" ? sub.customer : sub.customer?.id || "",
+      typeof sub.customer === "string" ? sub.customer : sub.customer.id,
 
     currentPeriodStart: new Date(periodStartTs * 1000).toISOString(),
     currentPeriodEnd: new Date(periodEndTs * 1000).toISOString(),
 
     cancelAtPeriodEnd: sub.cancel_at_period_end,
     startedAt: new Date(sub.start_date * 1000).toISOString(),
+
     canceledAt: sub.canceled_at
       ? new Date(sub.canceled_at * 1000).toISOString()
       : undefined,
+    trialStart: sub.trial_start
+      ? new Date(sub.trial_start * 1000).toISOString()
+      : undefined,
+    trialEnd: sub.trial_end
+      ? new Date(sub.trial_end * 1000).toISOString()
+      : undefined,
 
+    pauseResumesAt: sub.pause_collection?.resumes_at
+      ? new Date(sub.pause_collection.resumes_at * 1000).toISOString()
+      : undefined,
+
+    metadata: sub.metadata || {},
     raw: sub,
   };
 }

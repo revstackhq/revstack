@@ -4,7 +4,6 @@ import {
   AsyncActionResult,
   CreateSubscriptionInput,
   PaginatedResult,
-  PaginationOptions,
   ProviderContext,
   Subscription,
   RevstackErrorCode,
@@ -12,13 +11,17 @@ import {
   buildPagePagination,
   UpdateSubscriptionInput,
   CheckoutSessionInput,
-  LineItem,
-  getTrialDays,
   CustomLineItem,
+  GetSubscriptionInput,
+  CancelSubscriptionInput,
+  PauseSubscriptionInput,
+  ResumeSubscriptionInput,
+  ListSubscriptionsOptions,
 } from "@revstackhq/providers-core";
 
 import { resolveJitProductId } from "@/utils/jit";
 import { mapError } from "@/shared/error-map";
+import { SubscriptionUpdate } from "@polar-sh/sdk/models/components/subscriptionupdate.js";
 
 /**
  * Defers Polar subscription creation safely to a checkout session.
@@ -96,11 +99,11 @@ export async function createSubscription(
  */
 export async function getSubscription(
   ctx: ProviderContext,
-  id: string,
+  input: GetSubscriptionInput,
 ): Promise<AsyncActionResult<Subscription>> {
   try {
     const polar = getOrCreatePolar(ctx);
-    const sub = await polar.subscriptions.get({ id });
+    const sub = await polar.subscriptions.get({ id: input.id });
     return {
       data: mapPolarSubscriptionToSubscription(sub),
       status: "success",
@@ -123,12 +126,19 @@ export async function getSubscription(
  */
 export async function cancelSubscription(
   ctx: ProviderContext,
-  id: string,
-  _reason?: string,
+  input: CancelSubscriptionInput,
 ): Promise<AsyncActionResult<string>> {
   try {
     const polar = getOrCreatePolar(ctx);
-    const sub = await polar.subscriptions.revoke({ id });
+
+    const update: SubscriptionUpdate = input.immediate
+      ? { revoke: true }
+      : { cancelAtPeriodEnd: true };
+
+    const sub = await polar.subscriptions.update({
+      id: input.id,
+      subscriptionUpdate: update,
+    });
 
     return {
       data: sub.id,
@@ -162,7 +172,7 @@ export async function cancelSubscription(
  */
 export async function pauseSubscription(
   _ctx: ProviderContext,
-  _id: string,
+  _input: PauseSubscriptionInput,
 ): Promise<AsyncActionResult<string>> {
   return {
     data: null,
@@ -183,7 +193,7 @@ export async function pauseSubscription(
  */
 export async function resumeSubscription(
   _ctx: ProviderContext,
-  _id: string,
+  _input: ResumeSubscriptionInput,
 ): Promise<AsyncActionResult<string>> {
   return {
     data: null,
@@ -205,23 +215,22 @@ export async function resumeSubscription(
  */
 export async function listSubscriptions(
   ctx: ProviderContext,
-  pagination: PaginationOptions,
-  filters?: Record<string, any>,
+  options: ListSubscriptionsOptions,
 ): Promise<AsyncActionResult<PaginatedResult<Subscription>>> {
   try {
     const polar = getOrCreatePolar(ctx);
     const targetPage =
-      pagination.page ||
-      (pagination.startingAfter && parseInt(pagination.startingAfter) + 1) ||
-      (pagination.endingBefore &&
-        Math.max(1, parseInt(pagination.endingBefore) - 1)) ||
+      options.page ||
+      (options.startingAfter && parseInt(options.startingAfter) + 1) ||
+      (options.endingBefore &&
+        Math.max(1, parseInt(options.endingBefore) - 1)) ||
       1;
 
     const subsResponse = await polar.subscriptions.list({
       organizationId: ctx.config.organizationId,
-      limit: pagination.limit || 10,
+      limit: options.limit || 10,
       page: targetPage,
-      ...filters,
+      ...options.filters,
     });
 
     return {
@@ -251,13 +260,12 @@ export async function listSubscriptions(
  */
 export async function updateSubscription(
   ctx: ProviderContext,
-  id: string,
   input: UpdateSubscriptionInput,
 ): Promise<AsyncActionResult<string>> {
   try {
     const polar = getOrCreatePolar(ctx);
 
-    const mainItem = input.lineItems?.find((item) => "priceId" in item);
+    const mainItem = input.lineItems?.find((item: any) => "priceId" in item);
 
     if (!mainItem || !("priceId" in mainItem) || !mainItem.priceId) {
       return {
@@ -272,7 +280,7 @@ export async function updateSubscription(
     }
 
     const sub = await polar.subscriptions.update({
-      id,
+      id: input.id,
       subscriptionUpdate: {
         prorationBehavior: input.proration === "none" ? "invoice" : "prorate",
         productId: mainItem.priceId,

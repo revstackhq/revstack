@@ -1,9 +1,8 @@
-import { LineItem } from "@/types/models/shared";
-// CHECKOUT MODELS
-// =============================================================================
-
-export type CheckoutSessionMode = "payment" | "subscription" | "setup";
-export type CheckoutSessionBillingAddressCollection = "auto" | "required";
+import {
+  CheckoutSessionBillingAddressCollection,
+  CheckoutSessionMode,
+} from "@/types/checkout/model";
+import { LineItem } from "@/types/shared";
 
 export type CheckoutSessionInput = {
   /** revstack customer id */
@@ -25,8 +24,12 @@ export type CheckoutSessionInput = {
   /** trial interval count for subscription line items */
   trialIntervalCount?: number;
 
-  /** save payment method */
-  setupFutureUsage?: boolean;
+  /** Save payment method for future use */
+  savePaymentMethod?: boolean;
+
+  /** currency */
+  currency?: string;
+
   /** checkout line items */
   lineItems: LineItem[];
   /** success url */
@@ -47,27 +50,4 @@ export type CheckoutSessionInput = {
 
   /** custom metadata */
   metadata?: Record<string, any>;
-};
-
-export type CheckoutSessionResult = {
-  /** external checkout session id */
-  id: string;
-  /** expires at iso */
-  expiresAt?: string;
-};
-
-// =============================================================================
-// BILLING PORTAL
-// =============================================================================
-
-export type BillingPortalInput = {
-  /** external customer id */
-  customerId: string;
-  /** return URL after the customer leaves the portal */
-  returnUrl: string;
-};
-
-export type BillingPortalResult = {
-  /** portal session URL to redirect the customer to */
-  url: string;
 };

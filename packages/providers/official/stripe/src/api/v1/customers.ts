@@ -9,10 +9,12 @@ import {
   CreateCustomerInput,
   Customer,
   UpdateCustomerInput,
-  PaginationOptions,
   buildCursorPagination,
   AsyncActionResult,
   PaginatedResult,
+  DeleteCustomerInput,
+  GetCustomerInput,
+  ListCustomersOptions,
 } from "@revstackhq/providers-core";
 import { getOrCreateClient } from "@/api/v1/client";
 
@@ -65,18 +67,16 @@ export async function createCustomer(
  * underlying subscriptions or attached payment methods.
  *
  * @param ctx - The core provider context instance.
- * @param id - The active Stripe Customer ID identifier (e.g., 'cus_...').
  * @param input - The scoped input payload of modifications to apply to the customer record.
  * @returns An AsyncActionResult detailing the successfully assigned Stripe Customer ID.
  */
 export async function updateCustomer(
   ctx: ProviderContext,
-  id: string,
   input: UpdateCustomerInput,
 ): Promise<AsyncActionResult<string>> {
   try {
     const stripe = getOrCreateClient(ctx.config.apiKey);
-    const customer = await stripe.customers.update(id, {
+    const customer = await stripe.customers.update(input.id, {
       email: input.email,
       name: input.name,
       phone: input.phone,
@@ -103,16 +103,16 @@ export async function updateCustomer(
  * tied to this customer within Stripe. Cannot be undone natively.
  *
  * @param ctx - The core provider context instance.
- * @param id - The exact Stripe Customer ID designated for permanent deletion.
+ * @param input - The scoped input payload of modifications to apply to the customer record.
  * @returns An AsyncActionResult dictating boolean `true` if uniquely removed successfully.
  */
 export async function deleteCustomer(
   ctx: ProviderContext,
-  id: string,
+  input: DeleteCustomerInput,
 ): Promise<AsyncActionResult<boolean>> {
   try {
     const stripe = getOrCreateClient(ctx.config.apiKey);
-    const deleted = await stripe.customers.del(id);
+    const deleted = await stripe.customers.del(input.id);
     return {
       data: deleted.deleted,
       status: "success",
@@ -131,16 +131,16 @@ export async function deleteCustomer(
  * configuration, this explicitly traps it and throws a formalized ResourceNotFound standard error.
  *
  * @param ctx - The core provider context instance.
- * @param id - The Stripe Customer ID query target.
+ * @param input - The scoped input payload of modifications to apply to the customer record.
  * @returns An AsyncActionResult containing the definitively mapped Revstack Customer format.
  */
 export async function getCustomer(
   ctx: ProviderContext,
-  id: string,
+  input: GetCustomerInput,
 ): Promise<AsyncActionResult<Customer>> {
   try {
     const stripe = getOrCreateClient(ctx.config.apiKey);
-    const customer = await stripe.customers.retrieve(id);
+    const customer = await stripe.customers.retrieve(input.id);
 
     if (customer.deleted) {
       throw {
@@ -176,23 +176,22 @@ export async function getCustomer(
  */
 export async function listCustomers(
   ctx: ProviderContext,
-  pagination: PaginationOptions,
-  filters?: Record<string, any>,
+  options: ListCustomersOptions,
 ): Promise<AsyncActionResult<PaginatedResult<Customer>>> {
   try {
     const stripe = getOrCreateClient(ctx.config.apiKey);
     const customers = await stripe.customers.list({
-      limit: pagination.limit || 10,
-      starting_after: pagination.startingAfter || undefined,
-      ending_before: pagination.endingBefore || undefined,
-      ...filters,
+      limit: options.limit || 10,
+      starting_after: options.startingAfter || undefined,
+      ending_before: options.endingBefore || undefined,
+      ...options.filters,
     });
 
     return {
       data: buildCursorPagination(
         customers.data,
         customers.has_more,
-        pagination,
+        options,
         mapStripeCustomerToCustomer,
       ),
       status: "success",

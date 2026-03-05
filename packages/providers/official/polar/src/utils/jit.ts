@@ -1,5 +1,8 @@
-import { ProviderContext, RevstackErrorCode } from "@revstackhq/providers-core";
-import { currencyMap } from "@/shared/currency-map";
+import {
+  normalizeCurrency,
+  ProviderContext,
+  RevstackErrorCode,
+} from "@revstackhq/providers-core";
 import { PresentmentCurrency } from "@polar-sh/sdk/models/components/presentmentcurrency.js";
 import { Polar } from "@polar-sh/sdk";
 
@@ -63,9 +66,10 @@ export async function resolveJitProductId(
       {
         amountType: "fixed",
         priceAmount: params.jit.amount,
-        priceCurrency: currencyMap[
-          params.jit.currency as keyof typeof currencyMap
-        ] as PresentmentCurrency,
+        priceCurrency: normalizeCurrency(
+          params.jit.currency,
+          "lowercase",
+        ) as PresentmentCurrency,
       },
     ],
   });

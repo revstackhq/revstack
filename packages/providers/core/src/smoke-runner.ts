@@ -1,5 +1,5 @@
 import { ProviderContext } from "@/context";
-import { IProvider } from "@/interfaces/features";
+import { IProvider } from "@/interfaces/provider";
 import { ProviderManifest } from "@/manifest";
 
 export interface SmokeConfig {

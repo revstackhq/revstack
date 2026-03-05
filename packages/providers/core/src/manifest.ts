@@ -1,6 +1,8 @@
+import { CurrencyCode } from "@/types/currency";
+import { RegionCode } from "@/types/region";
 import { ProviderCapabilities } from "@/types/capabilities";
 import { ProviderCategory } from "@/types/categories";
-import { CurrencyCode, RegionCode } from "@/types/regions";
+import { PaymentMethodType } from "@/types/paymentMethods";
 
 export interface ProviderEngine {
   /**
@@ -12,6 +14,57 @@ export interface ProviderEngine {
    * optional node version limit
    */
   node?: string;
+}
+
+export interface ProviderLocalization {
+  /** * Countries where the Merchant can be based to use this provider.
+   * Use ["*"] for global providers (like Polar/Paddle).
+   */
+  merchantCountries: RegionCode[];
+
+  /** Countries where the end-customer can be located to process payments. */
+  customerCountries: RegionCode[];
+
+  /** * Currencies that can be presented to the user at checkout (Processing).
+   * Example: ["USD", "ARS", "BRL"]
+   */
+  processingCurrencies: CurrencyCode[];
+
+  /** * Currencies in which the merchant receives their funds (Settlement).
+   * Important for MoR like Polar which might process in many but settle in USD.
+   */
+  settlementCurrencies: CurrencyCode[];
+}
+
+export interface ProviderCompliance {
+  /** * True if the provider acts as a Merchant of Record (MoR).
+   * Revstack uses this to decide if it should trigger its own tax engine.
+   */
+  actsAsMoR: boolean;
+
+  /** True if the provider handles sales tax/VAT calculation natively. */
+  calculatesTaxes: boolean;
+
+  /** Standard industry compliance (e.g., PCI-DSS Level) */
+  pciLevel?: string;
+}
+
+/**
+ * Internal system traits that dictate how the Core interacts with the Provider's API.
+ */
+export interface ProviderSystemTraits {
+  /** * If false, Revstack Cloud activates the 'Stateful Idempotency Layer'
+   * to prevent double charges.
+   */
+  hasNativeIdempotency: boolean;
+
+  /** API velocity constraints to prevent Provider-side 429 errors. */
+  rateLimits?: {
+    requestsPerSecond: number;
+  };
+
+  /** Strategy to toggle between test and live modes. */
+  sandboxStrategy: "separate_credentials" | "header_flag";
 }
 
 export interface ProviderPricing {
@@ -69,7 +122,7 @@ export type ConfigFieldType =
 /**
  * config field definition for UI rendering and encryption parsing
  */
-export interface ConfigFieldDefinition {
+export interface SetupRequestFieldDefinition {
   /** Label to display in the UI */
   label: string;
   /** Input type */
@@ -93,7 +146,7 @@ export interface ConfigFieldDefinition {
   errorMessage?: string;
 }
 
-export interface DataFieldDefinition {
+export interface SetupResponseFieldDefinition {
   /**
    * If true, the value of this field will be encrypted in the DB.
    */
@@ -109,6 +162,14 @@ export interface DataFieldDefinition {
  * dashboard update visual severity
  */
 export type UpdatePriority = "low" | "recommended" | "critical" | "security";
+
+export interface ProviderSetup {
+  /** UI Schema for the settings dashboard (Secrets, API Keys) */
+  request: Record<string, SetupRequestFieldDefinition>;
+
+  /** Internal persistence schema for installed instances (Webhook Secrets, etc.) */
+  response?: Record<string, SetupResponseFieldDefinition>;
+}
 
 /**
  * release versioning and migration plan
@@ -160,88 +221,80 @@ export interface ProviderRelease {
  * core provider metadata and capabilities schema
  */
 export interface ProviderManifest {
-  /** Unique identifier (e.g., 'stripe', 'polar') */
+  /** Unique identifier slug (e.g., 'stripe', 'polar') */
   slug: string;
 
-  /** Display name (e.g., 'Stripe') */
+  /** Human-readable display name */
   name: string;
 
-  /** Provider categories (providers can span multiple) */
-  categories: ProviderCategory[];
-
-  /**
-   * semver provider version
-   * needed for marketplace updates
-   */
+  /** Version of the current provider package */
   version: string;
 
-  /** Short description displayed in the marketplace card. */
+  /** Lifecycle status of the integration */
+  status: "stable" | "beta" | "deprecated" | "experimental";
+
+  /** Classification (e.g., Card, Wallet, MerchantOfRecord) */
+  categories: ProviderCategory[];
+
+  /** Short marketplace pitch */
   description?: string;
 
-  /** The organization or developer maintaining this provider. */
+  /** Maintainer organization name */
   author?: string;
 
-  /** Link to the official documentation for this specific provider. */
-  documentationUrl?: string;
+  /** Pricing info for the merchant */
+  pricing?: ProviderPricing;
 
-  /** Link to the support page or repository issue tracker. */
-  supportUrl?: string;
+  /** * Localization rules.
+   * Replaces the old top-level 'regions' and 'currencies' for better granularity.
+   */
+  localization: ProviderLocalization;
 
-  /** Link to the provider's dashboard for easy access to settings and metrics. */
-  dashboardUrl?: string;
+  /** Compliance and Tax responsibility flags */
+  compliance: ProviderCompliance;
 
   /**
-   * Link to the provider's setup guide for easy access to settings and metrics.
+   * Supported payment methods
    */
-  setupGuideUrl?: string;
-
-  /**
-   * supported regions (ISO 3166-1 alpha-2) or ["*"] for global
-   */
-  regions?: RegionCode[];
-
-  /**
-   * supported currencies (ISO 4217)
-   */
-  currencies?: CurrencyCode[];
+  supportedPaymentMethods: PaymentMethodType[];
 
   /**
    * flags if there's a dedicated sandbox mode
    */
   sandboxAvailable?: boolean;
 
-  /**
-   * config schema mapped to internal keys
-   */
-  configSchema: Record<string, ConfigFieldDefinition>;
+  /** Performance and infrastructure traits */
+  systemTraits: ProviderSystemTraits;
 
   /**
-   * internal data output schema
-   * helps core figure out what to encrypt
+   * Setup schema for the provider.
    */
-  dataSchema?: Record<string, DataFieldDefinition>;
+  setup: ProviderSetup;
 
-  /**
-   * capability flags
-   */
+  /** Functional capabilities (What this provider can actually do) */
   capabilities: ProviderCapabilities;
 
-  /** Lifecycle status */
-  status: ProviderStatus;
-
-  /** If true, hidden from the public marketplace (private plugins) */
-  hidden?: boolean;
-
-  /** Compatibility requirements */
-  engine: ProviderEngine;
-
-  /** Visual assets for the marketplace UI */
+  /** Visual assets for the Marketplace and Dashboard */
   media: ProviderMedia;
 
-  /** Pricing info for the merchant */
-  pricing?: ProviderPricing;
+  /** External links for support and documentation */
+  links: {
+    dashboard?: string;
+    documentation?: string;
+    support?: string;
+    setupGuide?: string;
+    pricing?: string;
+  };
 
+  /** Update history and migration paths */
   releases?: ProviderRelease[];
 
+  /** Technical execution requirements */
+  engine: ProviderEngine;
+
+  /** API pagination strategy for resource syncing */
   paginationType: "cursor" | "page";
+
+  /** If true, the provider is only visible to the owner (Private Plugin) */
+  hidden?: boolean;
 }

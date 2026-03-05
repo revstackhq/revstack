@@ -8,6 +8,8 @@ import {
   PaymentMethod,
   ProviderContext,
   SetupPaymentMethodInput,
+  ListPaymentMethodsOptions,
+  DeletePaymentMethodInput,
 } from "@revstackhq/providers-core";
 import Stripe from "stripe";
 
@@ -21,23 +23,24 @@ export async function setupPaymentMethod(
     successUrl: input.returnUrl,
     cancelUrl: input.cancelUrl,
     metadata: input.metadata,
+    currency: input.currency,
     lineItems: [],
   });
 }
 
 export async function listPaymentMethods(
   ctx: ProviderContext,
-  customerId: string,
+  options: ListPaymentMethodsOptions,
 ): Promise<AsyncActionResult<PaymentMethod[]>> {
   const stripe = getOrCreateClient(ctx.config.apiKey);
 
   try {
     const [paymentMethods, customer] = await Promise.all([
       stripe.paymentMethods.list({
-        customer: customerId,
+        customer: options.customerId,
         limit: 100,
       }),
-      stripe.customers.retrieve(customerId),
+      stripe.customers.retrieve(options.customerId),
     ]);
 
     if (customer.deleted) {
@@ -71,12 +74,12 @@ export async function listPaymentMethods(
 
 export async function deletePaymentMethod(
   ctx: ProviderContext,
-  id: string,
+  input: DeletePaymentMethodInput,
 ): Promise<AsyncActionResult<boolean>> {
   const stripe = getOrCreateClient(ctx.config.apiKey);
 
   try {
-    await stripe.paymentMethods.detach(id);
+    await stripe.paymentMethods.detach(input.id);
 
     return {
       data: true,

@@ -6,17 +6,17 @@ import {
   BillingPortalInput,
   BillingPortalResult,
   AsyncActionResult,
-  RevstackCurrency,
   CustomLineItem,
   CheckoutSessionMode,
   LineItem,
   CatalogLineItem,
   getTrialDays,
+  normalizeCurrency,
+  appendQueryParam,
 } from "@revstackhq/providers-core";
 import Stripe from "stripe";
-import { getOrCreateClient, appendQueryParam } from "@/api/v1/client";
+import { getOrCreateClient } from "@/api/v1/client";
 import { mapError } from "@/shared/error-map";
-import { currencyMap } from "@/shared/currency-map";
 
 /**
  * Formats checkout line items for Stripe depending on checkout mode.
@@ -43,7 +43,7 @@ function formatLineItems(
     const customItem = item as CustomLineItem;
 
     const priceData: Stripe.Checkout.SessionCreateParams.LineItem.PriceData = {
-      currency: currencyMap[customItem.currency as RevstackCurrency] || "USD",
+      currency: normalizeCurrency(customItem.currency, "uppercase"),
       product_data: {
         name: customItem.name || "Unknown",
         description: customItem.description || undefined,
@@ -102,14 +102,15 @@ export async function createCheckoutSession(
         : undefined,
       cancel_url: input.cancelUrl,
       customer: input.customerId,
+      currency: input.currency,
       customer_email: !input.customerId ? input.customerEmail : undefined,
       allow_promotion_codes: input.allowPromotionCodes,
-      line_items: formatLineItems(input.lineItems, input.mode),
-
+      line_items:
+        input.mode === "setup"
+          ? undefined
+          : formatLineItems(input.lineItems, input.mode),
       automatic_tax: input.automaticTax ? { enabled: true } : undefined,
-
       billing_address_collection: input.automaticTax ? "required" : "auto",
-
       customer_update: input.customerId
         ? { address: "auto", name: "auto" }
         : undefined,
@@ -117,11 +118,13 @@ export async function createCheckoutSession(
 
     if (input.mode === "payment") {
       sessionParams.payment_intent_data = {
-        setup_future_usage: input.setupFutureUsage ? "off_session" : undefined,
+        setup_future_usage: input.savePaymentMethod ? "off_session" : undefined,
         metadata: input.metadata,
         statement_descriptor: input.statementDescriptor || undefined,
       };
-    } else if (input.mode === "subscription") {
+    }
+
+    if (input.mode === "subscription") {
       sessionParams.subscription_data = {
         metadata: input.metadata,
         trial_period_days:

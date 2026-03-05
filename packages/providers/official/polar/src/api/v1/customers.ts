@@ -5,13 +5,15 @@ import {
   ProviderContext,
   UpdateCustomerInput,
   PaginatedResult,
-  PaginationOptions,
   buildPagePagination,
+  normalizeCountry,
+  DeleteCustomerInput,
+  GetCustomerInput,
+  ListCustomersOptions,
 } from "@revstackhq/providers-core";
 import { getOrCreatePolar } from "@/api/v1/client";
 import { mapPolarCustomerToCustomer } from "@/api/v1/mappers";
 import { mapError } from "@/shared/error-map";
-import { countryMap } from "@/shared/country-map";
 import { CountryAlpha2Input } from "@polar-sh/sdk/models/components/addressinput.js";
 
 /**
@@ -38,9 +40,9 @@ export const createCustomer = async (
             city: input.address.city,
             state: input.address.state,
             postalCode: input.address.postalCode,
-            country: countryMap[
-              input.address.country as keyof typeof countryMap
-            ] as CountryAlpha2Input,
+            country: normalizeCountry(
+              input.address.country,
+            ) as CountryAlpha2Input,
           }
         : undefined,
     });
@@ -67,13 +69,12 @@ export const createCustomer = async (
  */
 export const updateCustomer = async (
   ctx: ProviderContext,
-  customerId: string,
   input: UpdateCustomerInput,
 ): Promise<AsyncActionResult<string>> => {
   try {
     const polar = getOrCreatePolar(ctx);
     const customer = await polar.customers.update({
-      id: customerId,
+      id: input.id,
       customerUpdate: {
         email: input.email,
         name: input.name || undefined,
@@ -102,12 +103,12 @@ export const updateCustomer = async (
  */
 export const deleteCustomer = async (
   ctx: ProviderContext,
-  customerId: string,
+  input: DeleteCustomerInput,
 ): Promise<AsyncActionResult<boolean>> => {
   try {
     const polar = getOrCreatePolar(ctx);
     await polar.customers.delete({
-      id: customerId,
+      id: input.id,
     });
 
     return {
@@ -131,12 +132,12 @@ export const deleteCustomer = async (
  */
 export const getCustomer = async (
   ctx: ProviderContext,
-  customerId: string,
+  input: GetCustomerInput,
 ): Promise<AsyncActionResult<Customer>> => {
   try {
     const polar = getOrCreatePolar(ctx);
     const customer = await polar.customers.get({
-      id: customerId,
+      id: input.id,
     });
 
     return {
@@ -161,24 +162,22 @@ export const getCustomer = async (
  */
 export const listCustomers = async (
   ctx: ProviderContext,
-  options?: PaginationOptions & { email?: string },
-  filters?: Record<string, any>,
+  options: ListCustomersOptions,
 ): Promise<AsyncActionResult<PaginatedResult<Customer>>> => {
   try {
     const polar = getOrCreatePolar(ctx);
     const targetPage =
-      options?.page ||
-      (options?.startingAfter && parseInt(options.startingAfter) + 1) ||
-      (options?.endingBefore &&
+      options.page ||
+      (options.startingAfter && parseInt(options.startingAfter) + 1) ||
+      (options.endingBefore &&
         Math.max(1, parseInt(options.endingBefore) - 1)) ||
       1;
-    const limit = options?.limit || 10;
+    const limit = options.limit || 10;
 
     const customersPage = await polar.customers.list({
       limit,
       page: targetPage,
-      email: options?.email,
-      ...filters,
+      ...options.filters,
     });
 
     return {

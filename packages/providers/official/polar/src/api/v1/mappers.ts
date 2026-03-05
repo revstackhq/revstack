@@ -4,11 +4,11 @@ import {
   Payment,
   PaymentStatus,
   Customer,
+  normalizeCurrency,
 } from "@revstackhq/providers-core";
 import { Subscription as PolarSubscription } from "@polar-sh/sdk/models/components/subscription.js";
 import { Order as PolarOrder } from "@polar-sh/sdk/models/components/order.js";
 import { Customer as PolarCustomer } from "@polar-sh/sdk/models/components/customer.js";
-import { currencyMap } from "@/shared/currency-map";
 
 export function mapPolarSubStatusToSubscriptionStatus(
   status: string,
@@ -41,25 +41,28 @@ export function mapSessionToCheckoutResult(session: any) {
 }
 
 export function mapPolarSubscriptionToSubscription(
-  sub: PolarSubscription,
+  rawSub: PolarSubscription,
 ): Subscription {
+  const sub = rawSub;
+
   return {
     id: sub.id,
     providerId: "polar",
-    externalId: sub.id,
+    priceId: sub.prices[0]?.id,
+    endedAt: sub.endedAt ? new Date(sub.endedAt).toISOString() : undefined,
     status: mapPolarSubStatusToSubscriptionStatus(sub.status),
-
     amount: sub.amount || 0,
-    currency: currencyMap[sub.currency as keyof typeof currencyMap] as any,
+    trialEnd: sub.trialEnd ? new Date(sub.trialEnd).toISOString() : undefined,
+    trialStart: sub.trialStart
+      ? new Date(sub.trialStart).toISOString()
+      : undefined,
+    currency: normalizeCurrency(sub.currency, "uppercase"),
     interval: sub.recurringInterval === "year" ? "year" : "month",
-
     customerId: sub.customerId,
-
     currentPeriodStart: new Date(sub.currentPeriodStart).toISOString(),
     currentPeriodEnd: sub.currentPeriodEnd
       ? new Date(sub.currentPeriodEnd).toISOString()
       : new Date(sub.currentPeriodStart).toISOString(),
-
     cancelAtPeriodEnd: sub.cancelAtPeriodEnd,
     startedAt: sub.startedAt
       ? new Date(sub.startedAt).toISOString()
@@ -67,7 +70,6 @@ export function mapPolarSubscriptionToSubscription(
     canceledAt: sub.canceledAt
       ? new Date(sub.canceledAt).toISOString()
       : undefined,
-
     raw: sub,
   };
 }
@@ -79,7 +81,7 @@ export function mapPolarOrderToPayment(order: PolarOrder): Payment {
     externalId: order.id,
     amount: order.subtotalAmount || 0,
     amountRefunded: order.refundedAmount || 0,
-    currency: currencyMap[order.currency as keyof typeof currencyMap],
+    currency: normalizeCurrency(order.currency, "uppercase"),
     status: mapPolarOrderStatusToPaymentStatus(order.status),
     customerId: order.customerId,
     createdAt: new Date(order.createdAt).toISOString(),

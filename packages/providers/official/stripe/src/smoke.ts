@@ -1,9 +1,5 @@
 import { StripeProvider } from "@/provider";
-import {
-  ProviderContext,
-  RevstackErrorCode,
-  runSmoke,
-} from "@revstackhq/providers-core";
+import { ProviderContext, runSmoke } from "@revstackhq/providers-core";
 import dotenv from "dotenv";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -76,7 +72,6 @@ runSmoke({
     },
     parseWebhookEvent: async (ctx) => {
       const res = await provider.parseWebhookEvent(ctx, {
-        // 🔥 ENVOLTURA REAL DE STRIPE EVENT
         id: "evt_test_123",
         type: "checkout.session.completed",
         created: 1772512043,
@@ -231,8 +226,21 @@ runSmoke({
     // CUSTOMERS
     createCustomer: async (ctx) => {
       const res = await provider.createCustomer(ctx, {
-        email: "smoke@example.com",
-        name: "Smoke Test User",
+        email: `smoke-${Date.now()}@revstack.dev`,
+        name: "Smoke Test User " + Date.now(),
+        address: {
+          line1: "123 Main St",
+          line2: "Apt 4B",
+          city: "New York",
+          state: "NY",
+          postalCode: "10001",
+          country: "US",
+        },
+        description: "Smoke Test User",
+        metadata: {
+          smoke: "true",
+        },
+        phone: "1234567890",
       });
       console.log("[createCustomer]", res);
       return res;
@@ -244,13 +252,15 @@ runSmoke({
     },
     updateCustomer: async (ctx) => {
       const res = await provider.updateCustomer(ctx, FIXTURES.customerId, {
-        name: "Smoke Test User Updated",
+        name: "Smoke Test User Updated" + Date.now(),
       });
       console.log("[updateCustomer]", res);
       return res;
     },
     listCustomers: async (ctx) => {
-      const res = await provider.listCustomers(ctx, { limit: 10 });
+      const res = await provider.listCustomers(ctx, {
+        limit: 100,
+      });
       console.log("[listCustomers]", res);
       return res;
     },
@@ -283,6 +293,8 @@ runSmoke({
         customerId: realCustomerId,
         returnUrl: FIXTURES.returnUrl,
         cancelUrl: FIXTURES.cancelUrl,
+        successUrl: FIXTURES.returnUrl,
+        allowPromotionCodes: false,
         metadata: {
           revstack_plan: "pro",
           revstack_addon: "1k-tokens",
@@ -315,7 +327,6 @@ runSmoke({
     refundPayment: async (ctx) => {
       const res = await provider.refundPayment(ctx, {
         paymentId: FIXTURES.paymentId,
-        amount: 1000,
         reason: "requested_by_customer",
       });
       console.log("[refundPayment]", res);
@@ -346,6 +357,7 @@ runSmoke({
         customerId: FIXTURES.customerId,
         returnUrl: FIXTURES.successUrl,
         cancelUrl: FIXTURES.cancelUrl,
+        currency: "USD",
       });
       console.log("[setupPaymentMethod]", res);
       return res;
@@ -372,8 +384,7 @@ runSmoke({
         returnUrl: FIXTURES.returnUrl,
         cancelUrl: FIXTURES.cancelUrl,
         successUrl: FIXTURES.successUrl,
-        trialInterval: "month",
-        trialIntervalCount: 1,
+        allowPromotionCodes: false,
         lineItems: [
           {
             name: "Pro Plan",

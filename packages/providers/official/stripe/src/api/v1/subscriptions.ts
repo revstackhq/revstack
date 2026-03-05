@@ -5,12 +5,16 @@ import {
   UpdateSubscriptionInput,
   Subscription,
   PaginatedResult,
-  PaginationOptions,
   AsyncActionResult,
   RevstackErrorCode,
   buildCursorPagination,
   CheckoutSessionInput,
   CheckoutSessionResult,
+  GetSubscriptionInput,
+  CancelSubscriptionInput,
+  PauseSubscriptionInput,
+  ResumeSubscriptionInput,
+  ListSubscriptionsOptions,
 } from "@revstackhq/providers-core";
 import Stripe from "stripe";
 import { getOrCreateClient } from "@/api/v1/client";
@@ -120,11 +124,11 @@ export async function createSubscription(
  */
 export async function getSubscription(
   ctx: ProviderContext,
-  id: string,
+  input: GetSubscriptionInput,
 ): Promise<AsyncActionResult<Subscription>> {
   try {
     const stripe = getOrCreateClient(ctx.config.apiKey);
-    const sub = await stripe.subscriptions.retrieve(id);
+    const sub = await stripe.subscriptions.retrieve(input.id);
     return {
       data: mapStripeSubscriptionToSubscription(sub),
       status: "success",
@@ -150,18 +154,30 @@ export async function getSubscription(
  */
 export async function cancelSubscription(
   ctx: ProviderContext,
-  id: string,
-  reason?: string,
+  input: CancelSubscriptionInput,
 ): Promise<AsyncActionResult<string>> {
   try {
     const stripe = getOrCreateClient(ctx.config.apiKey);
-    const sub = await stripe.subscriptions.update(id, {
-      cancel_at_period_end: true,
-      cancellation_details: {
-        comment: reason || null,
-        feedback: "other",
-      },
-    });
+    let sub;
+
+    if (input.immediate) {
+      sub = await stripe.subscriptions.cancel(input.id, {
+        cancellation_details: {
+          comment: input.reason || null,
+          feedback: "other",
+        },
+        invoice_now: true,
+        prorate: true,
+      });
+    } else {
+      sub = await stripe.subscriptions.update(input.id, {
+        cancel_at_period_end: true,
+        cancellation_details: {
+          comment: input.reason || null,
+          feedback: "other",
+        },
+      });
+    }
 
     return {
       data: sub.id,
@@ -213,12 +229,12 @@ export async function cancelSubscription(
  */
 export async function pauseSubscription(
   ctx: ProviderContext,
-  id: string,
+  input: PauseSubscriptionInput,
 ): Promise<AsyncActionResult<string>> {
   try {
     const stripe = getOrCreateClient(ctx.config.apiKey);
     const sub = await stripe.subscriptions.update(
-      id,
+      input.id,
       {
         pause_collection: {
           behavior: "void",
@@ -250,12 +266,12 @@ export async function pauseSubscription(
  */
 export async function resumeSubscription(
   ctx: ProviderContext,
-  id: string,
+  input: ResumeSubscriptionInput,
 ): Promise<AsyncActionResult<string>> {
   try {
     const stripe = getOrCreateClient(ctx.config.apiKey);
     const sub = await stripe.subscriptions.update(
-      id,
+      input.id,
       {
         pause_collection: null,
       },
@@ -285,23 +301,22 @@ export async function resumeSubscription(
  */
 export async function listSubscriptions(
   ctx: ProviderContext,
-  pagination: PaginationOptions,
-  filters?: Record<string, any>,
+  options: ListSubscriptionsOptions,
 ): Promise<AsyncActionResult<PaginatedResult<Subscription>>> {
   try {
     const stripe = getOrCreateClient(ctx.config.apiKey);
     const subs = await stripe.subscriptions.list({
-      limit: pagination.limit || 10,
-      starting_after: pagination.startingAfter || undefined,
-      ending_before: pagination.endingBefore || undefined,
-      ...filters,
+      limit: options.limit || 10,
+      starting_after: options.startingAfter || undefined,
+      ending_before: options.endingBefore || undefined,
+      ...options.filters,
     });
 
     return {
       data: buildCursorPagination(
         subs.data,
         subs.has_more,
-        pagination,
+        options,
         mapStripeSubscriptionToSubscription,
       ),
       status: "success",
@@ -326,14 +341,13 @@ export async function listSubscriptions(
  */
 export async function updateSubscription(
   ctx: ProviderContext,
-  id: string,
   input: UpdateSubscriptionInput,
 ): Promise<AsyncActionResult<string>> {
   try {
     const stripe = getOrCreateClient(ctx.config.apiKey);
-    const updateParams = await buildUpdateParams(stripe, id, input);
+    const updateParams = await buildUpdateParams(stripe, input.id, input);
 
-    const sub = await stripe.subscriptions.update(id, updateParams, {
+    const sub = await stripe.subscriptions.update(input.id, updateParams, {
       idempotencyKey: ctx.idempotencyKey,
     });
 

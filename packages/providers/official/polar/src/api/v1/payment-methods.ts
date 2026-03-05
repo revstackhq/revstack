@@ -5,6 +5,8 @@ import {
   ProviderContext,
   RevstackErrorCode,
   SetupPaymentMethodInput,
+  ListPaymentMethodsOptions,
+  DeletePaymentMethodInput,
 } from "@revstackhq/providers-core";
 
 const NOT_IMPLEMENTED = {
@@ -24,14 +26,14 @@ export const setupPaymentMethod = async (
 
 export const listPaymentMethods = async (
   _ctx: ProviderContext,
-  _customerId: string,
+  _options: ListPaymentMethodsOptions,
 ): Promise<AsyncActionResult<PaymentMethod[]>> => {
   return { ...NOT_IMPLEMENTED, data: null };
 };
 
 export const deletePaymentMethod = async (
   _ctx: ProviderContext,
-  _id: string,
+  _input: DeletePaymentMethodInput,
 ): Promise<AsyncActionResult<boolean>> => {
   return { ...NOT_IMPLEMENTED, data: false };
 };

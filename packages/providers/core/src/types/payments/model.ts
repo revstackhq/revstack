@@ -1,9 +1,4 @@
-import { Address, LineItem } from "@/types/models/shared";
-import { RevstackCurrency } from "@/types/models/currency";
-
-// =============================================================================
-// PAYMENT MODELS
-// =============================================================================
+import { LineItem } from "@/types/shared";
 
 export enum PaymentStatus {
   /** created but not yet processed */
@@ -55,7 +50,7 @@ export type Payment = {
   /** amount in cents */
   amount: number;
   /** iso currency (e.g. USD) */
-  currency: RevstackCurrency;
+  currency: string;
   /** normalized revstack status */
   status: PaymentStatus;
 
@@ -104,65 +99,4 @@ export type Payment = {
   lineItems?: LineItem[];
   /** raw provider payload */
   raw?: any;
-};
-
-// =============================================================================
-// PAYMENT INPUTS
-// =============================================================================
-
-export type CreatePaymentInput = {
-  /** external reference id for webhooks (e.g. internal user or order id) */
-  clientReferenceId?: string;
-  /** revstack customer id */
-  customerId?: string;
-  /** fallback customer email for guest checkouts */
-  customerEmail?: string;
-  /** external payment method id */
-  paymentMethodId?: string;
-  /** optional description */
-  description?: string;
-  /** bank statement descriptor */
-  statementDescriptor?: string;
-  /** capture immediately or authorize only */
-  capture?: boolean;
-  /** redirect return url */
-  returnUrl?: string;
-  /** redirect cancel url */
-  cancelUrl?: string;
-  /** success url */
-  successUrl?: string;
-  /** billing address */
-  billingAddress?: Address;
-  /** shipping address */
-  shippingAddress?: Address;
-  /** custom metadata */
-  metadata?: Record<string, any>;
-  /** provider specific options */
-  providerOptions?: any;
-
-  /** inline checkout line items */
-  lineItems: [LineItem, ...LineItem[]];
-
-  /** enable automatic tax calculation (e.g., Stripe Tax, Polar automatic tax) */
-  automaticTax?: boolean;
-  /** automatically apply a specific provider promotion code ID */
-  promotionCodeId?: string;
-  /** allow promo codes input box on the hosted checkout */
-  allowPromotionCodes?: boolean;
-
-  /** setup future usage for the payment method */
-  setupFutureUsage?: boolean;
-};
-
-export type RefundPaymentInput = {
-  /** revstack internal id */
-  paymentId: string;
-  /** external payment id */
-  externalPaymentId?: string;
-  /** refund amount in cents */
-  amount?: number;
-  /** refund reason */
-  reason?: "duplicate" | "fraudulent" | "requested_by_customer";
-  /** custom metadata */
-  metadata?: Record<string, any>;
 };
