@@ -58,13 +58,7 @@ export const ERROR_CODE_MAP: Record<string, RevstackErrorCode> = {
 
   // --- email ---
   email_invalid: RevstackErrorCode.InvalidEmail,
-};
 
-/**
- * maps stripe error types (error.type) to revstack error codes.
- * these are broader categories than error.code.
- */
-export const ERROR_TYPE_MAP: Record<string, RevstackErrorCode> = {
   StripeRateLimitError: RevstackErrorCode.RateLimitExceeded,
   StripeAuthenticationError: RevstackErrorCode.InvalidCredentials,
   StripeConnectionError: RevstackErrorCode.ProviderUnavailable,
@@ -83,21 +77,10 @@ export function mapError(error: unknown): {
     const msg = error.message;
     const stripeCode = error.code;
 
-    // 1. try by specific error code
     const mappedCode = stripeCode ? ERROR_CODE_MAP[stripeCode] : undefined;
     if (mappedCode) {
       return {
         code: mappedCode,
-        message: msg,
-        providerError: stripeCode,
-      };
-    }
-
-    // 2. try by error type
-    const mappedType = ERROR_TYPE_MAP[error.type];
-    if (mappedType) {
-      return {
-        code: mappedType,
         message: msg,
         providerError: stripeCode,
       };

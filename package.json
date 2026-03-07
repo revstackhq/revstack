@@ -8,7 +8,7 @@
     "lint": "turbo run lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "check-types": "turbo run check-types",
-    "smoke": "node scripts/smoke-cli.js",
+    "smoke": "node scripts/smoke-cli.mjs",
     "changeset": "changeset",
     "version-packages": "changeset version",
     "publish-packages": "turbo run build && changeset publish",

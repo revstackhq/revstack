@@ -453,8 +453,8 @@ importers:
         specifier: ^17.2.4
         version: 17.2.4
       stripe:
-        specifier: ^20.3.1
-        version: 20.3.1(@types/node@20.19.30)
+        specifier: ^20.4.1
+        version: 20.4.1(@types/node@20.19.30)
     devDependencies:
       '@eslint/js':
         specifier: ^9.39.1
@@ -3796,6 +3796,15 @@ packages:
 
   stripe@20.3.1:
     resolution: {integrity: sha512-k990yOT5G5rhX3XluRPw5Y8RLdJDW4dzQ29wWT66piHrbnM2KyamJ1dKgPsw4HzGHRWjDiSSdcI2WdxQUPV3aQ==}
+    engines: {node: '>=16'}
+    peerDependencies:
+      '@types/node': '>=16'
+    peerDependenciesMeta:
+      '@types/node':
+        optional: true
+
+  stripe@20.4.1:
+    resolution: {integrity: sha512-axCguHItc8Sxt0HC6aSkdVRPffjYPV7EQqZRb2GkIa8FzWDycE7nHJM19C6xAIynH1Qp1/BHiopSi96jGBxT0w==}
     engines: {node: '>=16'}
     peerDependencies:
       '@types/node': '>=16'
@@ -7615,6 +7624,10 @@ snapshots:
   strip-json-comments@3.1.1: {}
 
   stripe@20.3.1(@types/node@20.19.30):
+    optionalDependencies:
+      '@types/node': 20.19.30
+
+  stripe@20.4.1(@types/node@20.19.30):
     optionalDependencies:
       '@types/node': 20.19.30
 

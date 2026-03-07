@@ -3,7 +3,6 @@ import {
   CreatePaymentInput,
   RefundPaymentInput,
   Payment,
-  PaginationOptions,
   PaginatedResult,
   CreateSubscriptionInput,
   UpdateSubscriptionInput,

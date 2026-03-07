@@ -14,7 +14,7 @@ export type Customer = {
   /** custom metadata */
   metadata?: Record<string, any>;
   /** created at iso */
-  createdAt: string;
+  createdAt: Date;
   /** deleted flag */
   deleted?: boolean;
 };

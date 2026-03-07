@@ -1,4 +1,5 @@
 import { LineItem } from "@/types/catalog";
+import { RefundPaymentReason } from "@/types/refunds";
 import { Address } from "@/types/shared";
 import { PaginationOptions } from "@/types/shared";
 
@@ -54,7 +55,7 @@ export type RefundPaymentInput = {
   /** refund amount in cents */
   amount?: number;
   /** refund reason */
-  reason?: "duplicate" | "fraudulent" | "requested_by_customer";
+  reason?: RefundPaymentReason;
   /** custom metadata */
   metadata?: Record<string, any>;
 };

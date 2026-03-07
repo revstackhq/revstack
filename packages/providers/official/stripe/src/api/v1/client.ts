@@ -1,6 +1,6 @@
 import Stripe from "stripe";
 
-const STRIPE_API_VERSION: Stripe.LatestApiVersion = "2026-01-28.clover";
+const STRIPE_API_VERSION: Stripe.LatestApiVersion = "2026-02-25.clover";
 
 const clients = new Map<string, Stripe>();
 

@@ -108,6 +108,10 @@ export interface ProviderMedia {
 
 export type ProviderStatus = "stable" | "beta" | "deprecated" | "experimental";
 
+export type UpdatePriority = "low" | "recommended" | "critical" | "security";
+
+export type ProviderPaginationType = "cursor" | "page";
+
 /**
  * input UI field types
  */
@@ -161,7 +165,6 @@ export interface SetupResponseFieldDefinition {
 /**
  * dashboard update visual severity
  */
-export type UpdatePriority = "low" | "recommended" | "critical" | "security";
 
 export interface ProviderSetup {
   /** UI Schema for the settings dashboard (Secrets, API Keys) */
@@ -231,7 +234,7 @@ export interface ProviderManifest {
   version: string;
 
   /** Lifecycle status of the integration */
-  status: "stable" | "beta" | "deprecated" | "experimental";
+  status: ProviderStatus;
 
   /** Classification (e.g., Card, Wallet, MerchantOfRecord) */
   categories: ProviderCategory[];
@@ -293,7 +296,7 @@ export interface ProviderManifest {
   engine: ProviderEngine;
 
   /** API pagination strategy for resource syncing */
-  paginationType: "cursor" | "page";
+  paginationType: ProviderPaginationType;
 
   /** If true, the provider is only visible to the owner (Private Plugin) */
   hidden?: boolean;

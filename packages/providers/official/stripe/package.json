@@ -28,7 +28,7 @@
   "dependencies": {
     "@revstackhq/providers-core": "workspace:*",
     "dotenv": "^17.2.4",
-    "stripe": "^20.3.1"
+    "stripe": "^20.4.1"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",

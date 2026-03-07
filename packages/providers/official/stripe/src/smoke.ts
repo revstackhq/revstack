@@ -1,466 +1,239 @@
 import { StripeProvider } from "@/provider";
 import { ProviderContext, runSmoke } from "@revstackhq/providers-core";
+import Stripe from "stripe";
 import dotenv from "dotenv";
 import path from "path";
 import { fileURLToPath } from "url";
+import fs from "fs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-
 dotenv.config({ path: path.resolve(__dirname, "../.env.test") });
 
-if (!process.env.STRIPE_SECRET_KEY) {
-  console.error("❌ Missing STRIPE_SECRET_KEY in .env.test");
-  process.exit(1);
-}
+const loadWebhookMock = (fileName: string) => {
+  const filePath = path.resolve(
+    __dirname,
+    `../src/mocks/webhooks/${fileName}.json`,
+  );
+
+  console.log(filePath);
+  return JSON.parse(fs.readFileSync(filePath, "utf-8"));
+};
+
+// ─── CONFIGURATION ────────────────────────────────────────────────────────────
+
+const STRIPE_API_VERSION = "2026-02-25.clover";
 
 const provider = new StripeProvider();
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+  apiVersion: STRIPE_API_VERSION,
+});
+
+const STATE = {
+  customerId: "",
+  subscriptionId: "",
+  paymentId: "",
+  priceId: "",
+  webhookEndpointId: process.env.STRIPE_WEBHOOK_ENDPOINT_ID || "",
+};
+
+const FIXTURES = {
+  priceId: process.env.STRIPE_PRICE_ID!,
+  webhookUrl: process.env.STRIPE_WEBHOOK_URL || "https://example.com/webhook",
+  webhookSecret: process.env.STRIPE_WEBHOOK_SECRET || "whsec_test",
+  returnUrl: "https://example.com/return",
+};
 
 const ctx: ProviderContext = {
   isTestMode: true,
   traceId: `smoke-${Date.now()}`,
-  idempotencyKey: `idem-${Date.now()}`,
-  config: {
-    apiKey: process.env.STRIPE_SECRET_KEY,
-  },
+  config: { apiKey: process.env.STRIPE_SECRET_KEY! },
 };
 
-const FIXTURES = {
-  webhookUrl: process.env.STRIPE_WEBHOOK_URL!,
-  webhookSecret: process.env.STRIPE_WEBHOOK_SECRET!,
-  webhookEndpointId: process.env.STRIPE_WEBHOOK_ENDPOINT_ID!,
-  customerId: process.env.STRIPE_CUSTOMER_ID!,
-  paymentMethodId: process.env.STRIPE_PAYMENT_METHOD_ID!,
-  subscriptionId: process.env.STRIPE_SUBSCRIPTION_ID!,
-  paymentId: process.env.STRIPE_PAYMENT_ID!,
-  priceId: process.env.STRIPE_PRICE_ID!,
-  successUrl: process.env.STRIPE_SUCCESS_URL!,
-  cancelUrl: process.env.STRIPE_CANCEL_URL!,
-  returnUrl: process.env.STRIPE_RETURN_URL!,
-};
+const getStepCtx = (step: string) => ({
+  ...ctx,
+  idempotencyKey: `${ctx.traceId}-${step}`,
+});
+
+// ─── SMOKE TEST RUNNER ────────────────────────────────────────────────────────
 
 runSmoke({
   provider,
   ctx,
+  manifest: StripeProvider.manifest,
   scenarios: {
-    // SETUP / WEBHOOKS
-    onInstall: async (ctx) => {
-      const res = await provider.onInstall(ctx, {
+    bootstrap: async () => {
+      if (!STATE.priceId) {
+        console.log(
+          "🛠️  Bootstrap: No Price ID found, creating temporary product/price...",
+        );
+
+        const product = await stripe.products.create({
+          name: "Smoke Test Product",
+        });
+
+        const price = await stripe.prices.create({
+          product: product.id,
+          unit_amount: 2000,
+          currency: "usd",
+          recurring: { interval: "month" },
+        });
+        STATE.priceId = price.id;
+        console.log(`✅ Bootstrap: Created Price ${STATE.priceId}`);
+      }
+      return { priceId: STATE.priceId };
+    },
+    // ─── SETUP & WEBHOOKS ─────────────────────────────────────────────────────
+
+    onInstall: async (c) => {
+      const res = await provider.onInstall(getStepCtx("install"), {
         webhookUrl: FIXTURES.webhookUrl,
-        config: ctx.config,
+        config: c.config,
       });
-      console.log("[onInstall]", res);
+      if (res.data?.data?.webhookEndpointId) {
+        STATE.webhookEndpointId = res.data.data.webhookEndpointId as string;
+      }
       return res;
     },
-    onUninstall: async (ctx) => {
-      const res = await provider.onUninstall(ctx, {
-        config: ctx.config,
-        data: { webhookEndpointId: FIXTURES.webhookEndpointId },
-      });
-      console.log("[onUninstall]", res);
-      return res;
-    },
-    verifyWebhookSignature: async (ctx) => {
-      const res = await provider.verifyWebhookSignature(
-        ctx,
+
+    verifyWebhookSignature: async (c) => {
+      return await provider.verifyWebhookSignature(
+        c,
         JSON.stringify({ id: "evt_test", type: "payment_intent.succeeded" }),
-        { "stripe-signature": "t=123,v1=bad_signature" },
+        { "stripe-signature": `t=${Math.floor(Date.now() / 1000)},v1=bad_sig` },
         FIXTURES.webhookSecret,
       );
-      console.log("[verifyWebhookSignature]", res);
-      return res;
-    },
-    parseWebhookEvent: async (ctx) => {
-      const res = await provider.parseWebhookEvent(ctx, {
-        id: "evt_test_123",
-        type: "checkout.session.completed",
-        created: 1772512043,
-        data: {
-          object: {
-            id: "cs_test_a1QMPokmxpdeIQEDnVOA257mZRsj65y9K92FfdV87UIwylz0yW07o6ItsC",
-            object: "checkout.session",
-            adaptive_pricing: {
-              enabled: true,
-            },
-            after_expiration: null,
-            allow_promotion_codes: null,
-            amount_subtotal: 24900,
-            amount_total: 24900,
-            automatic_tax: {
-              enabled: false,
-              liability: null,
-              provider: null,
-              status: null,
-            },
-            billing_address_collection: "auto",
-            branding_settings: {
-              background_color: "#ffffff",
-              border_style: "rounded",
-              button_color: "#0074d4",
-              display_name: "Revstack",
-              font_family: "default",
-              icon: null,
-              logo: null,
-            },
-            cancel_url: "https://example.com/cancel",
-            client_reference_id: "test",
-            client_secret: null,
-            collected_information: {
-              business_name: null,
-              individual_name: null,
-              shipping_details: null,
-            },
-            consent: null,
-            consent_collection: null,
-            created: 1772512043,
-            currency: "usd",
-            currency_conversion: null,
-            custom_fields: [],
-            custom_text: {
-              after_submit: null,
-              shipping_address: null,
-              submit: null,
-              terms_of_service_acceptance: null,
-            },
-            customer: "cus_U4uNwICzkKm3Fw",
-            customer_account: null,
-            customer_creation: null,
-            customer_details: {
-              address: {
-                city: null,
-                country: "AR",
-                line1: null,
-                line2: null,
-                postal_code: null,
-                state: null,
-              },
-              business_name: null,
-              email: "test-payment@revstack.dev",
-              individual_name: null,
-              name: "Facundo Lavagnino",
-              phone: null,
-              tax_exempt: "none",
-              tax_ids: [],
-            },
-            customer_email: null,
-            discounts: [],
-            expires_at: 1772598442,
-            invoice: null,
-            invoice_creation: {
-              enabled: false,
-              invoice_data: {
-                account_tax_ids: null,
-                custom_fields: null,
-                description: null,
-                footer: null,
-                issuer: null,
-                metadata: {},
-                rendering_options: null,
-              },
-            },
-            livemode: false,
-            locale: null,
-            metadata: {
-              revstack_addon: "1k-tokens",
-              revstack_plan: "pro",
-              revstack_trace_id: "smoke-1772512041574",
-              trace_id: "smoke-1772512041574",
-            },
-            mode: "payment",
-            origin_context: null,
-            payment_intent: "pi_3T6kZMAlYb77eHnG1e50Jkyu",
-            payment_link: null,
-            payment_method_collection: "if_required",
-            payment_method_configuration_details: {
-              id: "pmc_1ReBs5AlYb77eHnGF8gjrKYZ",
-              parent: null,
-            },
-            payment_method_options: {
-              card: {
-                request_three_d_secure: "automatic",
-              },
-            },
-            payment_method_types: ["card", "link", "cashapp", "amazon_pay"],
-            payment_status: "paid",
-            permissions: null,
-            phone_number_collection: {
-              enabled: false,
-            },
-            recovered_from: null,
-            saved_payment_method_options: {
-              allow_redisplay_filters: ["always"],
-              payment_method_remove: "disabled",
-              payment_method_save: null,
-            },
-            setup_intent: null,
-            shipping_address_collection: null,
-            shipping_cost: null,
-            shipping_details: null,
-            shipping_options: [],
-            status: "complete",
-            submit_type: null,
-            subscription: null,
-            success_url:
-              "https://example.com/return?session_id={CHECKOUT_SESSION_ID}",
-            total_details: {
-              amount_discount: 0,
-              amount_shipping: 0,
-              amount_tax: 0,
-            },
-            ui_mode: "hosted",
-            url: null,
-            wallet_options: null,
-          },
-          previous_attributes: null,
-        },
-      });
-      console.log("[parseWebhookEvent]", res);
-      return res;
-    },
-    getWebhookResponse: async () => {
-      const res = await provider.getWebhookResponse();
-      console.log("[getWebhookResponse]", res);
-      return res;
     },
 
-    // CUSTOMERS
-    createCustomer: async (ctx) => {
-      const res = await provider.createCustomer(ctx, {
+    parseWebhookEvent: async (c) => {
+      const mockEvent = loadWebhookMock("subscription_updated");
+
+      mockEvent.data.object.customer = STATE.customerId;
+      mockEvent.data.object.id = STATE.subscriptionId;
+
+      return await provider.parseWebhookEvent(c, mockEvent);
+    },
+
+    // ─── CUSTOMER LIFECYCLE ───────────────────────────────────────────────────
+
+    createCustomer: async (c) => {
+      const res = await provider.createCustomer(getStepCtx("create-cust"), {
         email: `smoke-${Date.now()}@revstack.dev`,
-        name: "Smoke Test User " + Date.now(),
-        address: {
-          line1: "123 Main St",
-          line2: "Apt 4B",
-          city: "New York",
-          state: "NY",
-          postalCode: "10001",
-          country: "US",
-        },
-        description: "Smoke Test User",
-        metadata: {
-          smoke: "true",
-        },
-        phone: "1234567890",
+        name: "Smoke Automator",
+        metadata: { smoke: "true", traceId: ctx.traceId },
       });
-      console.log("[createCustomer]", res);
-      return res;
-    },
-    getCustomer: async (ctx) => {
-      const res = await provider.getCustomer(ctx, { id: FIXTURES.customerId });
-      console.log("[getCustomer]", res);
-      return res;
-    },
-    updateCustomer: async (ctx) => {
-      const res = await provider.updateCustomer(ctx, {
-        id: FIXTURES.customerId,
-        name: "Smoke Test User Updated" + Date.now(),
-      });
-      console.log("[updateCustomer]", res);
-      return res;
-    },
-    listCustomers: async (ctx) => {
-      const res = await provider.listCustomers(ctx, {
-        limit: 100,
-      });
-      console.log("[listCustomers]", res);
-      return res;
-    },
-    deleteCustomer: async (ctx) => {
-      const res = await provider.deleteCustomer(ctx, {
-        id: FIXTURES.customerId,
-      });
-      console.log("[deleteCustomer]", res);
+      if (res.data) STATE.customerId = res.data;
       return res;
     },
 
-    // PAYMENTS
-    createPayment: async (ctx) => {
-      const customerCtx = {
-        ...ctx,
-        idempotencyKey: `idem-cust-pay-${Date.now()}`,
-      };
-      const customerRes = await provider.createCustomer(customerCtx, {
-        email: "test-payment@revstack.dev",
-        name: "Revstack Founding Member",
+    getCustomer: async (c) => {
+      if (!STATE.customerId) throw new Error("Skipping: No customerId.");
+      return await provider.getCustomer(c, { id: STATE.customerId });
+    },
+
+    updateCustomer: async (c) => {
+      if (!STATE.customerId) throw new Error("Skipping: No customerId.");
+      return await provider.updateCustomer(getStepCtx("upd-cust"), {
+        id: STATE.customerId,
+        name: "Smoke Automator Updated",
       });
+    },
 
-      if (!customerRes.data) {
-        throw new Error("Failed to create test customer for payment");
-      }
+    // ─── PAYMENTS (Checkout + Shadow Intent) ──────────────────────────────────
 
-      const realCustomerId = customerRes.data;
+    createPayment: async (c) => {
+      if (!STATE.customerId) throw new Error("Skipping: No customerId.");
 
-      const payCtx = { ...ctx, idempotencyKey: `idem-pay-${Date.now()}` };
-      const res = await provider.createPayment(payCtx, {
-        clientReferenceId: "test",
-        customerId: realCustomerId,
-        returnUrl: FIXTURES.returnUrl,
-        cancelUrl: FIXTURES.cancelUrl,
+      const res = await provider.createPayment(getStepCtx("checkout-pay"), {
+        customerId: STATE.customerId,
         successUrl: FIXTURES.returnUrl,
-        allowPromotionCodes: false,
-        metadata: {
-          revstack_plan: "pro",
-          revstack_addon: "1k-tokens",
-          trace_id: ctx.traceId,
+        cancelUrl: FIXTURES.returnUrl,
+        lineItems: [
+          { name: "Credits", amount: 1000, currency: "USD", quantity: 1 },
+        ],
+      });
+
+      const intent = await stripe.paymentIntents.create({
+        amount: 1000,
+        currency: "usd",
+        customer: STATE.customerId,
+      });
+      STATE.paymentId = intent.id;
+      return res;
+    },
+
+    getPayment: async (c) => {
+      if (!STATE.paymentId) throw new Error("No paymentId.");
+      return await provider.getPayment(c, { id: STATE.paymentId });
+    },
+
+    // ─── SUBSCRIPTIONS (Checkout + Shadow Sub) ────────────────────────────────
+
+    createSubscription: async (c) => {
+      if (!STATE.customerId || !STATE.priceId)
+        throw new Error("Missing dependencies.");
+
+      const res = await provider.createSubscription(
+        getStepCtx("checkout-sub"),
+        {
+          customerId: STATE.customerId,
+          successUrl: FIXTURES.returnUrl,
+          cancelUrl: FIXTURES.returnUrl,
+          lineItems: [{ priceId: STATE.priceId, quantity: 1 }],
         },
-        statementDescriptor: "REVSTACK",
-        lineItems: [
-          {
-            name: "Revstack Founding Member Tier 2",
-            description: "Founding Member Tier 2",
-            amount: 24900,
-            currency: "USD",
-            quantity: 1,
-          },
-        ],
+      );
+
+      const shadowSub = await stripe.subscriptions.create({
+        customer: STATE.customerId,
+        items: [{ price: STATE.priceId }],
+        payment_behavior: "default_incomplete",
       });
-      console.log("[createPayment]", res);
-      return res;
-    },
-    getPayment: async (ctx) => {
-      const res = await provider.getPayment(ctx, { id: FIXTURES.paymentId });
-      console.log("[getPayment]", res);
-      return res;
-    },
-    capturePayment: async (ctx) => {
-      const res = await provider.capturePayment(ctx, {
-        id: FIXTURES.paymentId,
-      });
-      console.log("[capturePayment]", res);
-      return res;
-    },
-    refundPayment: async (ctx) => {
-      const res = await provider.refundPayment(ctx, {
-        paymentId: FIXTURES.paymentId,
-        reason: "requested_by_customer",
-      });
-      console.log("[refundPayment]", res);
-      return res;
-    },
-    listPayments: async (ctx) => {
-      const res = await provider.listPayments(ctx, { limit: 10, page: 1 });
-      console.log("[listPayments]", res);
+      STATE.subscriptionId = shadowSub.id;
+
       return res;
     },
 
-    // PAYMENT METHODS
-    listPaymentMethods: async (ctx) => {
-      const res = await provider.listPaymentMethods(ctx, {
-        customerId: FIXTURES.customerId,
-      });
-      console.log("[listPaymentMethods]", res);
-      return res;
-    },
-    deletePaymentMethod: async (ctx) => {
-      const res = await provider.deletePaymentMethod(ctx, {
-        id: FIXTURES.paymentMethodId,
-      });
-      console.log("[deletePaymentMethod]", res);
-      return res;
-    },
-    setupPaymentMethod: async (ctx) => {
-      const res = await provider.setupPaymentMethod(ctx, {
-        customerId: FIXTURES.customerId,
-        returnUrl: FIXTURES.successUrl,
-        cancelUrl: FIXTURES.cancelUrl,
-        currency: "USD",
-      });
-      console.log("[setupPaymentMethod]", res);
-      return res;
+    getSubscription: async (c) => {
+      if (!STATE.subscriptionId) throw new Error("No subscriptionId.");
+      return await provider.getSubscription(c, { id: STATE.subscriptionId });
     },
 
-    // SUBSCRIPTIONS
-    createSubscription: async (ctx) => {
-      const customerCtx = { ...ctx, idempotencyKey: `idem-cust-${Date.now()}` };
-      const customerRes = await provider.createCustomer(customerCtx, {
-        email: "sub-test@revstack.com",
+    pauseSubscription: async (c) => {
+      if (!STATE.subscriptionId) throw new Error("Skipping: No subscription.");
+      return await provider.pauseSubscription(getStepCtx("pause-sub"), {
+        id: STATE.subscriptionId,
       });
-
-      if (!customerRes.data) {
-        throw new Error("Failed to create test customer");
-      }
-
-      const realCustomerId = customerRes.data;
-
-      console.log("[createCustomer]", realCustomerId);
-
-      const subCtx = { ...ctx, idempotencyKey: `idem-sub-${Date.now()}` };
-      const res = await provider.createSubscription(subCtx, {
-        customerId: realCustomerId,
-        returnUrl: FIXTURES.returnUrl,
-        cancelUrl: FIXTURES.cancelUrl,
-        successUrl: FIXTURES.successUrl,
-        allowPromotionCodes: false,
-        lineItems: [
-          {
-            name: "Pro Plan",
-            amount: 21900,
-            currency: "USD",
-            interval: "month",
-            quantity: 1,
-          },
-          {
-            name: "1k Tokens Addon",
-            amount: 1000,
-            currency: "USD",
-            interval: "month",
-            quantity: 5,
-          },
-        ],
-      });
-      console.log("[createSubscription]", res);
-      return res;
-    },
-    getSubscription: async (ctx) => {
-      const res = await provider.getSubscription(ctx, {
-        id: FIXTURES.subscriptionId,
-      });
-      console.log("[getSubscription]", res);
-      return res;
-    },
-    updateSubscription: async (ctx) => {
-      const res = await provider.updateSubscription(ctx, {
-        id: FIXTURES.subscriptionId,
-        lineItems: [{ priceId: FIXTURES.priceId, quantity: 2 }],
-      });
-      console.log("[updateSubscription]", res);
-      return res;
-    },
-    pauseSubscription: async (ctx) => {
-      const res = await provider.pauseSubscription(ctx, {
-        id: FIXTURES.subscriptionId,
-      });
-      console.log("[pauseSubscription]", res);
-      return res;
-    },
-    resumeSubscription: async (ctx) => {
-      const res = await provider.resumeSubscription(ctx, {
-        id: FIXTURES.subscriptionId,
-      });
-      console.log("[resumeSubscription]", res);
-      return res;
-    },
-    listSubscriptions: async (ctx) => {
-      const res = await provider.listSubscriptions(ctx, { limit: 10 });
-      console.log("[listSubscriptions]", res);
-      return res;
-    },
-    cancelSubscription: async (ctx) => {
-      const res = await provider.cancelSubscription(ctx, {
-        id: FIXTURES.subscriptionId,
-      });
-      console.log("[cancelSubscription]", res);
-      return res;
     },
 
-    createBillingPortalSession: async (ctx) => {
-      const res = await provider.createBillingPortalSession(ctx, {
-        customerId: FIXTURES.customerId,
-        returnUrl: FIXTURES.returnUrl,
+    resumeSubscription: async (c) => {
+      if (!STATE.subscriptionId) throw new Error("Skipping: No subscription.");
+      return await provider.resumeSubscription(getStepCtx("resume-sub"), {
+        id: STATE.subscriptionId,
       });
-      console.log("[createBillingPortalSession]", res);
-      return res;
+    },
+
+    cancelSubscription: async (c) => {
+      if (!STATE.subscriptionId) throw new Error("No subscription.");
+      return await provider.cancelSubscription(getStepCtx("cancel-sub"), {
+        id: STATE.subscriptionId,
+      });
+    },
+
+    // ─── CLEANUP ──────────────────────────────────────────────────────────────
+
+    deleteCustomer: async (c) => {
+      if (!STATE.customerId) return { success: true };
+      return await provider.deleteCustomer(getStepCtx("del-cust"), {
+        id: STATE.customerId,
+      });
+    },
+
+    onUninstall: async (c) => {
+      if (!STATE.webhookEndpointId) return { success: true };
+      return await provider.onUninstall(c, {
+        config: c.config,
+        data: { webhookEndpointId: STATE.webhookEndpointId },
+      });
     },
   },
-  manifest: StripeProvider.manifest,
 });

@@ -1,5 +1,8 @@
 import { Interval, PricingType } from "@/types/shared";
 
+/** Structural pricing model for a price object. */
+export type PriceBillingScheme = "per_unit" | "tiered";
+
 export type Product = {
   /** provider external product ID (e.g., `prod_xxx`) */
   id: string;
@@ -12,7 +15,7 @@ export type Product = {
   /** whether the product is active */
   active: boolean;
   /** creation timestamp ISO */
-  createdAt: string;
+  createdAt: Date;
   /** custom metadata */
   metadata?: Record<string, any>;
 };
@@ -35,7 +38,7 @@ export type Price = {
   /** whether the price is active */
   active: boolean;
   /** creation timestamp ISO */
-  createdAt: string;
+  createdAt: Date;
   /** custom metadata */
   metadata?: Record<string, any>;
 };

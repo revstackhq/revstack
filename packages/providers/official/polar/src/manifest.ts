@@ -48,7 +48,7 @@ export const manifest: ProviderManifest = {
     processingCurrencies: ["USD", "CAD", "GBP", "EUR", "JPY", "AUD", "NZD"],
     settlementCurrencies: ["USD", "CAD", "GBP", "EUR", "JPY", "AUD", "NZD"],
   },
-  supportedPaymentMethods: ["card", "apple_pay", "google_pay", "amazon_pay"],
+  supportedPaymentMethods: ["card", "wallet"],
   systemTraits: {
     hasNativeIdempotency: false,
     sandboxStrategy: "separate_credentials",
@@ -91,10 +91,6 @@ export const manifest: ProviderManifest = {
     webhooks: {
       supported: true,
       verification: "signature",
-    },
-    catalog: {
-      supported: true,
-      strategy: "pre_created",
     },
   },
   author: "Revstack",

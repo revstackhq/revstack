@@ -1,113 +1,219 @@
+import { PaymentPayload } from "@/types/payments/payload";
+import { RefundPayload } from "@/types/refunds/payload";
+import { DisputePayload } from "@/types/disputes/payload";
+import { CheckoutPayload } from "@/types/checkout/payload";
+import { SubscriptionPayload } from "@/types/subscriptions/payload";
+import { InvoicePayload } from "@/types/invoices/payload";
+import { CustomerPayload } from "@/types/customers/payload";
+import {
+  PaymentMethodPayload,
+  MandatePayload,
+} from "@/types/paymentMethods/payload";
+import { ProductPayload, PricePayload } from "@/types/catalog/payload";
+
+// Re-export all payload types so consumers can import them from this central file.
+export type {
+  PaymentPayload,
+  RefundPayload,
+  DisputePayload,
+  CheckoutPayload,
+  SubscriptionPayload,
+  InvoicePayload,
+  CustomerPayload,
+  PaymentMethodPayload,
+  MandatePayload,
+  ProductPayload,
+  PricePayload,
+};
+
+/**
+ * Master dictionary of all standardized Revstack event types.
+ * Acts as the "universal translator" between provider-specific webhooks
+ * (Stripe, Polar, PayPal) and the internal state machine.
+ */
 export type EventType =
-  // --- PAYMENTS (Transaction Lifecycle) ---
+  // ── Payments (Direct Transactions) ──────────────────────────────────────────
   | "PAYMENT_CREATED"
+  | "PAYMENT_AUTHORIZED"
+  | "PAYMENT_CAPTURED"
+  | "PAYMENT_PROCESSING"
   | "PAYMENT_SUCCEEDED"
   | "PAYMENT_FAILED"
-  | "PAYMENT_PROCESSING"
   | "PAYMENT_CANCELED"
-  | "PAYMENT_AUTHORIZED" // Funds held (Auth)
-  | "PAYMENT_CAPTURED" // Funds captured
 
-  // --- REFUNDS & DISPUTES ---
+  // ── Refunds ──────────────────────────────────────────────────────────────────
   | "REFUND_CREATED"
   | "REFUND_PROCESSED"
   | "REFUND_FAILED"
-  | "DISPUTE_CREATED"
-  | "DISPUTE_RESOLVED"
-  | "DISPUTE_EXPIRED" // Merchant failed to provide evidence in time
 
-  // --- CHECKOUT ---
+  // ── Disputes (Chargebacks) ───────────────────────────────────────────────────
+  | "DISPUTE_CREATED"
+  | "DISPUTE_UPDATED"
+  | "DISPUTE_WON"
+  | "DISPUTE_LOST"
+
+  // ── Checkouts (Hosted Payment Sessions) ─────────────────────────────────────
+  | "CHECKOUT_CREATED"
   | "CHECKOUT_COMPLETED"
   | "CHECKOUT_EXPIRED"
+  | "CHECKOUT_CANCELED"
 
-  // --- SUBSCRIPTIONS (Lifecycle) ---
+  // ── Subscriptions (Recurring Billing Engine) ─────────────────────────────────
   | "SUBSCRIPTION_CREATED"
   | "SUBSCRIPTION_UPDATED"
+  | "SUBSCRIPTION_RENEWED"
+  | "SUBSCRIPTION_PAST_DUE"
   | "SUBSCRIPTION_CANCELED"
+  | "SUBSCRIPTION_REVOKED"
   | "SUBSCRIPTION_PAUSED"
   | "SUBSCRIPTION_RESUMED"
   | "SUBSCRIPTION_TRIAL_WILL_END"
-  | "SUBSCRIPTION_EXPIRING"
-  | "SUBSCRIPTION_PAYMENT_FAILED" // Recurring invoice payment specifically failed
 
-  // --- INVOICES (Recurring Billing Specific) ---
-  | "INVOICE_PAYMENT_SUCCEEDED"
+  // ── Invoices (B2B & Billing Documents) ──────────────────────────────────────
+  | "INVOICE_CREATED"
+  | "INVOICE_FINALIZED"
+  | "INVOICE_PAID"
   | "INVOICE_PAYMENT_FAILED"
+  | "INVOICE_VOIDED"
+  | "INVOICE_UNCOLLECTIBLE"
 
-  // --- CUSTOMERS ---
+  // ── Customers & Instruments (Vault) ─────────────────────────────────────────
   | "CUSTOMER_CREATED"
   | "CUSTOMER_UPDATED"
   | "CUSTOMER_DELETED"
-
-  // --- PAYMENT METHODS ---
   | "PAYMENT_METHOD_ATTACHED"
+  | "PAYMENT_METHOD_UPDATED"
   | "PAYMENT_METHOD_DETACHED"
-  | "MANDATE_CREATED";
+  | "MANDATE_CREATED"
+  | "MANDATE_REVOKED"
+
+  // ── Catalog (Product & Price Synchronization) ────────────────────────────────
+  | "PRODUCT_CREATED"
+  | "PRODUCT_UPDATED"
+  | "PRODUCT_DELETED"
+  | "PRICE_CREATED"
+  | "PRICE_UPDATED"
+  | "PRICE_DELETED";
 
 /**
- * Represents a normalized, provider-agnostic event within the Revstack ecosystem.
- * * This interface acts as the "Universal Translator" between different payment
- * gateways (Stripe, Polar, PayPal) and the Revstack Cloud, ensuring that the
- * business logic remains decoupled from provider-specific implementation details.
+ * Master dictionary that maps an EventType string literal to its corresponding payload interface.
+ * Enables strict discriminated unions and IDE autocompletion on `event.data`.
  */
-export interface RevstackEvent {
-  /**
-   * The normalized event category (e.g., 'PAYMENT_SUCCEEDED', 'SUBSCRIPTION_CANCELED').
-   * Used by the Cloud orchestrator to route business logic.
-   */
-  type: EventType;
+export interface EventPayloadMap {
+  // Payments
+  PAYMENT_CREATED: PaymentPayload;
+  PAYMENT_AUTHORIZED: PaymentPayload;
+  PAYMENT_CAPTURED: PaymentPayload;
+  PAYMENT_PROCESSING: PaymentPayload;
+  PAYMENT_SUCCEEDED: PaymentPayload;
+  PAYMENT_FAILED: PaymentPayload;
+  PAYMENT_CANCELED: PaymentPayload;
 
-  /**
-   * The unique identifier assigned to this specific event instance by the provider.
-   * Crucial for idempotency checks to prevent processing the same event multiple times.
-   */
+  // Refunds
+  REFUND_CREATED: RefundPayload;
+  REFUND_PROCESSED: RefundPayload;
+  REFUND_FAILED: RefundPayload;
+
+  // Disputes
+  DISPUTE_CREATED: DisputePayload;
+  DISPUTE_UPDATED: DisputePayload;
+  DISPUTE_WON: DisputePayload;
+  DISPUTE_LOST: DisputePayload;
+
+  // Checkouts
+  CHECKOUT_CREATED: CheckoutPayload;
+  CHECKOUT_COMPLETED: CheckoutPayload;
+  CHECKOUT_EXPIRED: CheckoutPayload;
+  CHECKOUT_CANCELED: CheckoutPayload;
+
+  // Subscriptions
+  SUBSCRIPTION_CREATED: SubscriptionPayload;
+  SUBSCRIPTION_UPDATED: SubscriptionPayload;
+  SUBSCRIPTION_RENEWED: SubscriptionPayload;
+  SUBSCRIPTION_PAST_DUE: SubscriptionPayload;
+  SUBSCRIPTION_CANCELED: SubscriptionPayload;
+  SUBSCRIPTION_REVOKED: SubscriptionPayload;
+  SUBSCRIPTION_PAUSED: SubscriptionPayload;
+  SUBSCRIPTION_RESUMED: SubscriptionPayload;
+  SUBSCRIPTION_TRIAL_WILL_END: SubscriptionPayload;
+
+  // Invoices
+  INVOICE_CREATED: InvoicePayload;
+  INVOICE_FINALIZED: InvoicePayload;
+  INVOICE_PAID: InvoicePayload;
+  INVOICE_PAYMENT_FAILED: InvoicePayload;
+  INVOICE_VOIDED: InvoicePayload;
+  INVOICE_UNCOLLECTIBLE: InvoicePayload;
+
+  // Customers & Instruments
+  CUSTOMER_CREATED: CustomerPayload;
+  CUSTOMER_UPDATED: CustomerPayload;
+  CUSTOMER_DELETED: CustomerPayload;
+  PAYMENT_METHOD_ATTACHED: PaymentMethodPayload;
+  PAYMENT_METHOD_UPDATED: PaymentMethodPayload;
+  PAYMENT_METHOD_DETACHED: PaymentMethodPayload;
+  MANDATE_CREATED: MandatePayload;
+  MANDATE_REVOKED: MandatePayload;
+
+  // Catalog
+  PRODUCT_CREATED: ProductPayload;
+  PRODUCT_UPDATED: ProductPayload;
+  PRODUCT_DELETED: ProductPayload;
+  PRICE_CREATED: PricePayload;
+  PRICE_UPDATED: PricePayload;
+  PRICE_DELETED: PricePayload;
+}
+
+/**
+ * Base properties that every Revstack event must carry, regardless of type.
+ * Acts as the standardized envelope for webhook processing.
+ */
+export interface BaseRevstackEvent<T extends EventType> {
+  /** The normalized event type used for routing (e.g., 'PAYMENT_SUCCEEDED'). */
+  type: T;
+
+  /** The provider's unique ID for this event — used for idempotency checks. */
   providerEventId: string;
 
-  /**
-   * The timestamp when the event was originally generated by the provider.
-   */
+  /** The exact timestamp when the provider originally emitted the event. */
   createdAt: Date;
 
-  /**
-   * The primary identifier of the underlying resource affected by this event.
-   * - For payments: typically the Payment Intent ID (pi_...)
-   * - For subscriptions: the Subscription ID (sub_...)
-   * This ID should be usable in 'getPayment' or 'getSubscription' methods.
-   */
+  /** The primary ID of the underlying resource affected by this event (e.g., pi_123, sub_456). */
   resourceId: string;
 
-  /**
-   * The provider-specific customer identifier (e.g., 'cus_...').
-   * Helps in quickly mapping the event to a specific account in the provider's dashboard.
-   */
+  /** The provider's customer ID, used to map the event to an account without extra lookups. */
   customerId?: string;
 
-  /**
-   * The internal Revstack identifier (e.g., User ID or Workspace ID) provided
-   * during the creation of the resource.
-   * * This is the "Golden Thread" for database reconciliation: it allows the Cloud
-   * to immediately identify which local entity owns the event without extra API lookups.
-   */
-  clientReferenceId?: string;
-
-  /**
-   * A flexible dictionary for normalized or injected metadata.
-   * * Should contain:
-   * 1. Business-level metadata passed during resource creation (e.g., plan_id).
-   * 2. Provider-specific hints (e.g., { stripeType: 'checkout.session.completed' }).
-   * 3. Tracing information (e.g., { revstack_trace_id: '...' }).
-   */
+  /** Flexible dictionary for injected metadata or tracing information. */
   metadata?: Record<string, any>;
 
-  /**
-   * The complete, unaltered raw payload received from the provider's webhook.
-   * Primarily used for deep debugging or extracting non-standard fields that
-   * are not yet part of the normalized Revstack contract.
-   */
+  /** The unaltered raw JSON payload received from the provider (useful for auditing). */
   originalPayload: any;
+
+  /**
+   * The strictly-typed payload containing the financial/operational details of the event.
+   * Its shape is determined by the `type` property (discriminated union).
+   */
+  data: EventPayloadMap[T];
 }
 
+/**
+ * The final RevstackEvent type — a discriminated union of all possible event shapes.
+ * Narrowing via `event.type === "PAYMENT_SUCCEEDED"` guarantees `event.data` is `PaymentPayload`.
+ */
+export type RevstackEvent = {
+  [K in EventType]: BaseRevstackEvent<K>;
+}[EventType];
+
+/**
+ * The standard response expected by the provider to acknowledge a processed webhook.
+ */
 export interface WebhookResponse {
+  /** HTTP status code (usually 200). */
   statusCode: number;
+  /** Response body (often empty or provider-specific). */
   body: any;
 }
+
+/** A handler function that processes a raw provider webhook payload into a RevstackEvent. */
+export type WebhookEventHandler = (raw: any) => RevstackEvent | null;

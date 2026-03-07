@@ -16,7 +16,6 @@ import {
   InstallInput,
   InstallResult,
   PaginatedResult,
-  PaginationOptions,
   Payment,
   PaymentMethod,
   ProviderContext,

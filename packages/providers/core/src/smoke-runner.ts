@@ -10,7 +10,7 @@ export interface SmokeConfig {
 }
 
 export async function runSmoke(config: SmokeConfig) {
-  const method = process.argv[2] || "onInstall";
+  const method = process.argv[2] || "all";
 
   const providerName = config.manifest.name;
   console.log(`\n🚬 \x1b[36mSmoking Provider:\x1b[0m ${providerName}`);
@@ -23,6 +23,29 @@ export async function runSmoke(config: SmokeConfig) {
         .map((k) => `  - ${k}`)
         .join("\n"),
     );
+    return;
+  }
+
+  if (method === "all") {
+    console.log("🏃 \x1b[35mRunning full automated suite...\x1b[0m");
+    console.log("───────────────────────────────────");
+    console.time("⏱️ Total Suite Time");
+
+    for (const [name, scenario] of Object.entries(config.scenarios)) {
+      try {
+        process.stdout.write(`▶️  Scenario [\x1b[33m${name}\x1b[0m]: `);
+        await scenario(config.ctx);
+        console.log("\x1b[32m✅ SUCCESS\x1b[0m");
+      } catch (e: any) {
+        console.log("\x1b[31m❌ FAILED\x1b[0m");
+        console.error(`\n🔥 \x1b[31mError in '${name}':\x1b[0m`, e.message);
+        process.exit(1);
+      }
+    }
+
+    console.log("───────────────────────────────────");
+    console.timeEnd("⏱️ Total Suite Time");
+    console.log("\n✨ \x1b[32mAll scenarios passed successfully!\x1b[0m\n");
     return;
   }
 

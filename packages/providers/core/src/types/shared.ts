@@ -21,6 +21,8 @@ export type Interval = "day" | "week" | "month" | "year";
 
 export type PricingType = "one_time" | "recurring";
 
+export type NextActionType = "redirect" | "url_load" | "show_modal";
+
 export type AsyncActionResult<T> = {
   /** result data payload */
   data: T | null;
@@ -29,7 +31,7 @@ export type AsyncActionResult<T> = {
   /** next action required */
   nextAction?: {
     /** next action type */
-    type: "redirect" | "url_load" | "show_modal";
+    type: NextActionType;
     /** action url */
     url?: string;
     /** provider payload */

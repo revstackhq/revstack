@@ -110,7 +110,7 @@ export const manifest: ProviderManifest = {
       "MXN",
     ],
   },
-  supportedPaymentMethods: ["card", "apple_pay", "google_pay", "amazon_pay"],
+  supportedPaymentMethods: ["card", "wallet"],
   systemTraits: {
     hasNativeIdempotency: true,
     sandboxStrategy: "separate_credentials",
@@ -153,10 +153,6 @@ export const manifest: ProviderManifest = {
     webhooks: {
       supported: true,
       verification: "signature",
-    },
-    catalog: {
-      supported: true,
-      strategy: "inline",
     },
   },
   author: "Revstack",

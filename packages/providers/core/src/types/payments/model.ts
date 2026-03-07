@@ -1,102 +1,108 @@
-import { LineItem } from "@/types/catalog";
+import { LineItem } from "../catalog/model";
+import { PaymentMethod } from "../paymentMethods/model";
 
+/**
+ * Standardized lifecycle states for a Revstack Payment.
+ * Abstracts away provider-specific statuses into a unified financial state machine.
+ */
 export enum PaymentStatus {
-  /** created but not yet processed */
+  /** Payment initialized but waiting for the customer to provide payment details. */
   Pending = "pending",
-  /** requires additional user action (e.g., 3DS authentication) */
+  /** Payment requires customer authentication (e.g., 3D Secure / SCA). */
   RequiresAction = "requires_action",
-  /** authorized but not captured yet */
+  /** Payment is currently processing (common for asynchronous methods like ACH or SEPA). */
+  Processing = "processing",
+  /** Funds have been held/authorized on the customer's instrument, awaiting capture. */
   Authorized = "authorized",
-  /** completed successfully */
+  /** Payment has been successfully completed and funds are captured. */
   Succeeded = "succeeded",
-  /** failed */
+  /** Payment attempt was declined or failed by the network. */
   Failed = "failed",
-  /** canceled */
+  /** Payment was voided or canceled prior to capture. */
   Canceled = "canceled",
-  /** fully refunded */
+
+  // ─── Post-Capture States ───────────────────────────────────────────────────
+
+  /** The entire captured amount has been refunded to the customer. */
   Refunded = "refunded",
-  /** partially refunded */
+  /** A portion of the captured amount has been refunded. */
   PartiallyRefunded = "partially_refunded",
-  /** under dispute */
+  /** The payment is currently being contested by the customer's bank (Chargeback). */
   Disputed = "disputed",
 }
 
-export type PaymentMethodDetails = {
-  /** The high-level payment method category. */
-  type: "card" | "bank_transfer" | "wallet" | "crypto" | "checkout";
-  /** The card/wallet brand (e.g., visa, mastercard). */
-  brand?: string;
-  /** Last 4 digits for card-like instruments. */
-  last4?: string;
-  /** Customer email when available (e.g., wallet payments). */
-  email?: string;
-  /** Card expiry month (1-12) when available. */
-  expiryMonth?: number;
-  /** Card expiry year (4-digit) when available. */
-  expiryYear?: number;
-  /** The cardholder name when available. */
-  cardHolderName?: string;
-  /** The bank name for bank transfer methods when available. */
-  bankName?: string;
-};
+/**
+ * Granular breakdown of the total payment amount.
+ */
+export interface PaymentAmountDetails {
+  /** The base amount before taxes or discounts, in the smallest currency unit. */
+  subtotal: number;
+  /** Total tax collected. */
+  tax: number;
+  /** Total discount applied. */
+  discount: number;
+  /** Shipping costs applied, if any. */
+  shipping?: number;
+  /** Provider processing fees (e.g., Stripe network fees), if visible at transaction time. */
+  fee?: number;
+}
 
-export type Payment = {
-  /** revstack internal id */
+/**
+ * The Universal Payment Entity.
+ * Represents a single financial transaction record in the Revstack ecosystem.
+ */
+export interface Payment {
+  /** Revstack internal payment ID (e.g., pay_123). */
   id: string;
-  /** provider slug (e.g. "stripe") */
+  /** The provider slug handling this payment (e.g., 'stripe', 'polar', 'mercadopago'). */
   providerId: string;
-  /** external provider id (e.g. stripe pi_xxx) */
+  /** External provider ID (e.g., Stripe's pi_xxx). */
   externalId: string;
-  /** amount in cents */
+
+  /** Total amount captured, in the smallest currency unit (e.g., cents). */
   amount: number;
-  /** iso currency (e.g. USD) */
+  /** Three-letter ISO 4217 currency code, in lowercase. */
   currency: string;
-  /** normalized revstack status */
+  /** The normalized operational state of the payment. */
   status: PaymentStatus;
 
-  /** amount breakdown */
-  amountDetails?: {
-    /** subtotal in cents */
-    subtotal: number;
-    /** tax in cents */
-    tax: number;
-    /** shipping in cents */
-    shipping: number;
-    /** discount in cents */
-    discount: number;
-    /** fee in cents */
-    fee?: number;
-  };
+  /** Granular breakdown of the total amount. */
+  amountDetails?: PaymentAmountDetails;
 
-  /** refunded amount in cents */
+  /** The total amount that has been refunded so far, in the smallest currency unit. */
   amountRefunded: number;
 
-  /** payment method details when available. */
-  method?: PaymentMethodDetails;
-  /** optional description */
-  description?: string;
+  /** The ID of the saved PaymentMethod used for this transaction. */
+  paymentMethodId?: string;
+  /** * A point-in-time snapshot of the payment instrument used.
+   * Utilizes the discriminated union from the paymentMethods domain.
+   */
+  paymentMethodSnapshot?: PaymentMethod;
 
-  /** bank statement descriptor */
+  /** Optional human-readable description for internal tracking. */
+  description?: string;
+  /** The dynamic text that will appear on the customer's bank statement. */
   statementDescriptor?: string;
 
-  /** revstack customer id */
+  /** Revstack internal customer ID. */
   customerId?: string;
-  /** external customer id */
+  /** External provider customer ID (e.g., cus_xxx). */
   externalCustomerId?: string;
 
-  /** provider failure code, when the payment fails. */
+  /** The provider's standardized decline code (e.g., 'insufficient_funds'). */
   failureCode?: string;
-  /** failure message, when the payment fails. */
+  /** Human-readable explanation of the failure provided by the network. */
   failureMessage?: string;
 
-  /** iso created at */
-  createdAt: string;
-  /** iso updated at */
-  updatedAt?: string;
-  /** custom metadata */
+  /** Exact timestamp when the payment was initiated. */
+  createdAt: Date;
+  /** Exact timestamp of the last state mutation. */
+  updatedAt?: Date;
+
+  /** Arbitrary key-value store for custom business logic mapping. */
   metadata?: Record<string, any>;
-  /** purchased line items if available */
+  /** Optional list of purchased items attached to this transaction. */
   lineItems?: LineItem[];
-  /** raw provider payload */
+  /** The raw JSON payload from the provider for deep auditing and debugging. */
   raw?: any;
-};
+}
