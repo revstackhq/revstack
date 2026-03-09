@@ -20,7 +20,12 @@ function findSummaries(dir) {
   const entries = fs.readdirSync(dir, { withFileTypes: true });
   for (const entry of entries) {
     if (entry.isDirectory()) {
-      if (["node_modules", ".git", "dist"].includes(entry.name)) continue;
+      if (
+        ["node_modules", ".git", "dist", "official", "community"].includes(
+          entry.name,
+        )
+      )
+        continue;
       if (entry.name === "coverage") {
         const summaryPath = path.join(dir, entry.name, "coverage-summary.json");
         if (fs.existsSync(summaryPath)) summaries.push(summaryPath);

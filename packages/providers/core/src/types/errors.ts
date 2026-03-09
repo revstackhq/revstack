@@ -74,6 +74,10 @@ export const RevstackErrorCode = {
   // --- 10. PROMOTIONS ---
   InvalidPromoCode: "invalid_promo_code",
   PromoCodeExpired: "promo_code_expired",
+
+  // --- 11. LIFECYCLE EXPIRY ---
+  ResourceExpired: "resource_expired", // Coupon, payment link, or promo code has expired
+  TrialExpired: "trial_expired", // Free trial period has ended without conversion
 } as const;
 
 export type RevstackErrorCode =
@@ -170,6 +174,11 @@ export class RevstackError extends Error {
       case RevstackErrorCode.InvalidPromoCode:
       case RevstackErrorCode.PromoCodeExpired:
         return 422;
+
+      // 410 Gone (Expired resources)
+      case RevstackErrorCode.ResourceExpired:
+      case RevstackErrorCode.TrialExpired:
+        return 410;
 
       // 429 Too Many Requests
       case RevstackErrorCode.RateLimitExceeded:

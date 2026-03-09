@@ -1,4 +1,8 @@
-import { ProviderContext, AsyncActionResult } from "@revstackhq/providers-core";
+import {
+  ProviderContext,
+  AsyncActionResult,
+  RevstackErrorCode,
+} from "@revstackhq/providers-core";
 import { getOrCreateClient } from "@/api/v1/client";
 
 /**
@@ -30,7 +34,15 @@ export async function verifyWebhookSignature(
   try {
     stripe.webhooks.constructEvent(payload, signature, secret);
     return { data: true, status: "success" };
-  } catch {
-    return { data: false, status: "failed" };
+  } catch (error: any) {
+    return {
+      data: null,
+      status: "failed",
+      error: {
+        code: RevstackErrorCode.WebhookSignatureVerificationFailed,
+        providerError: "stripe_signature",
+        message: error.message || "Invalid signature",
+      },
+    };
   }
 }

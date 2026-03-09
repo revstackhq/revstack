@@ -6,8 +6,9 @@
     "paths": {
       "@/*": ["src/*"]
     },
+    "resolveJsonModule": true,
     "noEmit": false
   },
-  "include": ["src", "tests", "../registry/src/loader.ts"],
+  "include": ["src", "tests"],
   "exclude": ["dist", "node_modules"]
 }

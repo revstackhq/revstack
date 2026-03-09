@@ -3,6 +3,7 @@ import {
   PricePayload,
   PriceMapper,
   fromUnixSeconds,
+  normalizeCurrency,
 } from "@revstackhq/providers-core";
 
 /**
@@ -19,7 +20,7 @@ export const toPrice: PriceMapper = (raw) => {
         ? price.product
         : (price.product?.id ?? ""),
     createdAt: fromUnixSeconds(price.created),
-    currency: price.currency,
+    currency: normalizeCurrency(price.currency, "uppercase"),
     unitAmount: price.unit_amount ?? 0,
     active: price.active,
     metadata: price.metadata,

@@ -32,6 +32,7 @@ export async function createProduct(
         tax_code: stripeTaxCode,
         metadata: {
           ...input.metadata,
+          revstack_category: input.category ?? "saas",
           revstack_trace_id: ctx.traceId || null,
         },
       },

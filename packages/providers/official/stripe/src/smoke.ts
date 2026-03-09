@@ -1,26 +1,14 @@
 import { StripeProvider } from "@/provider";
 import { ProviderContext, runSmoke } from "@revstackhq/providers-core";
+import { runLifecycleScenario } from "@/smoke/lifecycle";
 import Stripe from "stripe";
 import dotenv from "dotenv";
 import path from "path";
 import { fileURLToPath } from "url";
-import fs from "fs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 dotenv.config({ path: path.resolve(__dirname, "../.env.test") });
-
-const loadWebhookMock = (fileName: string) => {
-  const filePath = path.resolve(
-    __dirname,
-    `../src/mocks/webhooks/${fileName}.json`,
-  );
-
-  console.log(filePath);
-  return JSON.parse(fs.readFileSync(filePath, "utf-8"));
-};
-
-// ─── CONFIGURATION ────────────────────────────────────────────────────────────
 
 const STRIPE_API_VERSION = "2026-02-25.clover";
 const provider = new StripeProvider();
@@ -66,6 +54,7 @@ runSmoke({
   provider,
   ctx,
   manifest: StripeProvider.manifest,
+  bail: false,
   scenarios: {
     // ─── CATALOG & PROMOTIONS ─────────────────────────────────────────────────
 
@@ -207,6 +196,18 @@ runSmoke({
         config: c.config,
         data: { webhookEndpointId: STATE.webhookEndpointId },
       });
+    },
+
+    // ─── TIME-TRAVEL LIFECYCLE ────────────────────────────────────────────────
+    // Run via: pnpm smoke stripe lifecycle
+    // Requires STRIPE_PRICE_ID (a recurring monthly price) in .env.test
+
+    lifecycle: async (c) => {
+      const priceId = process.env.STRIPE_RECURRING_PRICE_ID;
+      if (!priceId)
+        throw new Error("STRIPE_RECURRING_PRICE_ID not set in .env.test");
+      await runLifecycleScenario(c, priceId);
+      return { status: "success" };
     },
   },
 });

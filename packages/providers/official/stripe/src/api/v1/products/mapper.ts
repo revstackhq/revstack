@@ -2,6 +2,7 @@ import Stripe from "stripe";
 import {
   ProductPayload,
   ProductMapper,
+  ProductCategory,
   fromUnixSeconds,
 } from "@revstackhq/providers-core";
 
@@ -9,14 +10,20 @@ import {
  * Empty ProductMapper for scaffolding. Replace with actual entity fields when needed.
  */
 export const toProduct: ProductMapper = (raw) => {
+  const product = raw as Stripe.Product;
+
+  const category: ProductCategory =
+    (product.metadata?.revstack_category as ProductCategory) ?? "saas";
+
   return {
-    id: raw.id,
-    createdAt: fromUnixSeconds(raw.created),
-    images: raw.images,
-    name: raw.name,
-    description: raw.description ?? undefined,
-    active: raw.active,
-    metadata: raw.metadata,
+    id: product.id,
+    createdAt: fromUnixSeconds(product.created),
+    images: product.images ?? [],
+    name: product.name,
+    description: product.description ?? undefined,
+    active: product.active,
+    category,
+    metadata: product.metadata,
     providerId: "stripe",
     raw,
   };
