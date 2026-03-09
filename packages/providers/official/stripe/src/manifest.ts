@@ -144,6 +144,7 @@ export const manifest: ProviderManifest = {
       supported: true,
       mode: "native",
       features: {
+        multiItem: true,
         cancellation: true,
         pause: true,
         resume: true,
@@ -153,6 +154,18 @@ export const manifest: ProviderManifest = {
     webhooks: {
       supported: true,
       verification: "signature",
+    },
+    billing: {
+      invoiceItems: true,
+      invoices: true,
+      metered: "invoiced",
+      paymentLinks: true,
+    },
+    catalog: {
+      syncStrategy: "inline",
+    },
+    promotions: {
+      coupons: "native",
     },
   },
   author: "Revstack",
@@ -170,6 +183,14 @@ export const manifest: ProviderManifest = {
         pattern: "^sk_(test|live)_[a-zA-Z0-9]+$",
         errorMessage: "Must start with sk_test_ or sk_live_",
       },
+      useStripeTax: {
+        label: "Enable Stripe Tax",
+        type: "switch",
+        secure: false,
+        required: false,
+        description:
+          "Automatically calculate taxes using Stripe Tax. (Ensure it is configured in your Stripe Dashboard first).",
+      },
     },
     response: {
       webhookEndpointId: {
@@ -183,6 +204,10 @@ export const manifest: ProviderManifest = {
       apiKey: {
         secure: true,
         description: "Stripe Secret API Key",
+      },
+      useStripeTax: {
+        secure: false,
+        description: "Flag indicating if Stripe Tax is enabled",
       },
     },
   },

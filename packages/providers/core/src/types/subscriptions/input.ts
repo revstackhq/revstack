@@ -1,5 +1,6 @@
 import { LineItem } from "@/types/catalog";
-import { PaginationOptions, Interval } from "@/types/shared";
+import { PaginationOptions, Interval, ProrationBehavior } from "@/types/shared";
+import { ReportUsageAction } from "@/types/subscriptions/model";
 
 export type CreateSubscriptionInput = {
   /** external reference id for webhooks (e.g. internal user or order id) */
@@ -18,8 +19,6 @@ export type CreateSubscriptionInput = {
   promotionCodeId?: string;
   /** allow promo codes input box on the hosted checkout */
   allowPromotionCodes?: boolean;
-  /** enable automatic tax calculation */
-  automaticTax?: boolean;
   /** custom metadata */
   metadata?: Record<string, any>;
   /** trial interval for subscription line items */
@@ -52,7 +51,7 @@ export type UpdateSubscriptionInput = {
   /** The items to update, add, or remove */
   lineItems?: UpdateSubscriptionItem[];
 
-  proration?: "create_prorations" | "none" | "always_invoice";
+  proration?: ProrationBehavior;
   trialEnd?: string;
   metadata?: Record<string, any>;
 };
@@ -71,4 +70,39 @@ export type GetSubscriptionInput = { id: string };
 
 export interface ListSubscriptionsOptions extends PaginationOptions {
   filters?: Record<string, any>;
+}
+
+/**
+ * Input parameters for simulating a subscription change (upgrade/downgrade).
+ */
+export interface PreviewSubscriptionUpdateInput {
+  /** The ID of the active subscription being modified. */
+  subscriptionId: string;
+  /** * The new state of the subscription items.
+   * This should represent the full final state, not just the delta.
+   */
+  items: Array<{
+    /** The provider's catalog price ID. */
+    priceId: string;
+    /** The new quantity for this item. */
+    quantity: number;
+  }>;
+  /** * Forces the provider to calculate the exact pro-rata difference based on the current date.
+   * Defaults to calculating prorations without generating an actual invoice.
+   */
+  prorationBehavior?: ProrationBehavior;
+}
+
+/**
+ * The expected output from simulating a subscription update.
+ */
+export interface ProrationPreviewResult {
+  /** The exact amount the user will be charged immediately (or on the next invoice) for the prorated difference. */
+  immediateChargeAmount: number;
+  /** The new recurring total that the user will pay on all subsequent billing cycles. */
+  newRecurringAmount: number;
+  /** The 3-letter ISO currency code. */
+  currency: string;
+  /** The exact timestamp used to calculate the pro-rata math. */
+  prorationDate: Date;
 }

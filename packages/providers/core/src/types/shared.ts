@@ -15,7 +15,13 @@ export type Address = {
 
 export type ActionStatus = "success" | "pending" | "requires_action" | "failed";
 
-export type ProrationBehavior = "create_prorations" | "none" | "always_invoice";
+export type ProrationBehavior =
+  /** Do not prorate. The user loses the remaining time on their old plan. */
+  | "none"
+  /** Calculate the difference and charge/credit the user on their next regular cycle. (Stripe's 'create_prorations') */
+  | "deferred"
+  /** Calculate the difference and bill the customer immediately for the upgrade. (Stripe's 'always_invoice') */
+  | "immediate";
 
 export type Interval = "day" | "week" | "month" | "year";
 
@@ -49,15 +55,15 @@ export type AsyncActionResult<T> = {
 };
 
 export type PaginationOptions = {
-  /** max limit */
+  /** The maximum number of items to return. */
   limit?: number;
-  /** pagination cursor */
+
+  /** The reference ID (cursor) to start fetching from. */
   cursor?: string;
-  /** external startingAfter cursor */
-  startingAfter?: string;
-  /** external endingBefore cursor */
-  endingBefore?: string;
-  /** page number */
+  /** The direction to paginate relative to the cursor. Defaults to "forward". */
+  direction?: "forward" | "backward";
+
+  /** The explicit page number to fetch. (Overrides cursor if provided). */
   page?: number;
 };
 

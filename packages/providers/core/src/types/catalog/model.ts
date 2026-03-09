@@ -3,11 +3,25 @@ import { Interval, PricingType } from "@/types/shared";
 /** Structural pricing model for a price object. */
 export type PriceBillingScheme = "per_unit" | "tiered";
 
+/**
+ * Universal product taxonomy for Revstack.
+ * Used internally to map to provider-specific tax codes and reporting metrics.
+ */
+export type ProductCategory =
+  | "saas" // Software as a Service (Cloud)
+  | "digital_goods" // Downloadables, eBooks, MP3s
+  | "physical" // Tangible goods shipped to a customer
+  | "consulting" // Professional services, hourly work
+  | "education" // Online courses, coaching
+  | "donations"; // Non-profit, tips
+
 export type Product = {
   /** provider external product ID (e.g., `prod_xxx`) */
   id: string;
   /** product name */
   name: string;
+  /** product category */
+  category: ProductCategory;
   /** product description */
   description?: string;
   /** product images */
@@ -50,27 +64,4 @@ export type CatalogLineItem = {
   quantity: number;
 };
 
-export type CustomLineItem = {
-  /** item name */
-  name: string;
-  /** unit amount in cents */
-  amount: number;
-  /** iso currency (e.g. USD) */
-  currency: string;
-  /** quantity to purchase */
-  quantity: number;
-
-  /** optional item description */
-  description?: string;
-  /** optional item image urls */
-  images?: string[];
-  /** recurring interval for subscription line items */
-  interval?: Interval;
-
-  /** trial interval for subscription line items */
-  trialInterval?: Interval;
-  /** trial interval count for subscription line items */
-  trialIntervalCount?: number;
-};
-
-export type LineItem = CatalogLineItem | CustomLineItem;
+export type LineItem = CatalogLineItem;

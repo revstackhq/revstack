@@ -3,22 +3,33 @@ import {
   ProviderContext,
   UpdateSubscriptionInput,
   AsyncActionResult,
- toUnixSeconds } from "@revstackhq/providers-core";
+  toUnixSeconds,
+  RevstackError,
+  RevstackErrorCode,
+  ProrationBehavior,
+} from "@revstackhq/providers-core";
 import Stripe from "stripe";
 import { getOrCreateClient } from "@/api/v1/client";
 
-/**
- * Builds the provider-specific update params from the Revstack UpdateSubscriptionInput.
- * Handles price swaps, quantity changes, and trial end date calculations.
- */
+function mapProrationBehavior(
+  behavior: ProrationBehavior,
+): Stripe.SubscriptionUpdateParams.ProrationBehavior {
+  switch (behavior) {
+    case "immediate":
+      return "always_invoice";
+    case "deferred":
+      return "create_prorations";
+    default:
+      return "create_prorations";
+  }
+}
+
 async function buildUpdateParams(
-  stripe: Stripe,
-  id: string,
   input: UpdateSubscriptionInput,
 ): Promise<Stripe.SubscriptionUpdateParams> {
   const updateParams: Stripe.SubscriptionUpdateParams = {
     metadata: input.metadata,
-    proration_behavior: input.proration || "create_prorations",
+    proration_behavior: mapProrationBehavior(input.proration ?? "none"),
   };
 
   if (input.lineItems && input.lineItems.length > 0) {
@@ -28,10 +39,11 @@ async function buildUpdateParams(
           id: item.id,
           price: item.priceId,
           quantity: item.quantity,
-          deleted: item.deleted,
+          deleted: item.deleted || undefined,
           metadata: item.metadata,
         };
       }
+
       if (item.priceId) {
         return {
           price: item.priceId,
@@ -39,37 +51,38 @@ async function buildUpdateParams(
           metadata: item.metadata,
         };
       }
-      throw new Error(
-        "Subscription update requires either an item 'id' or a 'priceId'.",
-      );
+
+      throw new RevstackError({
+        code: RevstackErrorCode.InvalidInput,
+        cause: "subscription_update_item",
+        message:
+          "Subscription update item requires either an internal provider 'id' or a 'priceId'.",
+      });
     });
   }
 
   if (input.trialEnd) {
-    updateParams.trial_end =
-      input.trialEnd === "now"
-        ? "now"
-        : toUnixSeconds(new Date(input.trialEnd));
+    if (input.trialEnd === "now") {
+      updateParams.trial_end = "now";
+    } else {
+      const date =
+        typeof input.trialEnd === "string"
+          ? new Date(input.trialEnd)
+          : input.trialEnd;
+      updateParams.trial_end = toUnixSeconds(date);
+    }
   }
 
   return updateParams;
 }
 
-/**
- * Modifies core properties of an active subscription.
- * Handles price swaps, quantity changes, proration, and trial end extensions.
- *
- * @param ctx - The provider context.
- * @param input - The changes to apply (line items, metadata, trial end, etc.).
- * @returns An AsyncActionResult yielding the updated subscription ID.
- */
 export async function updateSubscription(
   ctx: ProviderContext,
   input: UpdateSubscriptionInput,
 ): Promise<AsyncActionResult<string>> {
   try {
     const stripe = getOrCreateClient(ctx.config.apiKey);
-    const updateParams = await buildUpdateParams(stripe, input.id, input);
+    const updateParams = await buildUpdateParams(input);
 
     const sub = await stripe.subscriptions.update(input.id, updateParams, {
       idempotencyKey: ctx.idempotencyKey,
@@ -77,8 +90,9 @@ export async function updateSubscription(
 
     return { data: sub.id, status: "success" };
   } catch (error: any) {
-    if (error.isRevstackError)
+    if (error.isRevstackError) {
       return { data: null, status: "failed", error: error.errorPayload };
+    }
     return { data: null, status: "failed", error: mapError(error) };
   }
 }

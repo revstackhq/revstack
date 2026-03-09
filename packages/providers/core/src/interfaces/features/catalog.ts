@@ -1,8 +1,6 @@
 import { ProviderContext } from "@/context";
 import {
-  ProductInput,
   Product,
-  PriceInput,
   Price,
   GetProductInput,
   ListProductsOptions,
@@ -10,6 +8,8 @@ import {
   DeleteProductInput,
   GetPriceInput,
   ListPricesOptions,
+  CreateProductInput,
+  CreatePriceInput,
 } from "@/types/catalog";
 import { AsyncActionResult, PaginatedResult } from "@/types/shared";
 
@@ -25,7 +25,7 @@ export interface ICatalogFeature {
    */
   createProduct?(
     ctx: ProviderContext,
-    input: ProductInput,
+    input: CreateProductInput,
   ): Promise<AsyncActionResult<string>>;
 
   /**
@@ -65,7 +65,7 @@ export interface ICatalogFeature {
    */
   createPrice?(
     ctx: ProviderContext,
-    input: PriceInput,
+    input: CreatePriceInput,
   ): Promise<AsyncActionResult<string>>;
 
   /**

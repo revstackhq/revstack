@@ -30,19 +30,12 @@ export type CreatePaymentInput = {
   shippingAddress?: Address;
   /** custom metadata */
   metadata?: Record<string, any>;
-  /** provider specific options */
-  providerOptions?: any;
-
   /** inline checkout line items */
   lineItems: [LineItem, ...LineItem[]];
-
-  /** enable automatic tax calculation (e.g., Stripe Tax, Polar automatic tax) */
-  automaticTax?: boolean;
   /** automatically apply a specific provider promotion code ID */
   promotionCodeId?: string;
   /** allow promo codes input box on the hosted checkout */
   allowPromotionCodes?: boolean;
-
   /** Save payment method for future use */
   savePaymentMethod?: boolean;
 };

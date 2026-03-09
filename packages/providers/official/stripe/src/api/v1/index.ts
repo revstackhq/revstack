@@ -23,6 +23,22 @@ import {
   ListCustomersOptions,
   DeletePaymentMethodInput,
   ListPaymentMethodsOptions,
+  PreviewSubscriptionUpdateInput,
+  CreateProductInput,
+  GetProductInput,
+  UpdateProductInput,
+  DeleteProductInput,
+  ListProductsOptions,
+  CreatePriceInput,
+  GetPriceInput,
+  ListPricesOptions,
+  AddInvoiceItemInput,
+  CreatePaymentLinkInput,
+  GetInvoiceInput,
+  ListInvoicesOptions,
+  CreateCouponInput,
+  GetCouponInput,
+  CreateInvoiceInput,
 } from "@revstackhq/providers-core";
 
 import * as payments from "@/api/v1/payments";
@@ -31,6 +47,9 @@ import * as checkout from "@/api/v1/checkout";
 import * as customers from "@/api/v1/customers";
 import * as webhooks from "@/api/v1/webhooks";
 import * as paymentMethods from "@/api/v1/payment-methods";
+import * as catalog from "@/api/v1/catalog";
+import * as promotions from "@/api/v1/promotions";
+import * as invoices from "@/api/v1/invoices";
 
 export class StripeClientV1 implements ProviderClient {
   // ===========================================================================
@@ -134,6 +153,13 @@ export class StripeClientV1 implements ProviderClient {
     return subscriptions.updateSubscription(ctx, input);
   }
 
+  previewSubscriptionUpdate(
+    ctx: ProviderContext,
+    input: PreviewSubscriptionUpdateInput,
+  ) {
+    return subscriptions.previewSubscriptionUpdate(ctx, input);
+  }
+
   // ===========================================================================
   // CHECKOUT
   // ===========================================================================
@@ -144,6 +170,10 @@ export class StripeClientV1 implements ProviderClient {
 
   createBillingPortalSession(ctx: ProviderContext, input: BillingPortalInput) {
     return checkout.createBillingPortalSession(ctx, input);
+  }
+
+  createPaymentLink(ctx: ProviderContext, input: CreatePaymentLinkInput) {
+    return checkout.createPaymentLink(ctx, input);
   }
 
   // ===========================================================================
@@ -168,5 +198,73 @@ export class StripeClientV1 implements ProviderClient {
 
   listCustomers(ctx: ProviderContext, options: ListCustomersOptions) {
     return customers.listCustomers(ctx, options);
+  }
+
+  // ===========================================================================
+  // CATALOG (PRODUCTS & PRICES)
+  // ===========================================================================
+
+  createProduct(ctx: ProviderContext, input: CreateProductInput) {
+    return catalog.createProduct(ctx, input);
+  }
+
+  getProduct(ctx: ProviderContext, input: GetProductInput) {
+    return catalog.getProduct(ctx, input);
+  }
+
+  updateProduct(ctx: ProviderContext, input: UpdateProductInput) {
+    return catalog.updateProduct(ctx, input);
+  }
+
+  deleteProduct(ctx: ProviderContext, input: DeleteProductInput) {
+    return catalog.deleteProduct(ctx, input);
+  }
+
+  listProducts(ctx: ProviderContext, options: ListProductsOptions) {
+    return catalog.listProducts(ctx, options);
+  }
+
+  createPrice(ctx: ProviderContext, input: CreatePriceInput) {
+    return catalog.createPrice(ctx, input);
+  }
+
+  getPrice(ctx: ProviderContext, input: GetPriceInput) {
+    return catalog.getPrice(ctx, input);
+  }
+
+  listPrices(ctx: ProviderContext, options: ListPricesOptions) {
+    return catalog.listPrices(ctx, options);
+  }
+
+  // ===========================================================================
+  // INVOICES
+  // ===========================================================================
+
+  addInvoiceItem(ctx: ProviderContext, input: AddInvoiceItemInput) {
+    return invoices.addInvoiceItem(ctx, input);
+  }
+
+  createInvoice(ctx: ProviderContext, input: CreateInvoiceInput) {
+    return invoices.createInvoice(ctx, input);
+  }
+
+  getInvoice(ctx: ProviderContext, input: GetInvoiceInput) {
+    return invoices.getInvoice(ctx, input);
+  }
+
+  listInvoices(ctx: ProviderContext, options: ListInvoicesOptions) {
+    return invoices.listInvoices(ctx, options);
+  }
+
+  // ===========================================================================
+  // PROMOTIONS & DISCOUNTS
+  // ===========================================================================
+
+  createCoupon(ctx: ProviderContext, input: CreateCouponInput) {
+    return promotions.createCoupon(ctx, input);
+  }
+
+  getCoupon(ctx: ProviderContext, input: GetCouponInput) {
+    return promotions.getCoupon(ctx, input);
   }
 }

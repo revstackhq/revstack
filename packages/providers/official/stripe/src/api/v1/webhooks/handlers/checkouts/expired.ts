@@ -1,9 +1,4 @@
-import {
-  RevstackEvent,
-  CheckoutSessionMode,
-  CheckoutPaymentStatus,
-  fromUnixSeconds,
-} from "@revstackhq/providers-core";
+import { RevstackEvent, fromUnixSeconds } from "@revstackhq/providers-core";
 import { toCheckoutPayload } from "@/api/v1/checkout/mapper";
 import type Stripe from "stripe";
 

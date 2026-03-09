@@ -4,13 +4,10 @@ import {
   CheckoutSessionInput,
   CheckoutSessionResult,
   AsyncActionResult,
-  CustomLineItem,
-  CheckoutSessionMode,
-  LineItem,
   CatalogLineItem,
   getTrialDays,
-  normalizeCurrency,
   appendQueryParam,
+  normalizeCurrency,
 } from "@revstackhq/providers-core";
 import Stripe from "stripe";
 import { getOrCreateClient } from "@/api/v1/client";
@@ -18,46 +15,20 @@ import { mapError } from "@/shared/error-map";
 
 /**
  * Formats checkout line items into the provider's native format.
- * Routes to existing price IDs when available; otherwise builds inline price data.
- * Attaches recurring interval data for subscription-mode sessions.
+ * Since Revstack Cloud uses a JIT architecture, it guarantees that all items
+ * already have a native provider Price ID before hitting the SDK.
  */
 function formatLineItems(
-  items: LineItem[],
-  mode: CheckoutSessionMode,
+  items: CatalogLineItem[],
 ): Stripe.Checkout.SessionCreateParams.LineItem[] {
-  return items.map((item) => {
-    if ((item as CatalogLineItem).priceId) {
-      return {
-        price: (item as CatalogLineItem).priceId,
-        quantity: item.quantity,
-      };
-    }
-
-    const customItem = item as CustomLineItem;
-
-    const priceData: Stripe.Checkout.SessionCreateParams.LineItem.PriceData = {
-      currency: normalizeCurrency(customItem.currency, "uppercase"),
-      product_data: {
-        name: customItem.name || "Unknown",
-        description: customItem.description || undefined,
-        images: customItem.images || [],
-      },
-      unit_amount: customItem.amount,
-      tax_behavior: "unspecified",
-    };
-
-    if (mode === "subscription" && customItem.interval) {
-      priceData.recurring = { interval: customItem.interval };
-    }
-
-    return { price_data: priceData, quantity: customItem.quantity };
-  });
+  return items.map((item) => ({
+    price: item.priceId,
+    quantity: item.quantity,
+  }));
 }
 
 /**
  * Creates a hosted checkout session for payment, subscription, or setup flows.
- * Supports inline price data, existing price IDs, trial periods, automatic tax,
- * and saved payment method configuration.
  *
  * @param ctx - The provider context.
  * @param input - Session configuration: mode, line items, redirect URLs, metadata.
@@ -68,6 +39,9 @@ export async function createCheckoutSession(
   input: CheckoutSessionInput,
 ): Promise<AsyncActionResult<CheckoutSessionResult>> {
   const stripe = getOrCreateClient(ctx.config.apiKey);
+
+  const automaticTax =
+    ctx.config.useStripeTax === "true" || ctx.config.useStripeTax === true;
 
   try {
     const sessionParams: Stripe.Checkout.SessionCreateParams = {
@@ -83,15 +57,13 @@ export async function createCheckoutSession(
         : undefined,
       cancel_url: input.cancelUrl,
       customer: input.customerId,
-      currency: input.currency,
+      currency: normalizeCurrency(input.currency ?? "USD", "lowercase"),
       customer_email: !input.customerId ? input.customerEmail : undefined,
       allow_promotion_codes: input.allowPromotionCodes,
       line_items:
-        input.mode === "setup"
-          ? undefined
-          : formatLineItems(input.lineItems, input.mode),
-      automatic_tax: input.automaticTax ? { enabled: true } : undefined,
-      billing_address_collection: input.automaticTax ? "required" : "auto",
+        input.mode === "setup" ? undefined : formatLineItems(input.lineItems),
+      automatic_tax: automaticTax ? { enabled: true } : undefined,
+      billing_address_collection: automaticTax ? "required" : "auto",
       customer_update: input.customerId
         ? { address: "auto", name: "auto" }
         : undefined,

@@ -1,5 +1,9 @@
 import { ProviderContext } from "@/context";
-import { CheckoutSessionInput, CheckoutSessionResult } from "@/types/checkout";
+import {
+  CheckoutSessionInput,
+  CheckoutSessionResult,
+  CreatePaymentLinkInput,
+} from "@/types/checkout";
 import { AsyncActionResult } from "@/types/shared";
 
 /**
@@ -21,4 +25,17 @@ export interface ICheckoutFeature {
     ctx: ProviderContext,
     input: CheckoutSessionInput,
   ): Promise<AsyncActionResult<CheckoutSessionResult>>;
+
+  /**
+   * Creates a persistent, shareable payment URL.
+   * Useful for manual overage billing or asynchronous payment collection.
+   * Required when `billing.paymentLinks` is true.
+   * * @param ctx - The provider execution context.
+   * @param input - The payment details including amount, currency, and customer info.
+   * @returns An AsyncActionResult containing the generated payment URL.
+   */
+  createPaymentLink?(
+    ctx: ProviderContext,
+    input: CreatePaymentLinkInput,
+  ): Promise<AsyncActionResult<string>>;
 }

@@ -14,9 +14,6 @@ export type CheckoutSessionInput = {
   /** client reference id */
   clientReferenceId?: string;
 
-  /** enable automatic tax */
-  automaticTax?: boolean;
-
   /** statement descriptor */
   statementDescriptor?: string;
 
@@ -52,3 +49,22 @@ export type CheckoutSessionInput = {
   /** custom metadata */
   metadata?: Record<string, any>;
 };
+
+/**
+ * Input parameters for generating a standalone, shareable payment URL.
+ * Used for manual overage collection when `billing.paymentLinks` is true.
+ */
+export interface CreatePaymentLinkInput {
+  /** The exact amount to collect in the smallest currency unit. */
+  amount: number;
+  /** The 3-letter ISO currency code. */
+  currency: string;
+  /** What the user is paying for (e.g., "March API Overages"). */
+  description: string;
+  /** Optional: Auto-fills the checkout session if the customer ID is known. */
+  customerId?: string;
+  /** Optional: Auto-fills the email field if the customer ID is not provided. */
+  customerEmail?: string;
+  /** Optional: The exact date/time when this link should expire and become unpayable. */
+  expiresAt?: Date;
+}

@@ -4,6 +4,37 @@ import { ProviderCapabilities } from "@/types/capabilities";
 import { ProviderCategory } from "@/types/categories";
 import { PaymentMethodType } from "@/types/paymentMethods";
 
+export type ProviderStatus = "stable" | "beta" | "deprecated" | "experimental";
+
+export type UpdatePriority = "low" | "recommended" | "critical" | "security";
+
+export type ProviderPaginationType = "cursor" | "page";
+
+/**
+ * input UI field types
+ */
+export type ConfigFieldType =
+  | "text"
+  | "password"
+  | "switch"
+  | "select"
+  | "number"
+  | "json";
+
+/**
+ * Strategy to toggle between test and live modes.
+ */
+export type SandboxStrategy = "separate_credentials" | "header_flag";
+
+/**
+ * Pricing model of the provider.
+ */
+export type ProviderPricingModel =
+  | "subscription"
+  | "transactional"
+  | "freemium"
+  | "free";
+
 export interface ProviderEngine {
   /**
    * required core semver range (e.g. "^1.0.0")
@@ -64,14 +95,14 @@ export interface ProviderSystemTraits {
   };
 
   /** Strategy to toggle between test and live modes. */
-  sandboxStrategy: "separate_credentials" | "header_flag";
+  sandboxStrategy: SandboxStrategy;
 }
 
 export interface ProviderPricing {
   /**
    * underlying provider pricing model
    */
-  model: "subscription" | "transactional" | "freemium" | "free";
+  model: ProviderPricingModel;
 
   /**
    * human-readable fee text
@@ -105,23 +136,6 @@ export interface ProviderMedia {
    */
   screenshots?: string[];
 }
-
-export type ProviderStatus = "stable" | "beta" | "deprecated" | "experimental";
-
-export type UpdatePriority = "low" | "recommended" | "critical" | "security";
-
-export type ProviderPaginationType = "cursor" | "page";
-
-/**
- * input UI field types
- */
-export type ConfigFieldType =
-  | "text"
-  | "password"
-  | "switch"
-  | "select"
-  | "number"
-  | "json";
 
 /**
  * config field definition for UI rendering and encryption parsing

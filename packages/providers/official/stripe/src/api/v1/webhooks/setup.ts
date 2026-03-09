@@ -75,6 +75,8 @@ export async function setupWebhooks(
     "price.created",
     "price.updated",
     "price.deleted",
+
+    "invoice.upcoming",
   ];
 
   try {

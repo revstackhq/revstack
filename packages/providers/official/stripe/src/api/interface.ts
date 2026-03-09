@@ -32,6 +32,28 @@ import {
   ListCustomersOptions,
   ListPaymentMethodsOptions,
   DeletePaymentMethodInput,
+  Product,
+  CreateProductInput,
+  GetProductInput,
+  UpdateProductInput,
+  DeleteProductInput,
+  ListProductsOptions,
+  Price,
+  CreatePriceInput,
+  GetPriceInput,
+  ListPricesOptions,
+  AddInvoiceItemInput,
+  CreatePaymentLinkInput,
+  Invoice,
+  GetInvoiceInput,
+  ListInvoicesOptions,
+  Coupon,
+  CreateCouponInput,
+  GetCouponInput,
+  ApplyDiscountInput,
+  PreviewSubscriptionUpdateInput,
+  ProrationPreviewResult,
+  CreateInvoiceInput,
 } from "@revstackhq/providers-core";
 
 export interface ProviderClient {
@@ -48,6 +70,62 @@ export interface ProviderClient {
     ctx: ProviderContext,
     webhookId: string,
   ): Promise<AsyncActionResult<boolean>>;
+
+  verifyWebhookSignature(
+    ctx: ProviderContext,
+    payload: string | Buffer,
+    headers: Record<string, string | string[] | undefined>,
+    secret: string,
+  ): Promise<AsyncActionResult<boolean>>;
+
+  parseWebhookEvent(
+    payload: unknown,
+  ): Promise<AsyncActionResult<RevstackEvent | null>>;
+
+  createCustomer(
+    ctx: ProviderContext,
+    input: CreateCustomerInput,
+  ): Promise<AsyncActionResult<string>>;
+
+  updateCustomer(
+    ctx: ProviderContext,
+    input: UpdateCustomerInput,
+  ): Promise<AsyncActionResult<string>>;
+
+  deleteCustomer?(
+    ctx: ProviderContext,
+    input: DeleteCustomerInput,
+  ): Promise<AsyncActionResult<boolean>>;
+
+  getCustomer?(
+    ctx: ProviderContext,
+    input: GetCustomerInput,
+  ): Promise<AsyncActionResult<Customer>>;
+
+  listCustomers?(
+    ctx: ProviderContext,
+    options: ListCustomersOptions,
+  ): Promise<AsyncActionResult<PaginatedResult<Customer>>>;
+
+  createCheckoutSession?(
+    ctx: ProviderContext,
+    input: CheckoutSessionInput,
+  ): Promise<AsyncActionResult<CheckoutSessionResult>>;
+
+  setupPaymentMethod?(
+    ctx: ProviderContext,
+    input: SetupPaymentMethodInput,
+  ): Promise<AsyncActionResult<CheckoutSessionResult>>;
+
+  createPaymentLink?(
+    ctx: ProviderContext,
+    input: CreatePaymentLinkInput,
+  ): Promise<AsyncActionResult<string>>;
+
+  createBillingPortalSession?(
+    ctx: ProviderContext,
+    input: BillingPortalInput,
+  ): Promise<AsyncActionResult<BillingPortalResult>>;
 
   createPayment?(
     ctx: ProviderContext,
@@ -73,6 +151,16 @@ export interface ProviderClient {
     ctx: ProviderContext,
     input: CapturePaymentInput,
   ): Promise<AsyncActionResult<string>>;
+
+  listPaymentMethods?(
+    ctx: ProviderContext,
+    options: ListPaymentMethodsOptions,
+  ): Promise<AsyncActionResult<PaymentMethod[]>>;
+
+  deletePaymentMethod?(
+    ctx: ProviderContext,
+    input: DeletePaymentMethodInput,
+  ): Promise<AsyncActionResult<boolean>>;
 
   createSubscription?(
     ctx: ProviderContext,
@@ -109,64 +197,83 @@ export interface ProviderClient {
     input: UpdateSubscriptionInput,
   ): Promise<AsyncActionResult<string>>;
 
-  createCheckoutSession?(
+  previewSubscriptionUpdate?(
     ctx: ProviderContext,
-    input: CheckoutSessionInput,
-  ): Promise<AsyncActionResult<CheckoutSessionResult>>;
+    input: PreviewSubscriptionUpdateInput,
+  ): Promise<AsyncActionResult<ProrationPreviewResult>>;
 
-  setupPaymentMethod?(
+  createProduct?(
     ctx: ProviderContext,
-    input: SetupPaymentMethodInput,
-  ): Promise<AsyncActionResult<CheckoutSessionResult>>;
-
-  createBillingPortalSession?(
-    ctx: ProviderContext,
-    input: BillingPortalInput,
-  ): Promise<AsyncActionResult<BillingPortalResult>>;
-
-  createCustomer(
-    ctx: ProviderContext,
-    input: CreateCustomerInput,
+    input: CreateProductInput,
   ): Promise<AsyncActionResult<string>>;
 
-  updateCustomer(
+  getProduct?(
     ctx: ProviderContext,
-    input: UpdateCustomerInput,
+    input: GetProductInput,
+  ): Promise<AsyncActionResult<Product>>;
+
+  updateProduct?(
+    ctx: ProviderContext,
+    input: UpdateProductInput,
   ): Promise<AsyncActionResult<string>>;
 
-  deleteCustomer?(
+  deleteProduct?(
     ctx: ProviderContext,
-    input: DeleteCustomerInput,
+    input: DeleteProductInput,
   ): Promise<AsyncActionResult<boolean>>;
 
-  getCustomer?(
+  listProducts?(
     ctx: ProviderContext,
-    input: GetCustomerInput,
-  ): Promise<AsyncActionResult<Customer>>;
+    options: ListProductsOptions,
+  ): Promise<AsyncActionResult<PaginatedResult<Product>>>;
 
-  listPaymentMethods?(
+  createPrice?(
     ctx: ProviderContext,
-    options: ListPaymentMethodsOptions,
-  ): Promise<AsyncActionResult<PaymentMethod[]>>;
+    input: CreatePriceInput,
+  ): Promise<AsyncActionResult<string>>;
 
-  deletePaymentMethod?(
+  getPrice?(
     ctx: ProviderContext,
-    input: DeletePaymentMethodInput,
+    input: GetPriceInput,
+  ): Promise<AsyncActionResult<Price>>;
+
+  listPrices?(
+    ctx: ProviderContext,
+    options: ListPricesOptions,
+  ): Promise<AsyncActionResult<PaginatedResult<Price>>>;
+
+  addInvoiceItem?(
+    ctx: ProviderContext,
+    input: AddInvoiceItemInput,
+  ): Promise<AsyncActionResult<string>>;
+
+  createInvoice?(
+    ctx: ProviderContext,
+    input: CreateInvoiceInput,
+  ): Promise<AsyncActionResult<string>>;
+
+  getInvoice?(
+    ctx: ProviderContext,
+    input: GetInvoiceInput,
+  ): Promise<AsyncActionResult<Invoice>>;
+
+  listInvoices?(
+    ctx: ProviderContext,
+    options: ListInvoicesOptions,
+  ): Promise<AsyncActionResult<PaginatedResult<Invoice>>>;
+
+  createCoupon?(
+    ctx: ProviderContext,
+    input: CreateCouponInput,
+  ): Promise<AsyncActionResult<string>>;
+
+  getCoupon?(
+    ctx: ProviderContext,
+    input: GetCouponInput,
+  ): Promise<AsyncActionResult<Coupon>>;
+
+  applyDiscount?(
+    ctx: ProviderContext,
+    input: ApplyDiscountInput,
   ): Promise<AsyncActionResult<boolean>>;
-
-  listCustomers?(
-    ctx: ProviderContext,
-    options: ListCustomersOptions,
-  ): Promise<AsyncActionResult<PaginatedResult<Customer>>>;
-
-  verifyWebhookSignature(
-    ctx: ProviderContext,
-    payload: string | Buffer,
-    headers: Record<string, string | string[] | undefined>,
-    secret: string,
-  ): Promise<AsyncActionResult<boolean>>;
-
-  parseWebhookEvent(
-    payload: unknown,
-  ): Promise<AsyncActionResult<RevstackEvent | null>>;
 }

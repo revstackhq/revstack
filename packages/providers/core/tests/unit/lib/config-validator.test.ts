@@ -79,6 +79,7 @@ describe("configValidator", () => {
           pause: false,
           resume: false,
           proration: true,
+          multiItem: true,
         },
       },
       webhooks: {
@@ -86,8 +87,16 @@ describe("configValidator", () => {
         verification: "signature",
       },
       catalog: {
-        supported: true,
-        strategy: "pre_created",
+        syncStrategy: "inline",
+      },
+      promotions: {
+        coupons: "native",
+      },
+      billing: {
+        invoiceItems: true,
+        invoices: true,
+        metered: "native",
+        paymentLinks: true,
       },
     },
     author: "Revstack",

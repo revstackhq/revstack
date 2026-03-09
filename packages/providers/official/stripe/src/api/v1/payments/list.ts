@@ -34,11 +34,11 @@ export async function listPayments(
     };
 
     if (options.cursor) {
-      params.starting_after = options.cursor;
-    } else if (options.startingAfter) {
-      params.starting_after = options.startingAfter;
-    } else if (options.endingBefore) {
-      params.ending_before = options.endingBefore;
+      if (options.direction === "backward") {
+        params.ending_before = options.cursor;
+      } else {
+        params.starting_after = options.cursor;
+      }
     }
 
     const result = await stripe.paymentIntents.list(params);

@@ -4,11 +4,7 @@ import { InstallInput, InstallResult, UninstallInput } from "@/types/lifecycle";
 import { RevstackEvent, WebhookResponse } from "@/types/events";
 import { IProvider } from "@/interfaces/provider";
 import { RevstackErrorCode } from "@/types/errors";
-import {
-  AsyncActionResult,
-  PaginatedResult,
-  PaginationOptions,
-} from "@/types/shared";
+import { AsyncActionResult, PaginatedResult } from "@/types/shared";
 import {
   CreatePaymentInput,
   Payment,
@@ -26,6 +22,8 @@ import {
   ResumeSubscriptionInput,
   GetSubscriptionInput,
   ListSubscriptionsOptions,
+  PreviewSubscriptionUpdateInput,
+  ProrationPreviewResult,
 } from "@/types/subscriptions";
 import {
   CreateCustomerInput,
@@ -41,20 +39,37 @@ import {
   ListPaymentMethodsOptions,
   DeletePaymentMethodInput,
 } from "@/types/paymentMethods";
-import { CheckoutSessionInput, CheckoutSessionResult } from "@/types/checkout";
+import {
+  CheckoutSessionInput,
+  CheckoutSessionResult,
+  CreatePaymentLinkInput,
+} from "@/types/checkout";
 import { BillingPortalInput, BillingPortalResult } from "@/types/portal";
 import {
   Price,
-  PriceInput,
   Product,
-  ProductInput,
   GetProductInput,
   ListProductsOptions,
   UpdateProductInput,
   DeleteProductInput,
   GetPriceInput,
   ListPricesOptions,
+  CreatePriceInput,
+  CreateProductInput,
 } from "@/types/catalog";
+import {
+  ApplyDiscountInput,
+  Coupon,
+  CreateCouponInput,
+  GetCouponInput,
+} from "@/types/promotions";
+import {
+  AddInvoiceItemInput,
+  CreateInvoiceInput,
+  GetInvoiceInput,
+  Invoice,
+  ListInvoicesOptions,
+} from "@/types/invoices";
 
 export abstract class BaseProvider implements IProvider {
   private notImplemented(methodName: string): AsyncActionResult<any> {
@@ -270,7 +285,7 @@ export abstract class BaseProvider implements IProvider {
 
   async createProduct(
     ctx: ProviderContext,
-    input: ProductInput,
+    input: CreateProductInput,
   ): Promise<AsyncActionResult<string>> {
     return this.notImplemented("createProduct");
   }
@@ -305,7 +320,7 @@ export abstract class BaseProvider implements IProvider {
 
   async createPrice(
     ctx: ProviderContext,
-    input: PriceInput,
+    input: CreatePriceInput,
   ): Promise<AsyncActionResult<string>> {
     return this.notImplemented("createPrice");
   }
@@ -322,5 +337,68 @@ export abstract class BaseProvider implements IProvider {
     options: ListPricesOptions,
   ): Promise<AsyncActionResult<PaginatedResult<Price>>> {
     return this.notImplemented("listPrices");
+  }
+
+  async previewSubscriptionUpdate(
+    ctx: ProviderContext,
+    input: PreviewSubscriptionUpdateInput,
+  ): Promise<AsyncActionResult<ProrationPreviewResult>> {
+    return this.notImplemented("previewSubscriptionUpdate");
+  }
+
+  async createCoupon(
+    ctx: ProviderContext,
+    input: CreateCouponInput,
+  ): Promise<AsyncActionResult<string>> {
+    return this.notImplemented("createCoupon");
+  }
+
+  async applyDiscount(
+    ctx: ProviderContext,
+    input: ApplyDiscountInput,
+  ): Promise<AsyncActionResult<boolean>> {
+    return this.notImplemented("applyDiscount");
+  }
+
+  async getCoupon(
+    ctx: ProviderContext,
+    input: GetCouponInput,
+  ): Promise<AsyncActionResult<Coupon>> {
+    return this.notImplemented("getCoupon");
+  }
+
+  async createPaymentLink(
+    ctx: ProviderContext,
+    input: CreatePaymentLinkInput,
+  ): Promise<AsyncActionResult<string>> {
+    return this.notImplemented("createPaymentLink");
+  }
+
+  async addInvoiceItem(
+    ctx: ProviderContext,
+    input: AddInvoiceItemInput,
+  ): Promise<AsyncActionResult<string>> {
+    return this.notImplemented("addInvoiceItem");
+  }
+
+  async createInvoice(
+    ctx: ProviderContext,
+    input: CreateInvoiceInput,
+  ): Promise<AsyncActionResult<string>> {
+    return this.notImplemented("createInvoice");
+  }
+
+  async getInvoice(
+    ctx: ProviderContext,
+    input: GetInvoiceInput,
+  ): Promise<AsyncActionResult<Invoice>> {
+    return this.notImplemented("getInvoice");
+  }
+
+  async listInvoices(
+    ctx: ProviderContext,
+    options: ListInvoicesOptions,
+  ): Promise<AsyncActionResult<PaginatedResult<Invoice>>> {
+    return this.notImplemented("listInvoices");
   }
 }

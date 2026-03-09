@@ -24,10 +24,10 @@ describe("buildCursorPagination", () => {
     expect(result.previousCursor).toBe("prod_1");
   });
 
-  it("handles previous cursor correctly when startingAfter or cursor is provided", () => {
+  it("sets hasPrevious to true when a cursor is provided (forward direction)", () => {
     const rawData = [{ id: "prod_2", name: "B" }];
     const hasMore = false;
-    const options: PaginationOptions = { startingAfter: "prod_1" };
+    const options: PaginationOptions = { cursor: "prod_1" };
 
     const mapFn = (item: any) => item as Product;
     const result = buildCursorPagination(rawData, hasMore, options, mapFn);

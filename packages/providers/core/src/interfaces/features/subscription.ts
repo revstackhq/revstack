@@ -9,6 +9,8 @@ import {
   ResumeSubscriptionInput,
   GetSubscriptionInput,
   ListSubscriptionsOptions,
+  PreviewSubscriptionUpdateInput,
+  ProrationPreviewResult,
 } from "@/types/subscriptions";
 
 /**
@@ -96,4 +98,16 @@ export interface ISubscriptionFeature {
     ctx: ProviderContext,
     input: UpdateSubscriptionInput,
   ): Promise<AsyncActionResult<string>>;
+
+  /**
+   * Calculates the exact pro-rated cost of upgrading or downgrading a subscription
+   * before actually processing the change.
+   * * @param ctx - The provider execution context.
+   * @param input - The target subscription details and the new items to be applied.
+   * @returns An AsyncActionResult containing the immediate charge amount and the new recurring total.
+   */
+  previewSubscriptionUpdate?(
+    ctx: ProviderContext,
+    input: PreviewSubscriptionUpdateInput,
+  ): Promise<AsyncActionResult<ProrationPreviewResult>>;
 }

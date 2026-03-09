@@ -1,10 +1,15 @@
+import { ProductCategory } from "@/types/catalog/model";
 import { PaginationOptions, Interval } from "@/types/shared";
 
-export type ProductInput = {
+export type CreateProductInput = {
   /** product name */
   name: string;
   /** product description */
   description?: string;
+  /** * The universal Revstack product category.
+   * Providers will map this to their native tax codes internally.
+   */
+  category?: ProductCategory;
   /** product images */
   images?: string[];
   /** whether the product is active */
@@ -13,7 +18,7 @@ export type ProductInput = {
   metadata?: Record<string, any>;
 };
 
-export type PriceInput = {
+export type CreatePriceInput = {
   /** product ID this price belongs to */
   productId: string;
   /** amount in smallest currency unit (e.g., cents) */
@@ -34,7 +39,7 @@ export type GetProductInput = { id: string };
 
 export type DeleteProductInput = { id: string };
 
-export type UpdateProductInput = Partial<ProductInput> & { id: string };
+export type UpdateProductInput = Partial<CreateProductInput> & { id: string };
 
 export interface ListProductsOptions extends PaginationOptions {
   filters?: Record<string, any>;

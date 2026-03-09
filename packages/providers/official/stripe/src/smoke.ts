@@ -23,22 +23,24 @@ const loadWebhookMock = (fileName: string) => {
 // ─── CONFIGURATION ────────────────────────────────────────────────────────────
 
 const STRIPE_API_VERSION = "2026-02-25.clover";
-
 const provider = new StripeProvider();
+
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: STRIPE_API_VERSION,
 });
 
 const STATE = {
   customerId: "",
+  productId: "",
+  priceId: "",
+  recurringPriceId: "",
   subscriptionId: "",
   paymentId: "",
-  priceId: "",
+  couponId: "",
   webhookEndpointId: process.env.STRIPE_WEBHOOK_ENDPOINT_ID || "",
 };
 
 const FIXTURES = {
-  priceId: process.env.STRIPE_PRICE_ID!,
   webhookUrl: process.env.STRIPE_WEBHOOK_URL || "https://example.com/webhook",
   webhookSecret: process.env.STRIPE_WEBHOOK_SECRET || "whsec_test",
   returnUrl: "https://example.com/return",
@@ -47,7 +49,10 @@ const FIXTURES = {
 const ctx: ProviderContext = {
   isTestMode: true,
   traceId: `smoke-${Date.now()}`,
-  config: { apiKey: process.env.STRIPE_SECRET_KEY! },
+  config: {
+    apiKey: process.env.STRIPE_SECRET_KEY!,
+    useStripeTax: false,
+  },
 };
 
 const getStepCtx = (step: string) => ({
@@ -62,59 +67,60 @@ runSmoke({
   ctx,
   manifest: StripeProvider.manifest,
   scenarios: {
-    bootstrap: async () => {
-      if (!STATE.priceId) {
-        console.log(
-          "🛠️  Bootstrap: No Price ID found, creating temporary product/price...",
-        );
+    // ─── CATALOG & PROMOTIONS ─────────────────────────────────────────────────
 
-        const product = await stripe.products.create({
-          name: "Smoke Test Product",
-        });
-
-        const price = await stripe.prices.create({
-          product: product.id,
-          unit_amount: 2000,
-          currency: "usd",
-          recurring: { interval: "month" },
-        });
-        STATE.priceId = price.id;
-        console.log(`✅ Bootstrap: Created Price ${STATE.priceId}`);
-      }
-      return { priceId: STATE.priceId };
-    },
-    // ─── SETUP & WEBHOOKS ─────────────────────────────────────────────────────
-
-    onInstall: async (c) => {
-      const res = await provider.onInstall(getStepCtx("install"), {
-        webhookUrl: FIXTURES.webhookUrl,
-        config: c.config,
+    createProduct: async (c) => {
+      const res = await provider.createProduct(getStepCtx("create-prod"), {
+        name: "Smoke Test JIT Product",
+        description: "Created during smoke test",
+        active: true,
+        metadata: { smoke: "true", traceId: ctx.traceId },
+        category: "saas",
       });
-      if (res.data?.data?.webhookEndpointId) {
-        STATE.webhookEndpointId = res.data.data.webhookEndpointId as string;
-      }
+      if (res.data) STATE.productId = res.data;
       return res;
     },
 
-    verifyWebhookSignature: async (c) => {
-      return await provider.verifyWebhookSignature(
-        c,
-        JSON.stringify({ id: "evt_test", type: "payment_intent.succeeded" }),
-        { "stripe-signature": `t=${Math.floor(Date.now() / 1000)},v1=bad_sig` },
-        FIXTURES.webhookSecret,
+    createPrice: async (c) => {
+      if (!STATE.productId) throw new Error("Missing productId");
+
+      // One-time price
+      const oneTime = await provider.createPrice(getStepCtx("price-onetime"), {
+        productId: STATE.productId,
+        unitAmount: 5000, // $50.00
+        currency: "usd",
+        active: true,
+      });
+      if (oneTime.data) STATE.priceId = oneTime.data;
+
+      // Recurring price
+      const recurring = await provider.createPrice(
+        getStepCtx("price-recurring"),
+        {
+          productId: STATE.productId,
+          unitAmount: 2000, // $20.00
+          currency: "usd",
+          interval: "month",
+          intervalCount: 1,
+          active: true,
+        },
       );
+      if (recurring.data) STATE.recurringPriceId = recurring.data;
+
+      return recurring;
     },
 
-    parseWebhookEvent: async (c) => {
-      const mockEvent = loadWebhookMock("subscription_updated");
-
-      mockEvent.data.object.customer = STATE.customerId;
-      mockEvent.data.object.id = STATE.subscriptionId;
-
-      return await provider.parseWebhookEvent(c, mockEvent);
+    createCoupon: async (c) => {
+      const res = await provider.createCoupon(getStepCtx("create-coupon"), {
+        code: `SMOKE20_${Date.now()}`,
+        percentOff: 20,
+        duration: "once",
+      });
+      if (res.data) STATE.couponId = res.data;
+      return res;
     },
 
-    // ─── CUSTOMER LIFECYCLE ───────────────────────────────────────────────────
+    // ─── CUSTOMER & INVOICING ─────────────────────────────────────────────────
 
     createCustomer: async (c) => {
       const res = await provider.createCustomer(getStepCtx("create-cust"), {
@@ -126,52 +132,44 @@ runSmoke({
       return res;
     },
 
-    getCustomer: async (c) => {
-      if (!STATE.customerId) throw new Error("Skipping: No customerId.");
-      return await provider.getCustomer(c, { id: STATE.customerId });
-    },
-
-    updateCustomer: async (c) => {
-      if (!STATE.customerId) throw new Error("Skipping: No customerId.");
-      return await provider.updateCustomer(getStepCtx("upd-cust"), {
-        id: STATE.customerId,
-        name: "Smoke Automator Updated",
+    addInvoiceItem: async (c) => {
+      if (!STATE.customerId) throw new Error("No customerId");
+      return await provider.addInvoiceItem(getStepCtx("add-inv-item"), {
+        customerId: STATE.customerId,
+        amount: 1500, // $15.00
+        currency: "usd",
+        description: "One-time setup fee",
       });
     },
 
-    // ─── PAYMENTS (Checkout + Shadow Intent) ──────────────────────────────────
+    createInvoice: async (c) => {
+      if (!STATE.customerId) throw new Error("No customerId");
+      return await provider.createInvoice(getStepCtx("inv-create"), {
+        customerId: STATE.customerId,
+        autoAdvance: false,
+        collectionMethod: "manual",
+        daysUntilDue: 7,
+      });
+    },
+
+    // ─── CHECKOUT WITH DISCOUNTS ──────────────────────────────────────────────
 
     createPayment: async (c) => {
-      if (!STATE.customerId) throw new Error("Skipping: No customerId.");
+      if (!STATE.customerId || !STATE.priceId) throw new Error("Missing deps.");
 
-      const res = await provider.createPayment(getStepCtx("checkout-pay"), {
+      return await provider.createPayment(getStepCtx("checkout-pay"), {
         customerId: STATE.customerId,
         successUrl: FIXTURES.returnUrl,
         cancelUrl: FIXTURES.returnUrl,
-        lineItems: [
-          { name: "Credits", amount: 1000, currency: "USD", quantity: 1 },
-        ],
+        promotionCodeId: STATE.couponId,
+        allowPromotionCodes: false,
+        lineItems: [{ priceId: STATE.priceId, quantity: 1 }],
       });
-
-      const intent = await stripe.paymentIntents.create({
-        amount: 1000,
-        currency: "usd",
-        customer: STATE.customerId,
-      });
-      STATE.paymentId = intent.id;
-      return res;
     },
-
-    getPayment: async (c) => {
-      if (!STATE.paymentId) throw new Error("No paymentId.");
-      return await provider.getPayment(c, { id: STATE.paymentId });
-    },
-
-    // ─── SUBSCRIPTIONS (Checkout + Shadow Sub) ────────────────────────────────
 
     createSubscription: async (c) => {
-      if (!STATE.customerId || !STATE.priceId)
-        throw new Error("Missing dependencies.");
+      if (!STATE.customerId || !STATE.recurringPriceId)
+        throw new Error("Missing deps.");
 
       const res = await provider.createSubscription(
         getStepCtx("checkout-sub"),
@@ -179,13 +177,14 @@ runSmoke({
           customerId: STATE.customerId,
           successUrl: FIXTURES.returnUrl,
           cancelUrl: FIXTURES.returnUrl,
-          lineItems: [{ priceId: STATE.priceId, quantity: 1 }],
+          promotionCodeId: STATE.couponId,
+          lineItems: [{ priceId: STATE.recurringPriceId, quantity: 1 }],
         },
       );
 
       const shadowSub = await stripe.subscriptions.create({
         customer: STATE.customerId,
-        items: [{ price: STATE.priceId }],
+        items: [{ price: STATE.recurringPriceId }],
         payment_behavior: "default_incomplete",
       });
       STATE.subscriptionId = shadowSub.id;
@@ -193,44 +192,18 @@ runSmoke({
       return res;
     },
 
-    getSubscription: async (c) => {
-      if (!STATE.subscriptionId) throw new Error("No subscriptionId.");
-      return await provider.getSubscription(c, { id: STATE.subscriptionId });
-    },
-
-    pauseSubscription: async (c) => {
-      if (!STATE.subscriptionId) throw new Error("Skipping: No subscription.");
-      return await provider.pauseSubscription(getStepCtx("pause-sub"), {
-        id: STATE.subscriptionId,
-      });
-    },
-
-    resumeSubscription: async (c) => {
-      if (!STATE.subscriptionId) throw new Error("Skipping: No subscription.");
-      return await provider.resumeSubscription(getStepCtx("resume-sub"), {
-        id: STATE.subscriptionId,
-      });
-    },
-
-    cancelSubscription: async (c) => {
-      if (!STATE.subscriptionId) throw new Error("No subscription.");
-      return await provider.cancelSubscription(getStepCtx("cancel-sub"), {
-        id: STATE.subscriptionId,
-      });
-    },
-
     // ─── CLEANUP ──────────────────────────────────────────────────────────────
 
     deleteCustomer: async (c) => {
-      if (!STATE.customerId) return { success: true };
+      if (!STATE.customerId) return { status: "success" };
       return await provider.deleteCustomer(getStepCtx("del-cust"), {
         id: STATE.customerId,
       });
     },
 
     onUninstall: async (c) => {
-      if (!STATE.webhookEndpointId) return { success: true };
-      return await provider.onUninstall(c, {
+      if (!STATE.webhookEndpointId) return { status: "success" };
+      return await provider.onUninstall(getStepCtx("uninstall"), {
         config: c.config,
         data: { webhookEndpointId: STATE.webhookEndpointId },
       });

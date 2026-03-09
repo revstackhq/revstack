@@ -25,9 +25,15 @@ export async function listSubscriptions(
   try {
     const stripe = getOrCreateClient(ctx.config.apiKey);
     const subs = await stripe.subscriptions.list({
-      limit: options.limit || 10,
-      starting_after: options.startingAfter || undefined,
-      ending_before: options.endingBefore || undefined,
+      limit: options.limit ?? 10,
+      starting_after:
+        options.cursor && options.direction !== "backward"
+          ? options.cursor
+          : undefined,
+      ending_before:
+        options.cursor && options.direction === "backward"
+          ? options.cursor
+          : undefined,
       ...options.filters,
     });
 

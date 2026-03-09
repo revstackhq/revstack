@@ -1,3 +1,5 @@
+export type ReportUsageAction = "increment" | "decrement" | "set";
+
 /**
  * Standardized lifecycle states for a Revstack Subscription.
  * These states abstract away provider-specific quirks to give the merchant

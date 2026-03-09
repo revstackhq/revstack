@@ -79,3 +79,13 @@ export function addDays(date: Date, days: number): Date {
 export function diffInSeconds(start: Date, end: Date): number {
   return Math.abs(Math.floor((end.getTime() - start.getTime()) / 1000));
 }
+
+/**
+ * Generates the current UTC timestamp in Unix seconds.
+ * Standardizes 'Now' across all provider implementations to prevent
+ * milliseconds/seconds mismatch errors during API calls.
+ * * @returns The current Unix timestamp in seconds.
+ */
+export function currentUnixSeconds(): number {
+  return Math.floor(Date.now() / 1000);
+}
