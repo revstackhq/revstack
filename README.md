@@ -16,7 +16,7 @@
 <p align="center">
   <a href="https://docs.revstack.dev"><strong>Docs</strong></a> ·
   <a href="https://app.revstack.dev"><strong>Dashboard</strong></a> ·
-  <a href="https://github.com/revstackhq/revstack-os/issues"><strong>Issues</strong></a> ·
+  <a href="https://github.com/revstack-dev/revstack-os/issues"><strong>Issues</strong></a> ·
   <a href="CONTRIBUTING.md"><strong>Contributing</strong></a>
 </p>
 
