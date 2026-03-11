@@ -39,11 +39,37 @@ import {
   ListCustomersOptions,
   DeletePaymentMethodInput,
   ListPaymentMethodsOptions,
+  Product,
+  CreateProductInput,
+  GetProductInput,
+  UpdateProductInput,
+  DeleteProductInput,
+  ListProductsOptions,
+  Price,
+  CreatePriceInput,
+  GetPriceInput,
+  ListPricesOptions,
+  AddInvoiceItemInput,
+  CreatePaymentLinkInput,
+  Invoice,
+  GetInvoiceInput,
+  ListInvoicesOptions,
+  Coupon,
+  CreateCouponInput,
+  GetCouponInput,
+  ApplyDiscountInput,
+  PreviewSubscriptionUpdateInput,
+  ProrationPreviewResult,
+  CreateInvoiceInput,
 } from "@revstackhq/providers-core";
 
 export class PolarProvider extends BaseProvider {
   static manifest = manifest;
   manifest = manifest;
+
+  // ===========================================================================
+  // CORE & WEBHOOKS
+  // ===========================================================================
 
   async onInstall(
     ctx: ProviderContext,
@@ -52,7 +78,7 @@ export class PolarProvider extends BaseProvider {
     const client = getClient(input.config);
     const installVersion = manifest.version;
 
-    const isValid = await client.validateCredentials({
+    const isValid = await client.webhooks.validateCredentials({
       ...ctx,
       config: input.config,
     });
@@ -71,9 +97,9 @@ export class PolarProvider extends BaseProvider {
 
     let webhookData: Record<string, any> = {};
 
-    if (client.setupWebhooks && input.webhookUrl) {
+    if (client.webhooks.setup && input.webhookUrl) {
       try {
-        const wh = await client.setupWebhooks(
+        const wh = await client.webhooks.setup(
           { ...ctx, config: input.config },
           input.webhookUrl,
         );
@@ -127,9 +153,9 @@ export class PolarProvider extends BaseProvider {
   ): Promise<AsyncActionResult<boolean>> {
     const client = getClient(input.config);
 
-    if (client.removeWebhooks && input.data.webhookEndpointId) {
+    if (client.webhooks.remove && input.data.webhookEndpointId) {
       try {
-        await client.removeWebhooks(
+        await client.webhooks.remove(
           ctx,
           input.data.webhookEndpointId as string,
         );
@@ -150,7 +176,7 @@ export class PolarProvider extends BaseProvider {
     secret: string,
   ): Promise<AsyncActionResult<boolean>> {
     const client = getClient(ctx.config);
-    return client.verifyWebhookSignature(ctx, payload, headers, secret);
+    return client.webhooks.verify(ctx, payload, headers, secret);
   }
 
   async parseWebhookEvent(
@@ -158,7 +184,7 @@ export class PolarProvider extends BaseProvider {
     payload: any,
   ): Promise<AsyncActionResult<RevstackEvent | null>> {
     const client = getClient(ctx.config);
-    return client.parseWebhookEvent(payload);
+    return client.webhooks.parse(payload);
   }
 
   async getWebhookResponse(): Promise<AsyncActionResult<WebhookResponse>> {
@@ -178,7 +204,7 @@ export class PolarProvider extends BaseProvider {
   ): Promise<AsyncActionResult<string>> {
     const client = getClient(ctx.config);
 
-    if (!client.createPayment) {
+    if (!client.payments.create) {
       return {
         data: null,
         status: "failed",
@@ -189,7 +215,7 @@ export class PolarProvider extends BaseProvider {
       };
     }
 
-    return client.createPayment(ctx, input);
+    return client.payments.create(ctx, input);
   }
 
   async getPayment(
@@ -198,7 +224,7 @@ export class PolarProvider extends BaseProvider {
   ): Promise<AsyncActionResult<Payment>> {
     const client = getClient(ctx.config);
 
-    if (!client.getPayment) {
+    if (!client.payments.get) {
       return {
         data: null,
         status: "failed",
@@ -209,7 +235,7 @@ export class PolarProvider extends BaseProvider {
       };
     }
 
-    return client.getPayment(ctx, input);
+    return client.payments.get(ctx, input);
   }
 
   async refundPayment(
@@ -218,7 +244,7 @@ export class PolarProvider extends BaseProvider {
   ): Promise<AsyncActionResult<string>> {
     const client = getClient(ctx.config);
 
-    if (!client.refundPayment) {
+    if (!client.payments.refund) {
       return {
         data: null,
         status: "failed",
@@ -229,7 +255,7 @@ export class PolarProvider extends BaseProvider {
       };
     }
 
-    return client.refundPayment(ctx, input);
+    return client.payments.refund(ctx, input);
   }
 
   async listPayments(
@@ -238,7 +264,7 @@ export class PolarProvider extends BaseProvider {
   ): Promise<AsyncActionResult<PaginatedResult<Payment>>> {
     const client = getClient(ctx.config);
 
-    if (!client.listPayments) {
+    if (!client.payments.list) {
       return {
         data: null,
         status: "failed",
@@ -249,7 +275,27 @@ export class PolarProvider extends BaseProvider {
       };
     }
 
-    return client.listPayments(ctx, options);
+    return client.payments.list(ctx, options);
+  }
+
+  async capturePayment(
+    ctx: ProviderContext,
+    input: CapturePaymentInput,
+  ): Promise<AsyncActionResult<string>> {
+    const client = getClient(ctx.config);
+
+    if (!client.payments.capture) {
+      return {
+        data: null,
+        status: "failed",
+        error: {
+          code: RevstackErrorCode.NotImplemented,
+          message: "Capture not supported",
+        },
+      };
+    }
+
+    return client.payments.capture(ctx, input);
   }
 
   // ===========================================================================
@@ -262,7 +308,7 @@ export class PolarProvider extends BaseProvider {
   ): Promise<AsyncActionResult<string>> {
     const client = getClient(ctx.config);
 
-    if (!client.createSubscription) {
+    if (!client.subscriptions.create) {
       return {
         data: null,
         status: "failed",
@@ -273,7 +319,7 @@ export class PolarProvider extends BaseProvider {
       };
     }
 
-    return client.createSubscription(ctx, input);
+    return client.subscriptions.create(ctx, input);
   }
 
   async getSubscription(
@@ -282,7 +328,7 @@ export class PolarProvider extends BaseProvider {
   ): Promise<AsyncActionResult<Subscription>> {
     const client = getClient(ctx.config);
 
-    if (!client.getSubscription) {
+    if (!client.subscriptions.get) {
       return {
         data: null,
         status: "failed",
@@ -293,7 +339,7 @@ export class PolarProvider extends BaseProvider {
       };
     }
 
-    return client.getSubscription(ctx, input);
+    return client.subscriptions.get(ctx, input);
   }
 
   async cancelSubscription(
@@ -302,7 +348,7 @@ export class PolarProvider extends BaseProvider {
   ): Promise<AsyncActionResult<string>> {
     const client = getClient(ctx.config);
 
-    if (!client.cancelSubscription) {
+    if (!client.subscriptions.cancel) {
       return {
         data: null,
         status: "failed",
@@ -313,7 +359,7 @@ export class PolarProvider extends BaseProvider {
       };
     }
 
-    return client.cancelSubscription(ctx, input);
+    return client.subscriptions.cancel(ctx, input);
   }
 
   async pauseSubscription(
@@ -322,7 +368,7 @@ export class PolarProvider extends BaseProvider {
   ): Promise<AsyncActionResult<string>> {
     const client = getClient(ctx.config);
 
-    if (!client.pauseSubscription) {
+    if (!client.subscriptions.pause) {
       return {
         data: null,
         status: "failed",
@@ -333,7 +379,7 @@ export class PolarProvider extends BaseProvider {
       };
     }
 
-    return client.pauseSubscription(ctx, input);
+    return client.subscriptions.pause(ctx, input);
   }
 
   async resumeSubscription(
@@ -342,7 +388,7 @@ export class PolarProvider extends BaseProvider {
   ): Promise<AsyncActionResult<string>> {
     const client = getClient(ctx.config);
 
-    if (!client.resumeSubscription) {
+    if (!client.subscriptions.resume) {
       return {
         data: null,
         status: "failed",
@@ -353,11 +399,71 @@ export class PolarProvider extends BaseProvider {
       };
     }
 
-    return client.resumeSubscription(ctx, input);
+    return client.subscriptions.resume(ctx, input);
+  }
+
+  async listSubscriptions(
+    ctx: ProviderContext,
+    options: ListSubscriptionsOptions,
+  ): Promise<AsyncActionResult<PaginatedResult<Subscription>>> {
+    const client = getClient(ctx.config);
+
+    if (!client.subscriptions.list) {
+      return {
+        data: null,
+        status: "failed",
+        error: {
+          code: RevstackErrorCode.NotImplemented,
+          message: "List subscriptions not supported",
+        },
+      };
+    }
+
+    return client.subscriptions.list(ctx, options);
+  }
+
+  async updateSubscription(
+    ctx: ProviderContext,
+    input: UpdateSubscriptionInput,
+  ): Promise<AsyncActionResult<string>> {
+    const client = getClient(ctx.config);
+
+    if (!client.subscriptions.update) {
+      return {
+        data: null,
+        status: "failed",
+        error: {
+          code: RevstackErrorCode.NotImplemented,
+          message: "Update subscription not supported",
+        },
+      };
+    }
+
+    return client.subscriptions.update(ctx, input);
+  }
+
+  async previewSubscriptionUpdate(
+    ctx: ProviderContext,
+    input: PreviewSubscriptionUpdateInput,
+  ): Promise<AsyncActionResult<ProrationPreviewResult>> {
+    const client = getClient(ctx.config);
+
+    if (!client.subscriptions.preview) {
+      return {
+        data: null,
+        status: "failed",
+        error: {
+          code: RevstackErrorCode.NotImplemented,
+          message: "Preview subscription update not supported",
+        },
+      };
+    }
+
+    return client.subscriptions.preview(ctx, input);
   }
 
   // ===========================================================================
-  // CHECKOUT
+  // CHECKOUT & PORTAL
   // ===========================================================================
 
   async createCheckoutSession(
@@ -366,7 +472,7 @@ export class PolarProvider extends BaseProvider {
   ): Promise<AsyncActionResult<CheckoutSessionResult>> {
     const client = getClient(ctx.config);
 
-    if (!client.createCheckoutSession) {
+    if (!client.checkout.createSession) {
       return {
         data: null,
         status: "failed",
@@ -377,7 +483,67 @@ export class PolarProvider extends BaseProvider {
       };
     }
 
-    return client.createCheckoutSession(ctx, input);
+    return client.checkout.createSession(ctx, input);
+  }
+
+  async createBillingPortalSession(
+    ctx: ProviderContext,
+    input: BillingPortalInput,
+  ): Promise<AsyncActionResult<BillingPortalResult>> {
+    const client = getClient(ctx.config);
+
+    if (!client.checkout.createBillingPortal) {
+      return {
+        data: null,
+        status: "failed",
+        error: {
+          code: RevstackErrorCode.NotImplemented,
+          message: "Billing portal not supported",
+        },
+      };
+    }
+
+    return client.checkout.createBillingPortal(ctx, input);
+  }
+
+  async createPaymentLink(
+    ctx: ProviderContext,
+    input: CreatePaymentLinkInput,
+  ): Promise<AsyncActionResult<string>> {
+    const client = getClient(ctx.config);
+
+    if (!client.checkout.createPaymentLink) {
+      return {
+        data: null,
+        status: "failed",
+        error: {
+          code: RevstackErrorCode.NotImplemented,
+          message: "Payment links not supported by this provider.",
+        },
+      };
+    }
+
+    return client.checkout.createPaymentLink(ctx, input);
+  }
+
+  async setupPaymentMethod(
+    ctx: ProviderContext,
+    input: SetupPaymentMethodInput,
+  ): Promise<AsyncActionResult<CheckoutSessionResult>> {
+    const client = getClient(ctx.config);
+
+    if (!client.paymentMethods.setup) {
+      return {
+        data: null,
+        status: "failed",
+        error: {
+          code: RevstackErrorCode.NotImplemented,
+          message: "Setup payment method not supported",
+        },
+      };
+    }
+
+    return client.paymentMethods.setup(ctx, input);
   }
 
   // ===========================================================================
@@ -390,18 +556,18 @@ export class PolarProvider extends BaseProvider {
   ): Promise<AsyncActionResult<string>> {
     const client = getClient(ctx.config);
 
-    if (!client.createCustomer) {
+    if (!client.customers.create) {
       return {
         data: null,
         status: "failed",
         error: {
           code: RevstackErrorCode.NotImplemented,
-          message: "Customer management not supported",
+          message: "Customer creation not supported",
         },
       };
     }
 
-    return client.createCustomer(ctx, input);
+    return client.customers.create(ctx, input);
   }
 
   async updateCustomer(
@@ -410,7 +576,7 @@ export class PolarProvider extends BaseProvider {
   ): Promise<AsyncActionResult<string>> {
     const client = getClient(ctx.config);
 
-    if (!client.updateCustomer) {
+    if (!client.customers.update) {
       return {
         data: null,
         status: "failed",
@@ -421,7 +587,7 @@ export class PolarProvider extends BaseProvider {
       };
     }
 
-    return client.updateCustomer(ctx, input);
+    return client.customers.update(ctx, input);
   }
 
   async deleteCustomer(
@@ -430,7 +596,7 @@ export class PolarProvider extends BaseProvider {
   ): Promise<AsyncActionResult<boolean>> {
     const client = getClient(ctx.config);
 
-    if (!client.deleteCustomer) {
+    if (!client.customers.delete) {
       return {
         data: false,
         status: "failed",
@@ -441,7 +607,7 @@ export class PolarProvider extends BaseProvider {
       };
     }
 
-    return client.deleteCustomer(ctx, input);
+    return client.customers.delete(ctx, input);
   }
 
   async getCustomer(
@@ -450,7 +616,7 @@ export class PolarProvider extends BaseProvider {
   ): Promise<AsyncActionResult<Customer>> {
     const client = getClient(ctx.config);
 
-    if (!client.getCustomer) {
+    if (!client.customers.get) {
       return {
         data: null,
         status: "failed",
@@ -461,7 +627,27 @@ export class PolarProvider extends BaseProvider {
       };
     }
 
-    return client.getCustomer(ctx, input);
+    return client.customers.get(ctx, input);
+  }
+
+  async listCustomers(
+    ctx: ProviderContext,
+    options: ListCustomersOptions,
+  ): Promise<AsyncActionResult<PaginatedResult<Customer>>> {
+    const client = getClient(ctx.config);
+
+    if (!client.customers.list) {
+      return {
+        data: null,
+        status: "failed",
+        error: {
+          code: RevstackErrorCode.NotImplemented,
+          message: "List customers not supported",
+        },
+      };
+    }
+
+    return client.customers.list(ctx, options);
   }
 
   // ===========================================================================
@@ -474,7 +660,7 @@ export class PolarProvider extends BaseProvider {
   ): Promise<AsyncActionResult<PaymentMethod[]>> {
     const client = getClient(ctx.config);
 
-    if (!client.listPaymentMethods) {
+    if (!client.paymentMethods.list) {
       return {
         data: null,
         status: "failed",
@@ -485,7 +671,7 @@ export class PolarProvider extends BaseProvider {
       };
     }
 
-    return client.listPaymentMethods(ctx, options);
+    return client.paymentMethods.list(ctx, options);
   }
 
   async deletePaymentMethod(
@@ -494,7 +680,7 @@ export class PolarProvider extends BaseProvider {
   ): Promise<AsyncActionResult<boolean>> {
     const client = getClient(ctx.config);
 
-    if (!client.deletePaymentMethod) {
+    if (!client.paymentMethods.delete) {
       return {
         data: false,
         status: "failed",
@@ -505,130 +691,298 @@ export class PolarProvider extends BaseProvider {
       };
     }
 
-    return client.deletePaymentMethod(ctx, input);
+    return client.paymentMethods.delete(ctx, input);
   }
 
   // ===========================================================================
-  // ADDITIONAL METHODS
+  // CATALOG (PRODUCTS & PRICES)
   // ===========================================================================
 
-  async capturePayment(
+  async createProduct(
     ctx: ProviderContext,
-    input: CapturePaymentInput,
+    input: CreateProductInput,
   ): Promise<AsyncActionResult<string>> {
     const client = getClient(ctx.config);
 
-    if (!client.capturePayment) {
+    if (!client.catalog.createProduct) {
       return {
         data: null,
         status: "failed",
         error: {
           code: RevstackErrorCode.NotImplemented,
-          message: "Capture not supported",
+          message: "Create product not supported",
         },
       };
     }
 
-    return client.capturePayment(ctx, input);
+    return client.catalog.createProduct(ctx, input);
   }
 
-  async listSubscriptions(
+  async getProduct(
     ctx: ProviderContext,
-    options: ListSubscriptionsOptions,
-  ): Promise<AsyncActionResult<PaginatedResult<Subscription>>> {
+    input: GetProductInput,
+  ): Promise<AsyncActionResult<Product>> {
     const client = getClient(ctx.config);
 
-    if (!client.listSubscriptions) {
+    if (!client.catalog.getProduct) {
       return {
         data: null,
         status: "failed",
         error: {
           code: RevstackErrorCode.NotImplemented,
-          message: "List subscriptions not supported",
+          message: "Get product not supported",
         },
       };
     }
 
-    return client.listSubscriptions(ctx, options);
+    return client.catalog.getProduct(ctx, input);
   }
 
-  async updateSubscription(
+  async updateProduct(
     ctx: ProviderContext,
-    input: UpdateSubscriptionInput,
+    input: UpdateProductInput,
   ): Promise<AsyncActionResult<string>> {
     const client = getClient(ctx.config);
 
-    if (!client.updateSubscription) {
+    if (!client.catalog.updateProduct) {
       return {
         data: null,
         status: "failed",
         error: {
           code: RevstackErrorCode.NotImplemented,
-          message: "Update subscription not supported",
+          message: "Update product not supported",
         },
       };
     }
 
-    return client.updateSubscription(ctx, input);
+    return client.catalog.updateProduct(ctx, input);
   }
 
-  async listCustomers(
+  async deleteProduct(
     ctx: ProviderContext,
-    options: ListCustomersOptions,
-  ): Promise<AsyncActionResult<PaginatedResult<Customer>>> {
+    input: DeleteProductInput,
+  ): Promise<AsyncActionResult<boolean>> {
     const client = getClient(ctx.config);
 
-    if (!client.listCustomers) {
+    if (!client.catalog.deleteProduct) {
       return {
-        data: null,
+        data: false,
         status: "failed",
         error: {
           code: RevstackErrorCode.NotImplemented,
-          message: "List customers not supported",
+          message: "Delete product not supported",
         },
       };
     }
 
-    return client.listCustomers(ctx, options);
+    return client.catalog.deleteProduct(ctx, input);
   }
 
-  async setupPaymentMethod(
+  async listProducts(
     ctx: ProviderContext,
-    input: SetupPaymentMethodInput,
-  ): Promise<AsyncActionResult<CheckoutSessionResult>> {
+    options: ListProductsOptions,
+  ): Promise<AsyncActionResult<PaginatedResult<Product>>> {
     const client = getClient(ctx.config);
 
-    if (!client.setupPaymentMethod) {
+    if (!client.catalog.listProducts) {
       return {
         data: null,
         status: "failed",
         error: {
           code: RevstackErrorCode.NotImplemented,
-          message: "Setup payment method not supported",
+          message: "List products not supported",
         },
       };
     }
 
-    return client.setupPaymentMethod(ctx, input);
+    return client.catalog.listProducts(ctx, options);
   }
 
-  async createBillingPortalSession(
+  async createPrice(
     ctx: ProviderContext,
-    input: BillingPortalInput,
-  ): Promise<AsyncActionResult<BillingPortalResult>> {
+    input: CreatePriceInput,
+  ): Promise<AsyncActionResult<string>> {
     const client = getClient(ctx.config);
 
-    if (!client.createBillingPortalSession) {
+    if (!client.catalog.createPrice) {
       return {
         data: null,
         status: "failed",
         error: {
           code: RevstackErrorCode.NotImplemented,
-          message: "Billing portal not supported",
+          message: "Create price not supported",
         },
       };
     }
 
-    return client.createBillingPortalSession(ctx, input);
+    return client.catalog.createPrice(ctx, input);
+  }
+
+  async getPrice(
+    ctx: ProviderContext,
+    input: GetPriceInput,
+  ): Promise<AsyncActionResult<Price>> {
+    const client = getClient(ctx.config);
+
+    if (!client.catalog.getPrice) {
+      return {
+        data: null,
+        status: "failed",
+        error: {
+          code: RevstackErrorCode.NotImplemented,
+          message: "Get price not supported",
+        },
+      };
+    }
+
+    return client.catalog.getPrice(ctx, input);
+  }
+
+  async listPrices(
+    ctx: ProviderContext,
+    options: ListPricesOptions,
+  ): Promise<AsyncActionResult<PaginatedResult<Price>>> {
+    const client = getClient(ctx.config);
+
+    if (!client.catalog.listPrices) {
+      return {
+        data: null,
+        status: "failed",
+        error: {
+          code: RevstackErrorCode.NotImplemented,
+          message: "List prices not supported",
+        },
+      };
+    }
+
+    return client.catalog.listPrices(ctx, options);
+  }
+
+  // ===========================================================================
+  // INVOICES
+  // ===========================================================================
+
+  async addInvoiceItem(
+    ctx: ProviderContext,
+    input: AddInvoiceItemInput,
+  ): Promise<AsyncActionResult<string>> {
+    const client = getClient(ctx.config);
+
+    if (!client.invoices.addItem) {
+      return {
+        data: null,
+        status: "failed",
+        error: {
+          code: RevstackErrorCode.NotImplemented,
+          message: "Injecting invoice items not supported.",
+        },
+      };
+    }
+
+    return client.invoices.addItem(ctx, input);
+  }
+
+  async createInvoice(
+    ctx: ProviderContext,
+    input: CreateInvoiceInput,
+  ): Promise<AsyncActionResult<string>> {
+    const client = getClient(ctx.config);
+
+    if (!client.invoices.create) {
+      return {
+        data: null,
+        status: "failed",
+        error: {
+          code: RevstackErrorCode.NotImplemented,
+          message: "Create invoice not supported.",
+        },
+      };
+    }
+
+    return client.invoices.create(ctx, input);
+  }
+
+  async getInvoice(
+    ctx: ProviderContext,
+    input: GetInvoiceInput,
+  ): Promise<AsyncActionResult<Invoice>> {
+    const client = getClient(ctx.config);
+
+    if (!client.invoices.get) {
+      return {
+        data: null,
+        status: "failed",
+        error: {
+          code: RevstackErrorCode.NotImplemented,
+          message: "Get invoice not supported.",
+        },
+      };
+    }
+
+    return client.invoices.get(ctx, input);
+  }
+
+  async listInvoices(
+    ctx: ProviderContext,
+    options: ListInvoicesOptions,
+  ): Promise<AsyncActionResult<PaginatedResult<Invoice>>> {
+    const client = getClient(ctx.config);
+
+    if (!client.invoices.list) {
+      return {
+        data: null,
+        status: "failed",
+        error: {
+          code: RevstackErrorCode.NotImplemented,
+          message: "List invoices not supported.",
+        },
+      };
+    }
+
+    return client.invoices.list(ctx, options);
+  }
+
+  // ===========================================================================
+  // PROMOTIONS & DISCOUNTS
+  // ===========================================================================
+
+  async createCoupon(
+    ctx: ProviderContext,
+    input: CreateCouponInput,
+  ): Promise<AsyncActionResult<string>> {
+    const client = getClient(ctx.config);
+
+    if (!client.promotions.createCoupon) {
+      return {
+        data: null,
+        status: "failed",
+        error: {
+          code: RevstackErrorCode.NotImplemented,
+          message: "Create coupon not supported.",
+        },
+      };
+    }
+
+    return client.promotions.createCoupon(ctx, input);
+  }
+
+  async getCoupon(
+    ctx: ProviderContext,
+    input: GetCouponInput,
+  ): Promise<AsyncActionResult<Coupon>> {
+    const client = getClient(ctx.config);
+
+    if (!client.promotions.getCoupon) {
+      return {
+        data: null,
+        status: "failed",
+        error: {
+          code: RevstackErrorCode.NotImplemented,
+          message: "Get coupon not supported.",
+        },
+      };
+    }
+
+    return client.promotions.getCoupon(ctx, input);
   }
 }

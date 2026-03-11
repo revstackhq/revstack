@@ -1,4 +1,4 @@
-import { RevstackEvent, fromUnixSeconds } from "@revstackhq/providers-core";
+import { fromUnixSeconds, WebhookHandler } from "@revstackhq/providers-core";
 import { toPaymentPayload } from "@/api/v1/payments/mapper";
 import type Stripe from "stripe";
 
@@ -7,7 +7,7 @@ import type Stripe from "stripe";
  * Emitted when a payment attempt is declined or encounters an error.
  * Maps to: PAYMENT_FAILED
  */
-export function handlePaymentFailed(raw: any): RevstackEvent | null {
+export const handlePaymentFailed: WebhookHandler = async (raw, _ctx) => {
   const event = raw as Stripe.PaymentIntentPaymentFailedEvent;
   const pi = event.data.object;
   const lastError = pi.last_payment_error;
@@ -22,7 +22,7 @@ export function handlePaymentFailed(raw: any): RevstackEvent | null {
       lastError?.decline_code ?? lastError?.code ?? lastError?.message,
   };
 
-  return {
+  return Promise.resolve({
     type: "PAYMENT_FAILED",
     providerEventId: event.id,
     createdAt: fromUnixSeconds(event.created),
@@ -31,5 +31,5 @@ export function handlePaymentFailed(raw: any): RevstackEvent | null {
     metadata: { ...pi.metadata },
     originalPayload: raw,
     data,
-  };
-}
+  });
+};

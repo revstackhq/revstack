@@ -1,7 +1,7 @@
 import {
-  RevstackEvent,
   DisputeStatus,
   fromUnixSeconds,
+  WebhookHandler,
 } from "@revstackhq/providers-core";
 import { toDisputePayload } from "@/api/v1/disputes/mapper";
 import type Stripe from "stripe";
@@ -11,7 +11,7 @@ import type Stripe from "stripe";
  * Emitted when a dispute reaches a terminal outcome.
  * Routes to: DISPUTE_WON or DISPUTE_LOST based on the final outcome.
  */
-export function handleDisputeClosed(raw: any): RevstackEvent | null {
+export const handleDisputeClosed: WebhookHandler = async (raw, _ctx) => {
   const event = raw as Stripe.ChargeDisputeClosedEvent;
   const dispute = event.data.object;
 
@@ -23,7 +23,7 @@ export function handleDisputeClosed(raw: any): RevstackEvent | null {
     status,
   };
 
-  return {
+  return Promise.resolve({
     type: isWon ? "DISPUTE_WON" : "DISPUTE_LOST",
     providerEventId: event.id,
     createdAt: fromUnixSeconds(event.created),
@@ -31,5 +31,5 @@ export function handleDisputeClosed(raw: any): RevstackEvent | null {
     metadata: { ...dispute.metadata },
     originalPayload: raw,
     data,
-  };
-}
+  });
+};

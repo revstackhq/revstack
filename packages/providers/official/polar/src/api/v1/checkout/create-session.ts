@@ -1,4 +1,4 @@
-import { mapSessionToCheckoutResult } from "@/api/v1/mappers";
+import { mapSessionToCheckoutResult } from "@/api/v1/checkout/mapper";
 import {
   ProviderContext,
   CheckoutSessionInput,
@@ -6,11 +6,9 @@ import {
   AsyncActionResult,
   RevstackErrorCode,
   CatalogLineItem,
-  BillingPortalInput,
-  BillingPortalResult,
   appendQueryParam,
 } from "@revstackhq/providers-core";
-import { getOrCreatePolar } from "@/api/v1/client";
+import { getOrCreateClient } from "@/api/v1/client";
 import { CheckoutCreate } from "@polar-sh/sdk/models/components/checkoutcreate.js";
 import { mapError } from "@/shared/error-map";
 
@@ -26,7 +24,7 @@ export async function createCheckoutSession(
   ctx: ProviderContext,
   input: CheckoutSessionInput,
 ): Promise<AsyncActionResult<CheckoutSessionResult>> {
-  const polar = getOrCreatePolar(ctx);
+  const polar = getOrCreateClient(ctx);
 
   try {
     const products: string[] = (input.lineItems as CatalogLineItem[])
@@ -91,43 +89,6 @@ export async function createCheckoutSession(
       data: null,
       status: "failed",
       error: mapped,
-    };
-  }
-}
-
-/**
- * Creates a Billing Portal session using Polar's native Customer Portal functionality.
- * Allows users to self-manage subscriptions and payments.
- *
- * @param ctx - The provider execution context.
- * @param input - The portal session parameters.
- * @returns An AsyncActionResult with a redirect URL to the portal.
- */
-export async function createBillingPortalSession(
-  ctx: ProviderContext,
-  input: BillingPortalInput,
-): Promise<AsyncActionResult<BillingPortalResult>> {
-  const polar = getOrCreatePolar(ctx);
-
-  try {
-    const session = await polar.customerSessions.create({
-      customerId: input.customerId,
-      returnUrl: input.returnUrl || undefined,
-    });
-
-    return {
-      data: null,
-      status: "requires_action",
-      nextAction: {
-        type: "redirect",
-        url: session.customerPortalUrl,
-      },
-    };
-  } catch (error) {
-    return {
-      data: null,
-      status: "failed",
-      error: mapError(error),
     };
   }
 }

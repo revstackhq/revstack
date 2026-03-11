@@ -1,12 +1,12 @@
-import { RevstackEvent , fromUnixSeconds } from "@revstackhq/providers-core";
+import { fromUnixSeconds, WebhookHandler } from "@revstackhq/providers-core";
 import type Stripe from "stripe";
 import { toPricePayload } from "@/api/v1/prices/mapper";
 
 /** Handles a price deletion event. → PRICE_DELETED */
-export function handlePriceDeleted(raw: any): RevstackEvent | null {
+export const handlePriceDeleted: WebhookHandler = async (raw, _ctx) => {
   const event = raw as Stripe.PriceDeletedEvent;
   const price = event.data.object;
-  return {
+  return Promise.resolve({
     type: "PRICE_DELETED",
     providerEventId: event.id,
     createdAt: fromUnixSeconds(event.created),
@@ -14,5 +14,5 @@ export function handlePriceDeleted(raw: any): RevstackEvent | null {
     metadata: { ...price.metadata },
     originalPayload: raw,
     data: toPricePayload(price),
-  };
-}
+  });
+};

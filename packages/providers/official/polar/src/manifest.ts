@@ -82,15 +82,28 @@ export const manifest: ProviderManifest = {
       supported: true,
       mode: "native",
       features: {
+        multiItem: false,
         cancellation: true,
-        pause: false,
-        resume: false,
+        pause: true,
+        resume: true,
         proration: true,
       },
     },
     webhooks: {
       supported: true,
       verification: "signature",
+    },
+    billing: {
+      invoiceItems: true,
+      invoices: true,
+      metered: "invoiced",
+      paymentLinks: true,
+    },
+    catalog: {
+      syncStrategy: "jit",
+    },
+    promotions: {
+      coupons: "native",
     },
   },
   author: "Revstack",

@@ -1,12 +1,12 @@
-import { RevstackEvent, fromUnixSeconds } from "@revstackhq/providers-core";
+import { fromUnixSeconds, WebhookHandler } from "@revstackhq/providers-core";
 import type Stripe from "stripe";
 import { toPaymentMethodPayload } from "@/api/v1/payment-methods/mapper";
 
 /** Handles a payment method update event. → PAYMENT_METHOD_UPDATED */
-export function handlePaymentMethodUpdated(raw: any): RevstackEvent | null {
+export const handlePaymentMethodUpdated: WebhookHandler = async (raw, _ctx) => {
   const event = raw as Stripe.PaymentMethodUpdatedEvent;
   const pm = event.data.object;
-  return {
+  return Promise.resolve({
     type: "PAYMENT_METHOD_UPDATED",
     providerEventId: event.id,
     createdAt: fromUnixSeconds(event.created),
@@ -15,5 +15,5 @@ export function handlePaymentMethodUpdated(raw: any): RevstackEvent | null {
     metadata: { ...pm.metadata },
     originalPayload: raw,
     data: toPaymentMethodPayload(pm),
-  };
-}
+  });
+};

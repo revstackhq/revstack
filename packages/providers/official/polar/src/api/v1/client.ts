@@ -3,7 +3,7 @@ import { ProviderContext } from "@revstackhq/providers-core";
 
 let polarClient: Polar | null = null;
 
-export const getOrCreatePolar = (ctx: ProviderContext): Polar => {
+export const getOrCreateClient = (ctx: ProviderContext): Polar => {
   if (!polarClient) {
     polarClient = new Polar({
       accessToken: ctx.config.accessToken,

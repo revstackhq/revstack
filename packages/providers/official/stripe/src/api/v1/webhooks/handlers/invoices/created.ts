@@ -1,12 +1,12 @@
-import { RevstackEvent, fromUnixSeconds } from "@revstackhq/providers-core";
+import { fromUnixSeconds, WebhookHandler } from "@revstackhq/providers-core";
 import type Stripe from "stripe";
 import { toInvoicePayload } from "@/api/v1/invoices/mapper";
 
 /** Handles an invoice creation event. → INVOICE_CREATED */
-export function handleInvoiceCreated(raw: any): RevstackEvent | null {
+export const handleInvoiceCreated: WebhookHandler = async (raw, _ctx) => {
   const event = raw as Stripe.InvoiceCreatedEvent;
   const invoice = event.data.object;
-  return {
+  return Promise.resolve({
     type: "INVOICE_CREATED",
     providerEventId: event.id,
     createdAt: fromUnixSeconds(event.created),
@@ -18,5 +18,5 @@ export function handleInvoiceCreated(raw: any): RevstackEvent | null {
     metadata: { ...invoice.metadata },
     originalPayload: raw,
     data: toInvoicePayload(invoice),
-  };
-}
+  });
+};

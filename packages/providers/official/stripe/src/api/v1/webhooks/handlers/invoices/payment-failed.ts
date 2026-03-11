@@ -1,12 +1,12 @@
-import { RevstackEvent, fromUnixSeconds } from "@revstackhq/providers-core";
+import { fromUnixSeconds, WebhookHandler } from "@revstackhq/providers-core";
 import type Stripe from "stripe";
 import { toInvoicePayload } from "@/api/v1/invoices/mapper";
 
 /** Handles an invoice payment failure event. → INVOICE_PAYMENT_FAILED */
-export function handleInvoicePaymentFailed(raw: any): RevstackEvent | null {
+export const handleInvoicePaymentFailed: WebhookHandler = async (raw, _ctx) => {
   const event = raw as Stripe.InvoicePaymentFailedEvent;
   const invoice = event.data.object;
-  return {
+  return Promise.resolve({
     type: "INVOICE_PAYMENT_FAILED",
     providerEventId: event.id,
     createdAt: fromUnixSeconds(event.created),
@@ -18,5 +18,5 @@ export function handleInvoicePaymentFailed(raw: any): RevstackEvent | null {
     metadata: { ...invoice.metadata },
     originalPayload: raw,
     data: toInvoicePayload(invoice),
-  };
-}
+  });
+};

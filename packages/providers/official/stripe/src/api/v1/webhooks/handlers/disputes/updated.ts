@@ -1,4 +1,4 @@
-import { RevstackEvent, fromUnixSeconds } from "@revstackhq/providers-core";
+import { fromUnixSeconds, WebhookHandler } from "@revstackhq/providers-core";
 import { toDisputePayload } from "@/api/v1/disputes/mapper";
 import type Stripe from "stripe";
 import { mapStripeDisputeStatus } from "./created";
@@ -8,7 +8,7 @@ import { mapStripeDisputeStatus } from "./created";
  * Emitted when a dispute advances to a new stage in the review lifecycle.
  * Maps to: DISPUTE_UPDATED
  */
-export function handleDisputeUpdated(raw: any): RevstackEvent | null {
+export const handleDisputeUpdated: WebhookHandler = async (raw, _ctx) => {
   const event = raw as Stripe.ChargeDisputeUpdatedEvent;
   const dispute = event.data.object;
 
@@ -17,7 +17,7 @@ export function handleDisputeUpdated(raw: any): RevstackEvent | null {
     status: mapStripeDisputeStatus(dispute.status),
   };
 
-  return {
+  return Promise.resolve({
     type: "DISPUTE_UPDATED",
     providerEventId: event.id,
     createdAt: fromUnixSeconds(event.created),
@@ -25,5 +25,5 @@ export function handleDisputeUpdated(raw: any): RevstackEvent | null {
     metadata: { ...dispute.metadata },
     originalPayload: raw,
     data,
-  };
-}
+  });
+};

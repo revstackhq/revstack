@@ -1,5 +1,5 @@
-import { RevstackEvent, fromUnixSeconds } from "@revstackhq/providers-core";
 import { toCheckoutPayload } from "@/api/v1/checkout/mapper";
+import { fromUnixSeconds, WebhookHandler } from "@revstackhq/providers-core";
 import type Stripe from "stripe";
 
 /**
@@ -7,13 +7,13 @@ import type Stripe from "stripe";
  * Emitted when a customer successfully completes a hosted payment session.
  * Maps to: CHECKOUT_COMPLETED
  */
-export function handleCheckoutCompleted(raw: any): RevstackEvent | null {
+export const handleCheckoutCompleted: WebhookHandler = async (raw, _ctx) => {
   const event = raw as Stripe.CheckoutSessionCompletedEvent;
   const session = event.data.object;
 
   const data = toCheckoutPayload(session);
 
-  return {
+  return Promise.resolve({
     type: "CHECKOUT_COMPLETED",
     providerEventId: event.id,
     createdAt: fromUnixSeconds(event.created),
@@ -25,5 +25,5 @@ export function handleCheckoutCompleted(raw: any): RevstackEvent | null {
     metadata: { ...session.metadata },
     originalPayload: raw,
     data,
-  };
-}
+  });
+};

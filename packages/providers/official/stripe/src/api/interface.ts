@@ -56,152 +56,179 @@ import {
   CreateInvoiceInput,
 } from "@revstackhq/providers-core";
 
-export interface ProviderClient {
+// ─── Namespace: Webhooks ──────────────────────────────────────────────────────
+
+export interface WebhooksClient {
   validateCredentials(
     ctx: ProviderContext,
   ): Promise<AsyncActionResult<boolean>>;
 
-  setupWebhooks?(
+  setup?(
     ctx: ProviderContext,
     webhookUrl: string,
   ): Promise<AsyncActionResult<InstallResult>>;
 
-  removeWebhooks?(
+  remove?(
     ctx: ProviderContext,
     webhookId: string,
   ): Promise<AsyncActionResult<boolean>>;
 
-  verifyWebhookSignature(
+  verify(
     ctx: ProviderContext,
     payload: string | Buffer,
     headers: Record<string, string | string[] | undefined>,
     secret: string,
   ): Promise<AsyncActionResult<boolean>>;
 
-  parseWebhookEvent(
+  parse(
+    ctx: ProviderContext,
     payload: unknown,
   ): Promise<AsyncActionResult<RevstackEvent | null>>;
+}
 
-  createCustomer(
+// ─── Namespace: Customers ─────────────────────────────────────────────────────
+
+export interface CustomersClient {
+  create(
     ctx: ProviderContext,
     input: CreateCustomerInput,
   ): Promise<AsyncActionResult<string>>;
 
-  updateCustomer(
+  update(
     ctx: ProviderContext,
     input: UpdateCustomerInput,
   ): Promise<AsyncActionResult<string>>;
 
-  deleteCustomer?(
+  delete?(
     ctx: ProviderContext,
     input: DeleteCustomerInput,
   ): Promise<AsyncActionResult<boolean>>;
 
-  getCustomer?(
+  get?(
     ctx: ProviderContext,
     input: GetCustomerInput,
   ): Promise<AsyncActionResult<Customer>>;
 
-  listCustomers?(
+  list?(
     ctx: ProviderContext,
     options: ListCustomersOptions,
   ): Promise<AsyncActionResult<PaginatedResult<Customer>>>;
+}
 
-  createCheckoutSession?(
+// ─── Namespace: Checkout ──────────────────────────────────────────────────────
+
+export interface CheckoutClient {
+  createSession?(
     ctx: ProviderContext,
     input: CheckoutSessionInput,
   ): Promise<AsyncActionResult<CheckoutSessionResult>>;
 
-  setupPaymentMethod?(
+  createBillingPortal?(
     ctx: ProviderContext,
-    input: SetupPaymentMethodInput,
-  ): Promise<AsyncActionResult<CheckoutSessionResult>>;
+    input: BillingPortalInput,
+  ): Promise<AsyncActionResult<BillingPortalResult>>;
 
   createPaymentLink?(
     ctx: ProviderContext,
     input: CreatePaymentLinkInput,
   ): Promise<AsyncActionResult<string>>;
+}
 
-  createBillingPortalSession?(
+// ─── Namespace: Payment Methods ───────────────────────────────────────────────
+
+export interface PaymentMethodsClient {
+  setup?(
     ctx: ProviderContext,
-    input: BillingPortalInput,
-  ): Promise<AsyncActionResult<BillingPortalResult>>;
+    input: SetupPaymentMethodInput,
+  ): Promise<AsyncActionResult<CheckoutSessionResult>>;
 
-  createPayment?(
-    ctx: ProviderContext,
-    input: CreatePaymentInput,
-  ): Promise<AsyncActionResult<string>>;
-
-  getPayment?(
-    ctx: ProviderContext,
-    input: GetPaymentInput,
-  ): Promise<AsyncActionResult<Payment>>;
-
-  refundPayment?(
-    ctx: ProviderContext,
-    input: RefundPaymentInput,
-  ): Promise<AsyncActionResult<string>>;
-
-  listPayments?(
-    ctx: ProviderContext,
-    options: ListPaymentsOptions,
-  ): Promise<AsyncActionResult<PaginatedResult<Payment>>>;
-
-  capturePayment?(
-    ctx: ProviderContext,
-    input: CapturePaymentInput,
-  ): Promise<AsyncActionResult<string>>;
-
-  listPaymentMethods?(
+  list?(
     ctx: ProviderContext,
     options: ListPaymentMethodsOptions,
   ): Promise<AsyncActionResult<PaymentMethod[]>>;
 
-  deletePaymentMethod?(
+  delete?(
     ctx: ProviderContext,
     input: DeletePaymentMethodInput,
   ): Promise<AsyncActionResult<boolean>>;
+}
 
-  createSubscription?(
+// ─── Namespace: Payments ──────────────────────────────────────────────────────
+
+export interface PaymentsClient {
+  create?(
+    ctx: ProviderContext,
+    input: CreatePaymentInput,
+  ): Promise<AsyncActionResult<string>>;
+
+  get?(
+    ctx: ProviderContext,
+    input: GetPaymentInput,
+  ): Promise<AsyncActionResult<Payment>>;
+
+  refund?(
+    ctx: ProviderContext,
+    input: RefundPaymentInput,
+  ): Promise<AsyncActionResult<string>>;
+
+  list?(
+    ctx: ProviderContext,
+    options: ListPaymentsOptions,
+  ): Promise<AsyncActionResult<PaginatedResult<Payment>>>;
+
+  capture?(
+    ctx: ProviderContext,
+    input: CapturePaymentInput,
+  ): Promise<AsyncActionResult<string>>;
+}
+
+// ─── Namespace: Subscriptions ─────────────────────────────────────────────────
+
+export interface SubscriptionsClient {
+  create?(
     ctx: ProviderContext,
     input: CreateSubscriptionInput,
   ): Promise<AsyncActionResult<string>>;
 
-  getSubscription?(
+  get?(
     ctx: ProviderContext,
     input: GetSubscriptionInput,
   ): Promise<AsyncActionResult<Subscription>>;
 
-  cancelSubscription?(
+  cancel?(
     ctx: ProviderContext,
     input: CancelSubscriptionInput,
   ): Promise<AsyncActionResult<string>>;
 
-  pauseSubscription?(
+  pause?(
     ctx: ProviderContext,
     input: PauseSubscriptionInput,
   ): Promise<AsyncActionResult<string>>;
 
-  resumeSubscription?(
+  resume?(
     ctx: ProviderContext,
     input: ResumeSubscriptionInput,
   ): Promise<AsyncActionResult<string>>;
 
-  listSubscriptions?(
+  list?(
     ctx: ProviderContext,
     options: ListSubscriptionsOptions,
   ): Promise<AsyncActionResult<PaginatedResult<Subscription>>>;
 
-  updateSubscription?(
+  update?(
     ctx: ProviderContext,
     input: UpdateSubscriptionInput,
   ): Promise<AsyncActionResult<string>>;
 
-  previewSubscriptionUpdate?(
+  preview?(
     ctx: ProviderContext,
     input: PreviewSubscriptionUpdateInput,
   ): Promise<AsyncActionResult<ProrationPreviewResult>>;
+}
 
+// ─── Namespace: Catalog ───────────────────────────────────────────────────────
+
+export interface CatalogClient {
   createProduct?(
     ctx: ProviderContext,
     input: CreateProductInput,
@@ -241,27 +268,35 @@ export interface ProviderClient {
     ctx: ProviderContext,
     options: ListPricesOptions,
   ): Promise<AsyncActionResult<PaginatedResult<Price>>>;
+}
 
-  addInvoiceItem?(
+// ─── Namespace: Invoices ──────────────────────────────────────────────────────
+
+export interface InvoicesClient {
+  addItem?(
     ctx: ProviderContext,
     input: AddInvoiceItemInput,
   ): Promise<AsyncActionResult<string>>;
 
-  createInvoice?(
+  create?(
     ctx: ProviderContext,
     input: CreateInvoiceInput,
   ): Promise<AsyncActionResult<string>>;
 
-  getInvoice?(
+  get?(
     ctx: ProviderContext,
     input: GetInvoiceInput,
   ): Promise<AsyncActionResult<Invoice>>;
 
-  listInvoices?(
+  list?(
     ctx: ProviderContext,
     options: ListInvoicesOptions,
   ): Promise<AsyncActionResult<PaginatedResult<Invoice>>>;
+}
 
+// ─── Namespace: Promotions ────────────────────────────────────────────────────
+
+export interface PromotionsClient {
   createCoupon?(
     ctx: ProviderContext,
     input: CreateCouponInput,
@@ -276,4 +311,18 @@ export interface ProviderClient {
     ctx: ProviderContext,
     input: ApplyDiscountInput,
   ): Promise<AsyncActionResult<boolean>>;
+}
+
+// ─── Root ProviderClient ──────────────────────────────────────────────────────
+
+export interface ProviderClient {
+  webhooks: WebhooksClient;
+  customers: CustomersClient;
+  checkout: CheckoutClient;
+  paymentMethods: PaymentMethodsClient;
+  payments: PaymentsClient;
+  subscriptions: SubscriptionsClient;
+  catalog: CatalogClient;
+  invoices: InvoicesClient;
+  promotions: PromotionsClient;
 }

@@ -1,8 +1,8 @@
 import {
-  RevstackEvent,
   RefundPayload,
   fromUnixSeconds,
   RefundPaymentReason,
+  WebhookHandler,
 } from "@revstackhq/providers-core";
 import { toRefundPayload } from "@/api/v1/refunds/mapper";
 import type Stripe from "stripe";
@@ -12,7 +12,7 @@ import type Stripe from "stripe";
  * Emitted when a refund cannot be processed by the banking network.
  * Maps to: REFUND_FAILED
  */
-export function handleRefundFailed(raw: any): RevstackEvent | null {
+export const handleRefundFailed: WebhookHandler = async (raw, _ctx) => {
   const event = raw as Stripe.RefundFailedEvent;
   const refund = event.data.object;
 
@@ -31,7 +31,7 @@ export function handleRefundFailed(raw: any): RevstackEvent | null {
     status: "failed",
   };
 
-  return {
+  return Promise.resolve({
     type: "REFUND_FAILED",
     providerEventId: event.id,
     createdAt: fromUnixSeconds(event.created),
@@ -39,5 +39,5 @@ export function handleRefundFailed(raw: any): RevstackEvent | null {
     metadata: { ...refund.metadata },
     originalPayload: raw,
     data,
-  };
-}
+  });
+};

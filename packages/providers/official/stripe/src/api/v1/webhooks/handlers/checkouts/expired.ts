@@ -1,4 +1,4 @@
-import { RevstackEvent, fromUnixSeconds } from "@revstackhq/providers-core";
+import { fromUnixSeconds, WebhookHandler } from "@revstackhq/providers-core";
 import { toCheckoutPayload } from "@/api/v1/checkout/mapper";
 import type Stripe from "stripe";
 
@@ -7,13 +7,13 @@ import type Stripe from "stripe";
  * Emitted when a hosted payment session expires without the customer completing it.
  * Maps to: CHECKOUT_EXPIRED
  */
-export function handleCheckoutExpired(raw: any): RevstackEvent | null {
+export const handleCheckoutExpired: WebhookHandler = async (raw, _ctx) => {
   const event = raw as Stripe.CheckoutSessionExpiredEvent;
   const session = event.data.object;
 
   const data = toCheckoutPayload(session);
 
-  return {
+  return Promise.resolve({
     type: "CHECKOUT_EXPIRED",
     providerEventId: event.id,
     createdAt: fromUnixSeconds(event.created),
@@ -25,5 +25,5 @@ export function handleCheckoutExpired(raw: any): RevstackEvent | null {
     metadata: { ...session.metadata },
     originalPayload: raw,
     data,
-  };
-}
+  });
+};

@@ -1,9 +1,8 @@
 import {
   EventType,
-  RevstackEvent,
-  SubscriptionPayload,
   SubscriptionStatus,
   fromUnixSeconds,
+  WebhookHandler,
 } from "@revstackhq/providers-core";
 import type Stripe from "stripe";
 import {
@@ -16,7 +15,7 @@ import {
  * Routes to SUBSCRIPTION_UPDATED, SUBSCRIPTION_RENEWED, SUBSCRIPTION_PAST_DUE,
  * or SUBSCRIPTION_CANCELED based on the resulting status and billing period change.
  */
-export function handleSubscriptionUpdated(raw: any): RevstackEvent | null {
+export const handleSubscriptionUpdated: WebhookHandler = async (raw, _ctx) => {
   const event = raw as Stripe.CustomerSubscriptionUpdatedEvent;
   const sub = event.data.object;
   const prev = event.data.previous_attributes;
@@ -37,7 +36,7 @@ export function handleSubscriptionUpdated(raw: any): RevstackEvent | null {
   else if (periodChanged && mappedStatus === SubscriptionStatus.Active)
     type = "SUBSCRIPTION_RENEWED";
 
-  return {
+  return Promise.resolve({
     type,
     providerEventId: event.id,
     createdAt: fromUnixSeconds(event.created),
@@ -47,5 +46,5 @@ export function handleSubscriptionUpdated(raw: any): RevstackEvent | null {
     metadata: { ...sub.metadata },
     originalPayload: raw,
     data,
-  };
-}
+  });
+};

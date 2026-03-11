@@ -1,4 +1,4 @@
-import { RevstackEvent, fromUnixSeconds } from "@revstackhq/providers-core";
+import { fromUnixSeconds, WebhookHandler } from "@revstackhq/providers-core";
 import type Stripe from "stripe";
 import { toSubscriptionPayload } from "@/api/v1/subscriptions/mapper";
 
@@ -7,13 +7,13 @@ import { toSubscriptionPayload } from "@/api/v1/subscriptions/mapper";
  * Emitted when a new subscription is successfully activated.
  * Maps to: SUBSCRIPTION_CREATED
  */
-export function handleSubscriptionCreated(raw: any): RevstackEvent | null {
+export const handleSubscriptionCreated: WebhookHandler = async (raw, _ctx) => {
   const event = raw as Stripe.CustomerSubscriptionCreatedEvent;
   const sub = event.data.object;
 
   const data = toSubscriptionPayload(sub);
 
-  return {
+  return Promise.resolve({
     type: "SUBSCRIPTION_CREATED",
     providerEventId: event.id,
     createdAt: fromUnixSeconds(event.created),
@@ -23,5 +23,5 @@ export function handleSubscriptionCreated(raw: any): RevstackEvent | null {
     metadata: { ...sub.metadata },
     originalPayload: raw,
     data,
-  };
-}
+  });
+};

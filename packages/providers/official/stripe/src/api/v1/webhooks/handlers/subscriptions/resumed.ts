@@ -1,9 +1,8 @@
 import { toSubscriptionPayload } from "@/api/v1/subscriptions/mapper";
 import {
-  RevstackEvent,
-  SubscriptionPayload,
   SubscriptionStatus,
   fromUnixSeconds,
+  WebhookHandler,
 } from "@revstackhq/providers-core";
 import type Stripe from "stripe";
 
@@ -12,7 +11,7 @@ import type Stripe from "stripe";
  * Emitted when billing collection resumes on a previously paused subscription.
  * Maps to: SUBSCRIPTION_RESUMED
  */
-export function handleSubscriptionResumed(raw: any): RevstackEvent | null {
+export const handleSubscriptionResumed: WebhookHandler = async (raw, _ctx) => {
   const event = raw as Stripe.CustomerSubscriptionResumedEvent;
   const sub = event.data.object;
 
@@ -21,7 +20,7 @@ export function handleSubscriptionResumed(raw: any): RevstackEvent | null {
     status: SubscriptionStatus.Active,
   };
 
-  return {
+  return Promise.resolve({
     type: "SUBSCRIPTION_RESUMED",
     providerEventId: event.id,
     createdAt: fromUnixSeconds(event.created),
@@ -31,5 +30,5 @@ export function handleSubscriptionResumed(raw: any): RevstackEvent | null {
     metadata: { ...sub.metadata },
     originalPayload: raw,
     data,
-  };
-}
+  });
+};

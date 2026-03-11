@@ -1,7 +1,7 @@
 import {
-  RevstackEvent,
   DisputeStatus,
   fromUnixSeconds,
+  WebhookHandler,
 } from "@revstackhq/providers-core";
 import { toDisputePayload } from "@/api/v1/disputes/mapper";
 import type Stripe from "stripe";
@@ -27,7 +27,7 @@ export function mapStripeDisputeStatus(status: string): DisputeStatus {
  * Emitted when a customer initiates a chargeback through their bank.
  * Maps to: DISPUTE_CREATED
  */
-export function handleDisputeCreated(raw: any): RevstackEvent | null {
+export const handleDisputeCreated: WebhookHandler = async (raw, _ctx) => {
   const event = raw as Stripe.ChargeDisputeCreatedEvent;
   const dispute = event.data.object;
 
@@ -36,7 +36,7 @@ export function handleDisputeCreated(raw: any): RevstackEvent | null {
     status: "needs_response" as DisputeStatus,
   };
 
-  return {
+  return Promise.resolve({
     type: "DISPUTE_CREATED",
     providerEventId: event.id,
     createdAt: fromUnixSeconds(event.created),
@@ -44,5 +44,5 @@ export function handleDisputeCreated(raw: any): RevstackEvent | null {
     metadata: { ...dispute.metadata },
     originalPayload: raw,
     data,
-  };
-}
+  });
+};

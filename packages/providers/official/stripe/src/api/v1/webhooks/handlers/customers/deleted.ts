@@ -1,14 +1,14 @@
-import { RevstackEvent, fromUnixSeconds } from "@revstackhq/providers-core";
+import { fromUnixSeconds, WebhookHandler } from "@revstackhq/providers-core";
 import { toCustomerPayload } from "@/api/v1/customers/mapper";
 import type Stripe from "stripe";
 
 /** Handles a customer deletion event. → CUSTOMER_DELETED */
-export function handleCustomerDeleted(raw: any): RevstackEvent | null {
+export const handleCustomerDeleted: WebhookHandler = async (raw, _ctx) => {
   const event = raw as Stripe.CustomerDeletedEvent;
   const customer = event.data.object;
   const data = toCustomerPayload(customer);
 
-  return {
+  return Promise.resolve({
     type: "CUSTOMER_DELETED",
     providerEventId: event.id,
     createdAt: fromUnixSeconds(event.created),
@@ -17,5 +17,5 @@ export function handleCustomerDeleted(raw: any): RevstackEvent | null {
     metadata: { ...customer.metadata },
     originalPayload: raw,
     data,
-  };
-}
+  });
+};

@@ -1,14 +1,9 @@
 import {
   Subscription,
   SubscriptionStatus,
-  Payment,
-  PaymentStatus,
-  Customer,
   normalizeCurrency,
 } from "@revstackhq/providers-core";
 import { Subscription as PolarSubscription } from "@polar-sh/sdk/models/components/subscription.js";
-import { Order as PolarOrder } from "@polar-sh/sdk/models/components/order.js";
-import { Customer as PolarCustomer } from "@polar-sh/sdk/models/components/customer.js";
 
 export function mapPolarSubStatusToSubscriptionStatus(
   status: string,
@@ -23,21 +18,6 @@ export function mapPolarSubStatusToSubscriptionStatus(
     unpaid: SubscriptionStatus.Unpaid,
   };
   return map[status] || SubscriptionStatus.Active;
-}
-
-export function mapPolarOrderStatusToPaymentStatus(
-  status: string,
-): PaymentStatus {
-  return status === "paid" ? PaymentStatus.Succeeded : PaymentStatus.Pending;
-}
-
-export function mapSessionToCheckoutResult(session: any) {
-  return {
-    id: session.id,
-    expiresAt: session.expiresAt
-      ? new Date(session.expiresAt).toISOString()
-      : undefined,
-  };
 }
 
 export function mapPolarSubscriptionToSubscription(
@@ -71,34 +51,5 @@ export function mapPolarSubscriptionToSubscription(
       ? new Date(sub.canceledAt).toISOString()
       : undefined,
     raw: sub,
-  };
-}
-
-export function mapPolarOrderToPayment(order: PolarOrder): Payment {
-  return {
-    id: order.id,
-    providerId: "polar",
-    externalId: order.id,
-    amount: order.subtotalAmount || 0,
-    amountRefunded: order.refundedAmount || 0,
-    currency: normalizeCurrency(order.currency, "uppercase"),
-    status: mapPolarOrderStatusToPaymentStatus(order.status),
-    customerId: order.customerId,
-    createdAt: new Date(order.createdAt).toISOString(),
-    raw: order,
-  };
-}
-
-export function mapPolarCustomerToCustomer(customer: PolarCustomer): Customer {
-  return {
-    id: customer.id,
-    providerId: "polar",
-    externalId: customer.externalId || customer.id,
-    email: customer.email,
-    name: customer.name || undefined,
-    phone: undefined, // Polar doesn't store phone natively yet
-    metadata: customer.metadata,
-    createdAt: new Date(customer.createdAt).toISOString(),
-    deleted: false,
   };
 }

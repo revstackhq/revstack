@@ -1,3 +1,6 @@
+import { ProviderContext } from "@/context";
+import { RevstackEvent } from "@/types/events";
+
 export type Address = {
   /** address line 1 */
   line1: string;
@@ -79,3 +82,8 @@ export type PaginatedResult<T> = {
   /** previous page cursor */
   previousCursor?: string;
 };
+
+export type WebhookHandler = (
+  raw: any,
+  ctx: ProviderContext,
+) => Promise<RevstackEvent | null>;

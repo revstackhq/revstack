@@ -1,4 +1,4 @@
-import { RevstackEvent, fromUnixSeconds } from "@revstackhq/providers-core";
+import { fromUnixSeconds, WebhookHandler } from "@revstackhq/providers-core";
 import { toPaymentPayload } from "@/api/v1/payments/mapper";
 import type Stripe from "stripe";
 
@@ -7,13 +7,13 @@ import type Stripe from "stripe";
  * Emitted when a payment is accepted by the network and awaiting settlement.
  * Maps to: PAYMENT_PROCESSING
  */
-export function handlePaymentProcessing(raw: any): RevstackEvent | null {
+export const handlePaymentProcessing: WebhookHandler = async (raw, _ctx) => {
   const event = raw as Stripe.PaymentIntentProcessingEvent;
   const pi = event.data.object;
 
   const data = toPaymentPayload(pi);
 
-  return {
+  return Promise.resolve({
     type: "PAYMENT_PROCESSING",
     providerEventId: event.id,
     createdAt: fromUnixSeconds(event.created),
@@ -22,5 +22,5 @@ export function handlePaymentProcessing(raw: any): RevstackEvent | null {
     metadata: { ...pi.metadata },
     originalPayload: raw,
     data,
-  };
-}
+  });
+};

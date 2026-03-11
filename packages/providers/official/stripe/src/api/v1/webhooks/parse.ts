@@ -2,7 +2,8 @@ import {
   RevstackEvent,
   AsyncActionResult,
   RevstackErrorCode,
-  WebhookEventHandler,
+  WebhookHandler,
+  ProviderContext,
 } from "@revstackhq/providers-core";
 import Stripe from "stripe";
 
@@ -86,7 +87,7 @@ export function extractResourceId(event: Stripe.Event): string | null {
  * The Webhook Dispatcher Registry.
  * Maps the raw provider event type to its corresponding isolated handler function.
  */
-export const HANDLER_REGISTRY: Record<string, WebhookEventHandler> = {
+export const HANDLER_REGISTRY: Record<string, WebhookHandler> = {
   // ── Payments ────────────────────────────────────────────────────────────
   "payment_intent.created": handlePaymentCreated,
   "payment_intent.amount_capturable_updated": handlePaymentAuthorized,
@@ -156,6 +157,7 @@ export const HANDLER_REGISTRY: Record<string, WebhookEventHandler> = {
  * @returns An AsyncActionResult containing the normalized RevstackEvent, or null if ignored.
  */
 export const parseWebhookEvent = async (
+  ctx: ProviderContext,
   payload: any,
 ): Promise<AsyncActionResult<RevstackEvent | null>> => {
   if (!payload || !payload.type) {
@@ -177,7 +179,7 @@ export const parseWebhookEvent = async (
   }
 
   try {
-    const revstackEvent = handler(payload);
+    const revstackEvent = await handler(payload, ctx);
 
     if (!revstackEvent) {
       console.log(

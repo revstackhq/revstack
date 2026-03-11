@@ -1,9 +1,4 @@
-import {
-  RevstackEvent,
-  CheckoutSessionMode,
-  CheckoutPaymentStatus,
-  fromUnixSeconds,
-} from "@revstackhq/providers-core";
+import { fromUnixSeconds, WebhookHandler } from "@revstackhq/providers-core";
 import { toCheckoutPayload } from "@/api/v1/checkout/mapper";
 import type Stripe from "stripe";
 
@@ -12,13 +7,13 @@ import type Stripe from "stripe";
  * Emitted when a deferred payment within a completed session fails to settle.
  * Maps to: CHECKOUT_CANCELED
  */
-export function handleCheckoutCanceled(raw: any): RevstackEvent | null {
+export const handleCheckoutCanceled: WebhookHandler = async (raw, _ctx) => {
   const event = raw as Stripe.CheckoutSessionAsyncPaymentFailedEvent;
   const session = event.data.object;
 
   const data = toCheckoutPayload(session);
 
-  return {
+  return Promise.resolve({
     type: "CHECKOUT_CANCELED",
     providerEventId: event.id,
     createdAt: fromUnixSeconds(event.created),
@@ -30,5 +25,5 @@ export function handleCheckoutCanceled(raw: any): RevstackEvent | null {
     metadata: { ...session.metadata },
     originalPayload: raw,
     data,
-  };
-}
+  });
+};

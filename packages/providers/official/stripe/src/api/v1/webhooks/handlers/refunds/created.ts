@@ -1,8 +1,8 @@
 import {
-  RevstackEvent,
   RefundPaymentReason,
   RefundPayload,
   fromUnixSeconds,
+  WebhookHandler,
 } from "@revstackhq/providers-core";
 import { toRefundPayload } from "@/api/v1/refunds/mapper";
 import type Stripe from "stripe";
@@ -12,7 +12,7 @@ import type Stripe from "stripe";
  * Emitted when a new refund is initiated, before it is processed by the banking network.
  * Maps to: REFUND_CREATED
  */
-export function handleRefundCreated(raw: any): RevstackEvent | null {
+export const handleRefundCreated: WebhookHandler = async (raw, _ctx) => {
   const event = raw as Stripe.RefundCreatedEvent;
   const refund = event.data.object;
 
@@ -31,7 +31,7 @@ export function handleRefundCreated(raw: any): RevstackEvent | null {
     status: "pending",
   };
 
-  return {
+  return Promise.resolve({
     type: "REFUND_CREATED",
     providerEventId: event.id,
     createdAt: fromUnixSeconds(event.created),
@@ -39,5 +39,5 @@ export function handleRefundCreated(raw: any): RevstackEvent | null {
     metadata: { ...refund.metadata },
     originalPayload: raw,
     data,
-  };
-}
+  });
+};

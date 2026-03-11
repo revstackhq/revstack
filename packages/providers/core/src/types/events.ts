@@ -214,6 +214,3 @@ export interface WebhookResponse {
   /** Response body (often empty or provider-specific). */
   body: any;
 }
-
-/** A handler function that processes a raw provider webhook payload into a RevstackEvent. */
-export type WebhookEventHandler = (raw: any) => RevstackEvent | null;

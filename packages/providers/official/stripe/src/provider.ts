@@ -57,7 +57,6 @@ import {
   Coupon,
   CreateCouponInput,
   GetCouponInput,
-  ApplyDiscountInput,
   PreviewSubscriptionUpdateInput,
   ProrationPreviewResult,
   CreateInvoiceInput,
@@ -78,7 +77,7 @@ export class StripeProvider extends BaseProvider {
     const client = getClient(input.config);
     const installVersion = manifest.version;
 
-    const isValid = await client.validateCredentials({
+    const isValid = await client.webhooks.validateCredentials({
       ...ctx,
       config: input.config,
     });
@@ -97,9 +96,9 @@ export class StripeProvider extends BaseProvider {
 
     let webhookData: Record<string, any> = {};
 
-    if (client.setupWebhooks && input.webhookUrl) {
+    if (client.webhooks.setup && input.webhookUrl) {
       try {
-        const wh = await client.setupWebhooks(
+        const wh = await client.webhooks.setup(
           { ...ctx, config: input.config },
           input.webhookUrl,
         );
@@ -153,9 +152,9 @@ export class StripeProvider extends BaseProvider {
   ): Promise<AsyncActionResult<boolean>> {
     const client = getClient(input.config);
 
-    if (client.removeWebhooks && input.data.webhookEndpointId) {
+    if (client.webhooks.remove && input.data.webhookEndpointId) {
       try {
-        await client.removeWebhooks(
+        await client.webhooks.remove(
           ctx,
           input.data.webhookEndpointId as string,
         );
@@ -176,7 +175,7 @@ export class StripeProvider extends BaseProvider {
     secret: string,
   ): Promise<AsyncActionResult<boolean>> {
     const client = getClient(ctx.config);
-    return client.verifyWebhookSignature(ctx, payload, headers, secret);
+    return client.webhooks.verify(ctx, payload, headers, secret);
   }
 
   async parseWebhookEvent(
@@ -184,7 +183,7 @@ export class StripeProvider extends BaseProvider {
     payload: any,
   ): Promise<AsyncActionResult<RevstackEvent | null>> {
     const client = getClient(ctx.config);
-    return client.parseWebhookEvent(payload);
+    return client.webhooks.parse(ctx, payload);
   }
 
   async getWebhookResponse(): Promise<AsyncActionResult<WebhookResponse>> {
@@ -204,7 +203,7 @@ export class StripeProvider extends BaseProvider {
   ): Promise<AsyncActionResult<string>> {
     const client = getClient(ctx.config);
 
-    if (!client.createPayment) {
+    if (!client.payments.create) {
       return {
         data: null,
         status: "failed",
@@ -215,7 +214,7 @@ export class StripeProvider extends BaseProvider {
       };
     }
 
-    return client.createPayment(ctx, input);
+    return client.payments.create(ctx, input);
   }
 
   async getPayment(
@@ -224,7 +223,7 @@ export class StripeProvider extends BaseProvider {
   ): Promise<AsyncActionResult<Payment>> {
     const client = getClient(ctx.config);
 
-    if (!client.getPayment) {
+    if (!client.payments.get) {
       return {
         data: null,
         status: "failed",
@@ -235,7 +234,7 @@ export class StripeProvider extends BaseProvider {
       };
     }
 
-    return client.getPayment(ctx, input);
+    return client.payments.get(ctx, input);
   }
 
   async refundPayment(
@@ -244,7 +243,7 @@ export class StripeProvider extends BaseProvider {
   ): Promise<AsyncActionResult<string>> {
     const client = getClient(ctx.config);
 
-    if (!client.refundPayment) {
+    if (!client.payments.refund) {
       return {
         data: null,
         status: "failed",
@@ -255,7 +254,7 @@ export class StripeProvider extends BaseProvider {
       };
     }
 
-    return client.refundPayment(ctx, input);
+    return client.payments.refund(ctx, input);
   }
 
   async listPayments(
@@ -264,7 +263,7 @@ export class StripeProvider extends BaseProvider {
   ): Promise<AsyncActionResult<PaginatedResult<Payment>>> {
     const client = getClient(ctx.config);
 
-    if (!client.listPayments) {
+    if (!client.payments.list) {
       return {
         data: null,
         status: "failed",
@@ -275,7 +274,7 @@ export class StripeProvider extends BaseProvider {
       };
     }
 
-    return client.listPayments(ctx, options);
+    return client.payments.list(ctx, options);
   }
 
   async capturePayment(
@@ -284,7 +283,7 @@ export class StripeProvider extends BaseProvider {
   ): Promise<AsyncActionResult<string>> {
     const client = getClient(ctx.config);
 
-    if (!client.capturePayment) {
+    if (!client.payments.capture) {
       return {
         data: null,
         status: "failed",
@@ -295,7 +294,7 @@ export class StripeProvider extends BaseProvider {
       };
     }
 
-    return client.capturePayment(ctx, input);
+    return client.payments.capture(ctx, input);
   }
 
   // ===========================================================================
@@ -308,7 +307,7 @@ export class StripeProvider extends BaseProvider {
   ): Promise<AsyncActionResult<string>> {
     const client = getClient(ctx.config);
 
-    if (!client.createSubscription) {
+    if (!client.subscriptions.create) {
       return {
         data: null,
         status: "failed",
@@ -319,7 +318,7 @@ export class StripeProvider extends BaseProvider {
       };
     }
 
-    return client.createSubscription(ctx, input);
+    return client.subscriptions.create(ctx, input);
   }
 
   async getSubscription(
@@ -328,7 +327,7 @@ export class StripeProvider extends BaseProvider {
   ): Promise<AsyncActionResult<Subscription>> {
     const client = getClient(ctx.config);
 
-    if (!client.getSubscription) {
+    if (!client.subscriptions.get) {
       return {
         data: null,
         status: "failed",
@@ -339,7 +338,7 @@ export class StripeProvider extends BaseProvider {
       };
     }
 
-    return client.getSubscription(ctx, input);
+    return client.subscriptions.get(ctx, input);
   }
 
   async cancelSubscription(
@@ -348,7 +347,7 @@ export class StripeProvider extends BaseProvider {
   ): Promise<AsyncActionResult<string>> {
     const client = getClient(ctx.config);
 
-    if (!client.cancelSubscription) {
+    if (!client.subscriptions.cancel) {
       return {
         data: null,
         status: "failed",
@@ -359,7 +358,7 @@ export class StripeProvider extends BaseProvider {
       };
     }
 
-    return client.cancelSubscription(ctx, input);
+    return client.subscriptions.cancel(ctx, input);
   }
 
   async pauseSubscription(
@@ -368,7 +367,7 @@ export class StripeProvider extends BaseProvider {
   ): Promise<AsyncActionResult<string>> {
     const client = getClient(ctx.config);
 
-    if (!client.pauseSubscription) {
+    if (!client.subscriptions.pause) {
       return {
         data: null,
         status: "failed",
@@ -379,7 +378,7 @@ export class StripeProvider extends BaseProvider {
       };
     }
 
-    return client.pauseSubscription(ctx, input);
+    return client.subscriptions.pause(ctx, input);
   }
 
   async resumeSubscription(
@@ -388,7 +387,7 @@ export class StripeProvider extends BaseProvider {
   ): Promise<AsyncActionResult<string>> {
     const client = getClient(ctx.config);
 
-    if (!client.resumeSubscription) {
+    if (!client.subscriptions.resume) {
       return {
         data: null,
         status: "failed",
@@ -399,7 +398,7 @@ export class StripeProvider extends BaseProvider {
       };
     }
 
-    return client.resumeSubscription(ctx, input);
+    return client.subscriptions.resume(ctx, input);
   }
 
   async listSubscriptions(
@@ -408,7 +407,7 @@ export class StripeProvider extends BaseProvider {
   ): Promise<AsyncActionResult<PaginatedResult<Subscription>>> {
     const client = getClient(ctx.config);
 
-    if (!client.listSubscriptions) {
+    if (!client.subscriptions.list) {
       return {
         data: null,
         status: "failed",
@@ -419,7 +418,7 @@ export class StripeProvider extends BaseProvider {
       };
     }
 
-    return client.listSubscriptions(ctx, options);
+    return client.subscriptions.list(ctx, options);
   }
 
   async updateSubscription(
@@ -428,7 +427,7 @@ export class StripeProvider extends BaseProvider {
   ): Promise<AsyncActionResult<string>> {
     const client = getClient(ctx.config);
 
-    if (!client.updateSubscription) {
+    if (!client.subscriptions.update) {
       return {
         data: null,
         status: "failed",
@@ -439,7 +438,7 @@ export class StripeProvider extends BaseProvider {
       };
     }
 
-    return client.updateSubscription(ctx, input);
+    return client.subscriptions.update(ctx, input);
   }
 
   async previewSubscriptionUpdate(
@@ -448,7 +447,7 @@ export class StripeProvider extends BaseProvider {
   ): Promise<AsyncActionResult<ProrationPreviewResult>> {
     const client = getClient(ctx.config);
 
-    if (!client.previewSubscriptionUpdate) {
+    if (!client.subscriptions.preview) {
       return {
         data: null,
         status: "failed",
@@ -459,7 +458,7 @@ export class StripeProvider extends BaseProvider {
       };
     }
 
-    return client.previewSubscriptionUpdate(ctx, input);
+    return client.subscriptions.preview(ctx, input);
   }
 
   // ===========================================================================
@@ -472,7 +471,7 @@ export class StripeProvider extends BaseProvider {
   ): Promise<AsyncActionResult<CheckoutSessionResult>> {
     const client = getClient(ctx.config);
 
-    if (!client.createCheckoutSession) {
+    if (!client.checkout.createSession) {
       return {
         data: null,
         status: "failed",
@@ -483,7 +482,7 @@ export class StripeProvider extends BaseProvider {
       };
     }
 
-    return client.createCheckoutSession(ctx, input);
+    return client.checkout.createSession(ctx, input);
   }
 
   async createBillingPortalSession(
@@ -492,7 +491,7 @@ export class StripeProvider extends BaseProvider {
   ): Promise<AsyncActionResult<BillingPortalResult>> {
     const client = getClient(ctx.config);
 
-    if (!client.createBillingPortalSession) {
+    if (!client.checkout.createBillingPortal) {
       return {
         data: null,
         status: "failed",
@@ -503,7 +502,7 @@ export class StripeProvider extends BaseProvider {
       };
     }
 
-    return client.createBillingPortalSession(ctx, input);
+    return client.checkout.createBillingPortal(ctx, input);
   }
 
   async createPaymentLink(
@@ -512,7 +511,7 @@ export class StripeProvider extends BaseProvider {
   ): Promise<AsyncActionResult<string>> {
     const client = getClient(ctx.config);
 
-    if (!client.createPaymentLink) {
+    if (!client.checkout.createPaymentLink) {
       return {
         data: null,
         status: "failed",
@@ -523,7 +522,7 @@ export class StripeProvider extends BaseProvider {
       };
     }
 
-    return client.createPaymentLink(ctx, input);
+    return client.checkout.createPaymentLink(ctx, input);
   }
 
   async setupPaymentMethod(
@@ -532,7 +531,7 @@ export class StripeProvider extends BaseProvider {
   ): Promise<AsyncActionResult<CheckoutSessionResult>> {
     const client = getClient(ctx.config);
 
-    if (!client.setupPaymentMethod) {
+    if (!client.paymentMethods.setup) {
       return {
         data: null,
         status: "failed",
@@ -543,7 +542,7 @@ export class StripeProvider extends BaseProvider {
       };
     }
 
-    return client.setupPaymentMethod(ctx, input);
+    return client.paymentMethods.setup(ctx, input);
   }
 
   // ===========================================================================
@@ -556,7 +555,7 @@ export class StripeProvider extends BaseProvider {
   ): Promise<AsyncActionResult<string>> {
     const client = getClient(ctx.config);
 
-    if (!client.createCustomer) {
+    if (!client.customers.create) {
       return {
         data: null,
         status: "failed",
@@ -567,7 +566,7 @@ export class StripeProvider extends BaseProvider {
       };
     }
 
-    return client.createCustomer(ctx, input);
+    return client.customers.create(ctx, input);
   }
 
   async updateCustomer(
@@ -576,7 +575,7 @@ export class StripeProvider extends BaseProvider {
   ): Promise<AsyncActionResult<string>> {
     const client = getClient(ctx.config);
 
-    if (!client.updateCustomer) {
+    if (!client.customers.update) {
       return {
         data: null,
         status: "failed",
@@ -587,7 +586,7 @@ export class StripeProvider extends BaseProvider {
       };
     }
 
-    return client.updateCustomer(ctx, input);
+    return client.customers.update(ctx, input);
   }
 
   async deleteCustomer(
@@ -596,7 +595,7 @@ export class StripeProvider extends BaseProvider {
   ): Promise<AsyncActionResult<boolean>> {
     const client = getClient(ctx.config);
 
-    if (!client.deleteCustomer) {
+    if (!client.customers.delete) {
       return {
         data: false,
         status: "failed",
@@ -607,7 +606,7 @@ export class StripeProvider extends BaseProvider {
       };
     }
 
-    return client.deleteCustomer(ctx, input);
+    return client.customers.delete(ctx, input);
   }
 
   async getCustomer(
@@ -616,7 +615,7 @@ export class StripeProvider extends BaseProvider {
   ): Promise<AsyncActionResult<Customer>> {
     const client = getClient(ctx.config);
 
-    if (!client.getCustomer) {
+    if (!client.customers.get) {
       return {
         data: null,
         status: "failed",
@@ -627,7 +626,7 @@ export class StripeProvider extends BaseProvider {
       };
     }
 
-    return client.getCustomer(ctx, input);
+    return client.customers.get(ctx, input);
   }
 
   async listCustomers(
@@ -636,7 +635,7 @@ export class StripeProvider extends BaseProvider {
   ): Promise<AsyncActionResult<PaginatedResult<Customer>>> {
     const client = getClient(ctx.config);
 
-    if (!client.listCustomers) {
+    if (!client.customers.list) {
       return {
         data: null,
         status: "failed",
@@ -647,7 +646,7 @@ export class StripeProvider extends BaseProvider {
       };
     }
 
-    return client.listCustomers(ctx, options);
+    return client.customers.list(ctx, options);
   }
 
   // ===========================================================================
@@ -660,7 +659,7 @@ export class StripeProvider extends BaseProvider {
   ): Promise<AsyncActionResult<PaymentMethod[]>> {
     const client = getClient(ctx.config);
 
-    if (!client.listPaymentMethods) {
+    if (!client.paymentMethods.list) {
       return {
         data: null,
         status: "failed",
@@ -671,7 +670,7 @@ export class StripeProvider extends BaseProvider {
       };
     }
 
-    return client.listPaymentMethods(ctx, options);
+    return client.paymentMethods.list(ctx, options);
   }
 
   async deletePaymentMethod(
@@ -680,7 +679,7 @@ export class StripeProvider extends BaseProvider {
   ): Promise<AsyncActionResult<boolean>> {
     const client = getClient(ctx.config);
 
-    if (!client.deletePaymentMethod) {
+    if (!client.paymentMethods.delete) {
       return {
         data: false,
         status: "failed",
@@ -691,7 +690,7 @@ export class StripeProvider extends BaseProvider {
       };
     }
 
-    return client.deletePaymentMethod(ctx, input);
+    return client.paymentMethods.delete(ctx, input);
   }
 
   // ===========================================================================
@@ -704,7 +703,7 @@ export class StripeProvider extends BaseProvider {
   ): Promise<AsyncActionResult<string>> {
     const client = getClient(ctx.config);
 
-    if (!client.createProduct) {
+    if (!client.catalog.createProduct) {
       return {
         data: null,
         status: "failed",
@@ -715,7 +714,7 @@ export class StripeProvider extends BaseProvider {
       };
     }
 
-    return client.createProduct(ctx, input);
+    return client.catalog.createProduct(ctx, input);
   }
 
   async getProduct(
@@ -724,7 +723,7 @@ export class StripeProvider extends BaseProvider {
   ): Promise<AsyncActionResult<Product>> {
     const client = getClient(ctx.config);
 
-    if (!client.getProduct) {
+    if (!client.catalog.getProduct) {
       return {
         data: null,
         status: "failed",
@@ -735,7 +734,7 @@ export class StripeProvider extends BaseProvider {
       };
     }
 
-    return client.getProduct(ctx, input);
+    return client.catalog.getProduct(ctx, input);
   }
 
   async updateProduct(
@@ -744,7 +743,7 @@ export class StripeProvider extends BaseProvider {
   ): Promise<AsyncActionResult<string>> {
     const client = getClient(ctx.config);
 
-    if (!client.updateProduct) {
+    if (!client.catalog.updateProduct) {
       return {
         data: null,
         status: "failed",
@@ -755,7 +754,7 @@ export class StripeProvider extends BaseProvider {
       };
     }
 
-    return client.updateProduct(ctx, input);
+    return client.catalog.updateProduct(ctx, input);
   }
 
   async deleteProduct(
@@ -764,7 +763,7 @@ export class StripeProvider extends BaseProvider {
   ): Promise<AsyncActionResult<boolean>> {
     const client = getClient(ctx.config);
 
-    if (!client.deleteProduct) {
+    if (!client.catalog.deleteProduct) {
       return {
         data: false,
         status: "failed",
@@ -775,7 +774,7 @@ export class StripeProvider extends BaseProvider {
       };
     }
 
-    return client.deleteProduct(ctx, input);
+    return client.catalog.deleteProduct(ctx, input);
   }
 
   async listProducts(
@@ -784,7 +783,7 @@ export class StripeProvider extends BaseProvider {
   ): Promise<AsyncActionResult<PaginatedResult<Product>>> {
     const client = getClient(ctx.config);
 
-    if (!client.listProducts) {
+    if (!client.catalog.listProducts) {
       return {
         data: null,
         status: "failed",
@@ -795,7 +794,7 @@ export class StripeProvider extends BaseProvider {
       };
     }
 
-    return client.listProducts(ctx, options);
+    return client.catalog.listProducts(ctx, options);
   }
 
   async createPrice(
@@ -804,7 +803,7 @@ export class StripeProvider extends BaseProvider {
   ): Promise<AsyncActionResult<string>> {
     const client = getClient(ctx.config);
 
-    if (!client.createPrice) {
+    if (!client.catalog.createPrice) {
       return {
         data: null,
         status: "failed",
@@ -815,7 +814,7 @@ export class StripeProvider extends BaseProvider {
       };
     }
 
-    return client.createPrice(ctx, input);
+    return client.catalog.createPrice(ctx, input);
   }
 
   async getPrice(
@@ -824,7 +823,7 @@ export class StripeProvider extends BaseProvider {
   ): Promise<AsyncActionResult<Price>> {
     const client = getClient(ctx.config);
 
-    if (!client.getPrice) {
+    if (!client.catalog.getPrice) {
       return {
         data: null,
         status: "failed",
@@ -835,7 +834,7 @@ export class StripeProvider extends BaseProvider {
       };
     }
 
-    return client.getPrice(ctx, input);
+    return client.catalog.getPrice(ctx, input);
   }
 
   async listPrices(
@@ -844,7 +843,7 @@ export class StripeProvider extends BaseProvider {
   ): Promise<AsyncActionResult<PaginatedResult<Price>>> {
     const client = getClient(ctx.config);
 
-    if (!client.listPrices) {
+    if (!client.catalog.listPrices) {
       return {
         data: null,
         status: "failed",
@@ -855,7 +854,7 @@ export class StripeProvider extends BaseProvider {
       };
     }
 
-    return client.listPrices(ctx, options);
+    return client.catalog.listPrices(ctx, options);
   }
 
   // ===========================================================================
@@ -868,7 +867,7 @@ export class StripeProvider extends BaseProvider {
   ): Promise<AsyncActionResult<string>> {
     const client = getClient(ctx.config);
 
-    if (!client.addInvoiceItem) {
+    if (!client.invoices.addItem) {
       return {
         data: null,
         status: "failed",
@@ -879,7 +878,7 @@ export class StripeProvider extends BaseProvider {
       };
     }
 
-    return client.addInvoiceItem(ctx, input);
+    return client.invoices.addItem(ctx, input);
   }
 
   async createInvoice(
@@ -888,7 +887,7 @@ export class StripeProvider extends BaseProvider {
   ): Promise<AsyncActionResult<string>> {
     const client = getClient(ctx.config);
 
-    if (!client.createInvoice) {
+    if (!client.invoices.create) {
       return {
         data: null,
         status: "failed",
@@ -899,7 +898,7 @@ export class StripeProvider extends BaseProvider {
       };
     }
 
-    return client.createInvoice(ctx, input);
+    return client.invoices.create(ctx, input);
   }
 
   async getInvoice(
@@ -908,7 +907,7 @@ export class StripeProvider extends BaseProvider {
   ): Promise<AsyncActionResult<Invoice>> {
     const client = getClient(ctx.config);
 
-    if (!client.getInvoice) {
+    if (!client.invoices.get) {
       return {
         data: null,
         status: "failed",
@@ -919,7 +918,7 @@ export class StripeProvider extends BaseProvider {
       };
     }
 
-    return client.getInvoice(ctx, input);
+    return client.invoices.get(ctx, input);
   }
 
   async listInvoices(
@@ -928,7 +927,7 @@ export class StripeProvider extends BaseProvider {
   ): Promise<AsyncActionResult<PaginatedResult<Invoice>>> {
     const client = getClient(ctx.config);
 
-    if (!client.listInvoices) {
+    if (!client.invoices.list) {
       return {
         data: null,
         status: "failed",
@@ -939,7 +938,7 @@ export class StripeProvider extends BaseProvider {
       };
     }
 
-    return client.listInvoices(ctx, options);
+    return client.invoices.list(ctx, options);
   }
 
   // ===========================================================================
@@ -952,7 +951,7 @@ export class StripeProvider extends BaseProvider {
   ): Promise<AsyncActionResult<string>> {
     const client = getClient(ctx.config);
 
-    if (!client.createCoupon) {
+    if (!client.promotions.createCoupon) {
       return {
         data: null,
         status: "failed",
@@ -963,7 +962,7 @@ export class StripeProvider extends BaseProvider {
       };
     }
 
-    return client.createCoupon(ctx, input);
+    return client.promotions.createCoupon(ctx, input);
   }
 
   async getCoupon(
@@ -972,7 +971,7 @@ export class StripeProvider extends BaseProvider {
   ): Promise<AsyncActionResult<Coupon>> {
     const client = getClient(ctx.config);
 
-    if (!client.getCoupon) {
+    if (!client.promotions.getCoupon) {
       return {
         data: null,
         status: "failed",
@@ -983,6 +982,6 @@ export class StripeProvider extends BaseProvider {
       };
     }
 
-    return client.getCoupon(ctx, input);
+    return client.promotions.getCoupon(ctx, input);
   }
 }

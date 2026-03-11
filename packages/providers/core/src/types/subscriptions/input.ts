@@ -1,6 +1,5 @@
 import { LineItem } from "@/types/catalog";
 import { PaginationOptions, Interval, ProrationBehavior } from "@/types/shared";
-import { ReportUsageAction } from "@/types/subscriptions/model";
 
 export type CreateSubscriptionInput = {
   /** external reference id for webhooks (e.g. internal user or order id) */

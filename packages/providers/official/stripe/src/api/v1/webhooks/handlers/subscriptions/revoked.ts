@@ -1,9 +1,8 @@
 import { toSubscriptionPayload } from "@/api/v1/subscriptions/mapper";
 import {
-  RevstackEvent,
-  SubscriptionPayload,
   SubscriptionStatus,
   fromUnixSeconds,
+  WebhookHandler,
 } from "@revstackhq/providers-core";
 import type Stripe from "stripe";
 
@@ -12,7 +11,7 @@ import type Stripe from "stripe";
  * Emitted when a subscription is permanently canceled by the provider or the merchant.
  * Maps to: SUBSCRIPTION_REVOKED
  */
-export function handleSubscriptionRevoked(raw: any): RevstackEvent | null {
+export const handleSubscriptionRevoked: WebhookHandler = async (raw, _ctx) => {
   const event = raw as Stripe.CustomerSubscriptionDeletedEvent;
   const sub = event.data.object;
 
@@ -24,7 +23,7 @@ export function handleSubscriptionRevoked(raw: any): RevstackEvent | null {
     cancelAtPeriodEnd: false,
   };
 
-  return {
+  return Promise.resolve({
     type: "SUBSCRIPTION_REVOKED",
     providerEventId: event.id,
     createdAt: fromUnixSeconds(event.created),
@@ -34,5 +33,5 @@ export function handleSubscriptionRevoked(raw: any): RevstackEvent | null {
     metadata: { ...sub.metadata },
     originalPayload: raw,
     data,
-  };
-}
+  });
+};
