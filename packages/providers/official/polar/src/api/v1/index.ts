@@ -1,4 +1,4 @@
-import { ProviderClient } from "@/api/interface";
+import { BillingClient, ProviderClient } from "@/api/interface";
 import {
   ProviderContext,
   CreatePaymentInput,
@@ -7,7 +7,6 @@ import {
   UpdateSubscriptionInput,
   CheckoutSessionInput,
   BillingPortalInput,
-  SetupPaymentMethodInput,
   CreateCustomerInput,
   UpdateCustomerInput,
   GetPaymentInput,
@@ -21,9 +20,6 @@ import {
   GetCustomerInput,
   DeleteCustomerInput,
   ListCustomersOptions,
-  DeletePaymentMethodInput,
-  ListPaymentMethodsOptions,
-  PreviewSubscriptionUpdateInput,
   CreateProductInput,
   GetProductInput,
   UpdateProductInput,
@@ -32,13 +28,11 @@ import {
   CreatePriceInput,
   GetPriceInput,
   ListPricesOptions,
-  AddInvoiceItemInput,
   CreatePaymentLinkInput,
-  GetInvoiceInput,
-  ListInvoicesOptions,
   CreateCouponInput,
   GetCouponInput,
-  CreateInvoiceInput,
+  CreateMeterInput,
+  IngestEventInput,
 } from "@revstackhq/providers-core";
 
 import * as payments from "@/api/v1/payments";
@@ -46,10 +40,9 @@ import * as subscriptions from "@/api/v1/subscriptions";
 import * as checkout from "@/api/v1/checkout";
 import * as customers from "@/api/v1/customers";
 import * as webhooks from "@/api/v1/webhooks";
-import * as paymentMethods from "@/api/v1/payment-methods";
 import * as catalog from "@/api/v1/catalog";
 import * as promotions from "@/api/v1/promotions";
-import * as invoices from "@/api/v1/invoices";
+import * as billing from "@/api/v1/billing";
 
 export class PolarClientV1 implements ProviderClient {
   // ─── Webhooks ───────────────────────────────────────────────────────────────
@@ -100,20 +93,8 @@ export class PolarClientV1 implements ProviderClient {
     createBillingPortal: (ctx: ProviderContext, input: BillingPortalInput) =>
       checkout.createBillingPortalSession(ctx, input),
 
-    // createPaymentLink: (ctx: ProviderContext, input: CreatePaymentLinkInput) =>
-    //   checkout.createPaymentLink(ctx, input),
-  };
-
-  // ─── Payment Methods ────────────────────────────────────────────────────────
-  paymentMethods = {
-    setup: (ctx: ProviderContext, input: SetupPaymentMethodInput) =>
-      paymentMethods.setupPaymentMethod(ctx, input),
-
-    list: (ctx: ProviderContext, options: ListPaymentMethodsOptions) =>
-      paymentMethods.listPaymentMethods(ctx, options),
-
-    delete: (ctx: ProviderContext, input: DeletePaymentMethodInput) =>
-      paymentMethods.deletePaymentMethod(ctx, input),
+    createPaymentLink: (ctx: ProviderContext, input: CreatePaymentLinkInput) =>
+      checkout.createPaymentLink(ctx, input),
   };
 
   // ─── Payments ───────────────────────────────────────────────────────────────
@@ -189,21 +170,6 @@ export class PolarClientV1 implements ProviderClient {
       catalog.listPrices(ctx, options),
   };
 
-  // ─── Invoices ───────────────────────────────────────────────────────────────
-  invoices = {
-    addItem: (ctx: ProviderContext, input: AddInvoiceItemInput) =>
-      invoices.addInvoiceItem(ctx, input),
-
-    create: (ctx: ProviderContext, input: CreateInvoiceInput) =>
-      invoices.createInvoice(ctx, input),
-
-    get: (ctx: ProviderContext, input: GetInvoiceInput) =>
-      invoices.getInvoice(ctx, input),
-
-    list: (ctx: ProviderContext, options: ListInvoicesOptions) =>
-      invoices.listInvoices(ctx, options),
-  };
-
   // ─── Promotions ─────────────────────────────────────────────────────────────
   promotions = {
     createCoupon: (ctx: ProviderContext, input: CreateCouponInput) =>
@@ -211,5 +177,13 @@ export class PolarClientV1 implements ProviderClient {
 
     getCoupon: (ctx: ProviderContext, input: GetCouponInput) =>
       promotions.getCoupon(ctx, input),
+  };
+
+  billing = {
+    createMeter: (ctx: ProviderContext, input: CreateMeterInput) =>
+      billing.createMeter(ctx, input),
+
+    ingestEvent: (ctx: ProviderContext, input: IngestEventInput) =>
+      billing.ingestEvent(ctx, input),
   };
 }

@@ -57,10 +57,11 @@ import {
   Coupon,
   CreateCouponInput,
   GetCouponInput,
-  ApplyDiscountInput,
   PreviewSubscriptionUpdateInput,
   ProrationPreviewResult,
   CreateInvoiceInput,
+  CreateMeterInput,
+  IngestEventInput,
 } from "@revstackhq/providers-core";
 
 export class PolarProvider extends BaseProvider {
@@ -184,7 +185,7 @@ export class PolarProvider extends BaseProvider {
     payload: any,
   ): Promise<AsyncActionResult<RevstackEvent | null>> {
     const client = getClient(ctx.config);
-    return client.webhooks.parse(payload);
+    return client.webhooks.parse(ctx, payload);
   }
 
   async getWebhookResponse(): Promise<AsyncActionResult<WebhookResponse>> {
@@ -526,26 +527,6 @@ export class PolarProvider extends BaseProvider {
     return client.checkout.createPaymentLink(ctx, input);
   }
 
-  async setupPaymentMethod(
-    ctx: ProviderContext,
-    input: SetupPaymentMethodInput,
-  ): Promise<AsyncActionResult<CheckoutSessionResult>> {
-    const client = getClient(ctx.config);
-
-    if (!client.paymentMethods.setup) {
-      return {
-        data: null,
-        status: "failed",
-        error: {
-          code: RevstackErrorCode.NotImplemented,
-          message: "Setup payment method not supported",
-        },
-      };
-    }
-
-    return client.paymentMethods.setup(ctx, input);
-  }
-
   // ===========================================================================
   // CUSTOMERS
   // ===========================================================================
@@ -648,50 +629,6 @@ export class PolarProvider extends BaseProvider {
     }
 
     return client.customers.list(ctx, options);
-  }
-
-  // ===========================================================================
-  // PAYMENT METHODS
-  // ===========================================================================
-
-  async listPaymentMethods(
-    ctx: ProviderContext,
-    options: ListPaymentMethodsOptions,
-  ): Promise<AsyncActionResult<PaymentMethod[]>> {
-    const client = getClient(ctx.config);
-
-    if (!client.paymentMethods.list) {
-      return {
-        data: null,
-        status: "failed",
-        error: {
-          code: RevstackErrorCode.NotImplemented,
-          message: "List payment methods not supported",
-        },
-      };
-    }
-
-    return client.paymentMethods.list(ctx, options);
-  }
-
-  async deletePaymentMethod(
-    ctx: ProviderContext,
-    input: DeletePaymentMethodInput,
-  ): Promise<AsyncActionResult<boolean>> {
-    const client = getClient(ctx.config);
-
-    if (!client.paymentMethods.delete) {
-      return {
-        data: false,
-        status: "failed",
-        error: {
-          code: RevstackErrorCode.NotImplemented,
-          message: "Delete payment method not supported",
-        },
-      };
-    }
-
-    return client.paymentMethods.delete(ctx, input);
   }
 
   // ===========================================================================
@@ -859,90 +796,6 @@ export class PolarProvider extends BaseProvider {
   }
 
   // ===========================================================================
-  // INVOICES
-  // ===========================================================================
-
-  async addInvoiceItem(
-    ctx: ProviderContext,
-    input: AddInvoiceItemInput,
-  ): Promise<AsyncActionResult<string>> {
-    const client = getClient(ctx.config);
-
-    if (!client.invoices.addItem) {
-      return {
-        data: null,
-        status: "failed",
-        error: {
-          code: RevstackErrorCode.NotImplemented,
-          message: "Injecting invoice items not supported.",
-        },
-      };
-    }
-
-    return client.invoices.addItem(ctx, input);
-  }
-
-  async createInvoice(
-    ctx: ProviderContext,
-    input: CreateInvoiceInput,
-  ): Promise<AsyncActionResult<string>> {
-    const client = getClient(ctx.config);
-
-    if (!client.invoices.create) {
-      return {
-        data: null,
-        status: "failed",
-        error: {
-          code: RevstackErrorCode.NotImplemented,
-          message: "Create invoice not supported.",
-        },
-      };
-    }
-
-    return client.invoices.create(ctx, input);
-  }
-
-  async getInvoice(
-    ctx: ProviderContext,
-    input: GetInvoiceInput,
-  ): Promise<AsyncActionResult<Invoice>> {
-    const client = getClient(ctx.config);
-
-    if (!client.invoices.get) {
-      return {
-        data: null,
-        status: "failed",
-        error: {
-          code: RevstackErrorCode.NotImplemented,
-          message: "Get invoice not supported.",
-        },
-      };
-    }
-
-    return client.invoices.get(ctx, input);
-  }
-
-  async listInvoices(
-    ctx: ProviderContext,
-    options: ListInvoicesOptions,
-  ): Promise<AsyncActionResult<PaginatedResult<Invoice>>> {
-    const client = getClient(ctx.config);
-
-    if (!client.invoices.list) {
-      return {
-        data: null,
-        status: "failed",
-        error: {
-          code: RevstackErrorCode.NotImplemented,
-          message: "List invoices not supported.",
-        },
-      };
-    }
-
-    return client.invoices.list(ctx, options);
-  }
-
-  // ===========================================================================
   // PROMOTIONS & DISCOUNTS
   // ===========================================================================
 
@@ -984,5 +837,45 @@ export class PolarProvider extends BaseProvider {
     }
 
     return client.promotions.getCoupon(ctx, input);
+  }
+
+  async createMeter(
+    ctx: ProviderContext,
+    input: CreateMeterInput,
+  ): Promise<AsyncActionResult<string>> {
+    const client = getClient(ctx.config);
+
+    if (!client.billing.createMeter) {
+      return {
+        data: null,
+        status: "failed",
+        error: {
+          code: RevstackErrorCode.NotImplemented,
+          message: "Create meter not supported.",
+        },
+      };
+    }
+
+    return client.billing.createMeter(ctx, input);
+  }
+
+  async ingestEvent(
+    ctx: ProviderContext,
+    input: IngestEventInput,
+  ): Promise<AsyncActionResult<void>> {
+    const client = getClient(ctx.config);
+
+    if (!client.billing.ingestEvent) {
+      return {
+        data: null,
+        status: "failed",
+        error: {
+          code: RevstackErrorCode.NotImplemented,
+          message: "Ingest event not supported.",
+        },
+      };
+    }
+
+    return client.billing.ingestEvent(ctx, input);
   }
 }

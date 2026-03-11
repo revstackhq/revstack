@@ -14,7 +14,7 @@ export type CheckoutStrategy =
    * - **Pros:** User stays on your domain, seamless UX.
    * - **Cons:** Requires handling client-side tokens and partial PCI SAQ A compliance.
    */
-  | "native_sdk"
+  | "embedded"
   /**
    * Server-Driven UI (SDUI). The provider returns raw JSON primitives (QR codes, Bank Instructions)
    * and Revstack renders the UI natively without external scripts.
@@ -51,21 +51,63 @@ export type WebhookVerificationType =
   | "none";
 
 /**
- * Defines how overages and usage-based billing are processed by the orchestrator.
+ * Defines the **Rating Engine** strategy for Pay-As-You-Go (PAYG) and metered billing.
+ *
+ * The "Rating Engine" is the system responsible for converting raw usage events
+ * (e.g., "user made 500 API calls") into a monetary charge on an invoice.
+ * Different providers expose different primitives, so the orchestrator must
+ * adapt the collection strategy accordingly.
+ *
+ * @remarks
+ * The chosen strategy directly determines which `BillingClient` methods the
+ * provider **MUST** implement. See each member's JSDoc for the contract.
  */
-export type MeteredBillingMode =
-  /** * The provider has a native usage API. Revstack periodically syncs usage data
-   * (e.g., using `reportUsage`), and the provider calculates the final invoice.
+export type MeteredBillingStrategy =
+  /**
+   * **Provider is the Rating Engine.**
+   *
+   * Revstack streams raw usage events to the provider's native metering API
+   * (e.g., Stripe `billing.meterEvents.create`). The provider aggregates,
+   * rates, and appends the resulting charges to the subscription invoice
+   * automatically at cycle end.
+   *
+   * - **Provider MUST implement:** `ingestEvent` (and optionally `createMeter`
+   *   if `requiresMeterCreation` is `true`).
+   * - **Revstack role:** Event relay — no math, no invoice manipulation.
    */
-  | "native"
-  /** * The provider supports invoices but not usage tracking. Revstack calculates the
-   * overage internally and injects standard line items into a pending draft invoice.
+  | "native_events"
+  /**
+   * **Revstack is the Rating Engine; provider handles invoicing.**
+   *
+   * Revstack calculates the monetary amount internally and injects standard
+   * line items into the provider's draft invoice before it finalizes at cycle end.
+   * Requires the provider to support draft invoices and `addInvoiceItem`.
+   *
+   * - **Provider MUST implement:** `invoices.addItem`, `invoices.create`.
+   * - **Revstack role:** Calculates usage × unit price, injects line items.
    */
-  | "invoiced"
-  /** * The provider is purely transactional. Revstack calculates usage and generates
-   * a standalone payment link to be emailed to the customer at the end of the cycle.
+  | "invoiced_line_items"
+  /**
+   * **Revstack is the Rating Engine; charges a vaulted payment method directly.**
+   *
+   * Revstack calculates the total overage and creates a one-time payment
+   * against the customer's stored payment method. No invoice entity involved.
+   *
+   * - **Provider MUST implement:** `payments.create`.
+   * - **Revstack role:** Calculates total, triggers a standalone charge.
    */
-  | "manual";
+  | "direct_charge"
+  /**
+   * **Revstack is the Rating Engine; generates a payment link (Grace Period flow).**
+   *
+   * Revstack calculates the total overage and generates a payment link URL
+   * that is emailed to the customer. Payment is collected asynchronously.
+   * Used as the last-resort fallback for gateways with no vaulting or invoicing.
+   *
+   * - **Provider MUST implement:** `checkout.createPaymentLink`.
+   * - **Revstack role:** Calculates total, generates link, sends email.
+   */
+  | "manual_link";
 
 /**
  * Defines how discount codes and promotions are handled during checkout.
@@ -153,16 +195,73 @@ export interface ProviderCapabilities {
 
   /**
    * Configuration for Usage-based Billing, Overages, and Invoicing.
+   *
+   * This section defines the metered billing strategy and the set of billing
+   * primitives the provider exposes. The orchestrator uses these flags to
+   * determine the correct PAYG collection flow at runtime.
    */
   billing: {
-    /** The strategy Revstack will use to charge for API calls, seats, or metered usage. */
-    metered: MeteredBillingMode;
-    /** Can the provider generate persistent, shareable payment URLs? */
-    paymentLinks: boolean;
-    /** Does the provider expose a native 'Invoice' entity for B2B accounting? */
-    invoices: boolean;
-    /** Can Revstack inject arbitrary charges into an upcoming/draft invoice? */
-    invoiceItems: boolean;
+    /**
+     * The strategy the orchestrator will use to collect usage-based charges.
+     *
+     * This is the single most important billing decision: it tells Revstack
+     * whether the **provider** or **Revstack** acts as the Rating Engine,
+     * and which payment primitive (events, invoice items, charges, or links)
+     * is used to settle the balance.
+     */
+    meteredStrategy: MeteredBillingStrategy;
+
+    /**
+     * Granular feature flags for billing primitives.
+     *
+     * Each flag maps to a concrete provider API capability. The orchestrator
+     * uses these, in combination with `meteredStrategy`, to validate that the
+     * provider can actually fulfill the configured billing flow.
+     */
+    features: {
+      /**
+       * Can the provider generate persistent, shareable payment URLs?
+       *
+       * When `true`, the `checkout.createPaymentLink` method is available.
+       * Required when `meteredStrategy` is `"manual_link"`.
+       */
+      paymentLinks: boolean;
+
+      /**
+       * Does the provider expose a native "Invoice" entity for B2B accounting?
+       *
+       * When `true`, the `invoices.create` and `invoices.get` methods are available.
+       * Required when `meteredStrategy` is `"invoiced_line_items"`.
+       */
+      invoices: boolean;
+
+      /**
+       * Can Revstack inject arbitrary charge line items into an upcoming/draft invoice?
+       *
+       * When `true`, the `invoices.addItem` method is available.
+       * Required when `meteredStrategy` is `"invoiced_line_items"`.
+       */
+      invoiceItems: boolean;
+
+      /**
+       * Can the provider natively receive and aggregate raw usage events?
+       *
+       * When `true`, the provider **MUST** implement `billing.ingestEvent`.
+       * Required when `meteredStrategy` is `"native_events"`.
+       */
+      ingestsEvents: boolean;
+
+      /**
+       * Does the provider require explicit "Meter" / "Metric" registration
+       * before usage events can be ingested?
+       *
+       * When `true`, the provider **MUST** implement `billing.createMeter`.
+       * Only relevant when `ingestsEvents` is also `true`.
+       *
+       * @example Stripe requires `billing.meters.create` before `meterEvents.create`.
+       */
+      requiresMeterCreation: boolean;
+    };
   };
 
   /**

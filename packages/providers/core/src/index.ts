@@ -8,6 +8,7 @@ export * from "@/types/customers";
 export * from "@/types/disputes";
 export * from "@/types/invoices";
 export * from "@/types/payments";
+export * from "@/types/billing";
 export * from "@/types/portal";
 export * from "@/types/refunds";
 export * from "@/types/subscriptions";

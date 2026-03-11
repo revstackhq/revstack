@@ -3,53 +3,54 @@ import {
   ProviderContext,
   CreatePaymentLinkInput,
   AsyncActionResult,
-  normalizeCurrency,
+  CatalogLineItem,
+  isCatalogItem,
   RevstackErrorCode,
 } from "@revstackhq/providers-core";
 import { getOrCreateClient } from "@/api/v1/client";
 import Stripe from "stripe";
 
 /**
- * Generates a shareable, standalone payment link for a one-off charge.
- * Used for manual overage collection or ad-hoc invoicing.
+ * Generates a shareable, standalone payment link.
  *
- * @param ctx - The provider execution context.
- * @param input - The amount, currency, description, and optional customer/expiry details.
- * @returns An AsyncActionResult containing the generated payment link URL.
+ * All line items must be `CatalogLineItem` (pre-created price IDs).
+ * AdHoc line items are not supported by Stripe payment links natively.
  */
 export async function createPaymentLink(
   ctx: ProviderContext,
   input: CreatePaymentLinkInput,
 ): Promise<AsyncActionResult<string>> {
-  if (!input.amount || !input.currency) {
+  // Validate all line items are CatalogLineItem
+  if (!input.lineItems.every(isCatalogItem)) {
     return {
       data: null,
       status: "failed",
       error: {
         code: RevstackErrorCode.InvalidInput,
-        message: "Amount and currency are required.",
+        message:
+          "Stripe payment links require all line items to be CatalogLineItems with a priceId. AdHoc line items are not supported.",
       },
     };
   }
 
+  const catalogItems = input.lineItems as CatalogLineItem[];
+
   try {
     const stripe = getOrCreateClient(ctx.config.apiKey);
 
-    const price = await stripe.prices.create({
-      unit_amount: input.amount,
-      currency: normalizeCurrency(input.currency, "lowercase"),
-      product_data: {
-        name: input.description,
-      },
-    });
+    const stripeLineItems: Stripe.PaymentLinkCreateParams.LineItem[] =
+      catalogItems.map((item) => ({
+        price: item.priceId,
+        quantity: item.quantity ?? 1,
+      }));
 
     const linkParams: Stripe.PaymentLinkCreateParams = {
-      line_items: [{ price: price.id, quantity: 1 }],
+      line_items: stripeLineItems,
+      metadata: {
+        ...input.metadata,
+        ...(input.customerId ? { customer_id: input.customerId } : {}),
+      },
     };
-
-    if (input.customerId) {
-      linkParams.metadata = { customer_id: input.customerId };
-    }
 
     const paymentLink = await stripe.paymentLinks.create(linkParams);
 

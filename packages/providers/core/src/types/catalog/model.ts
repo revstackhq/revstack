@@ -57,11 +57,74 @@ export type Price = {
   metadata?: Record<string, any>;
 };
 
+/**
+ * A line item referencing a pre-existing catalog price.
+ *
+ * Used when the product and price have already been created on the provider
+ * (e.g., via `catalog.createProduct` + `catalog.createPrice`), or when using
+ * a provider that supports inline `price_data` lookup by ID.
+ */
 export type CatalogLineItem = {
-  /** external price id (e.g., price_1Nxxx) */
+  /** External price ID (e.g., `price_1Nxxx`). */
   priceId: string;
-  /** quantity to purchase */
-  quantity: number;
+  /** Number of units to purchase. Defaults to 1. */
+  quantity?: number;
 };
 
-export type LineItem = CatalogLineItem;
+/**
+ * An inline, ad-hoc line item with pricing defined at call-time.
+ *
+ * Used when the charge doesn't correspond to a pre-registered catalog price.
+ * Common use cases: overage charges, one-off adjustments, dynamic usage fees.
+ *
+ * If `interval` is provided, the line item is treated as a recurring charge
+ * (e.g., a usage-based add-on billed monthly).
+ */
+export type AdHocLineItem = {
+  /** Human-readable name of the product or charge (e.g., "API Overage Charge"). */
+  name: string;
+  /** Exact amount in the smallest currency unit (cents). */
+  amount: number;
+  /** 3-letter ISO 4217 currency code (e.g., "usd", "eur"). */
+  currency: string;
+  /** Longer description for the line item, shown on invoices and receipts. */
+  description?: string;
+  /** Number of units. Defaults to 1. */
+  quantity?: number;
+  /**
+   * Billing interval. If provided, this line item represents a recurring charge.
+   * Omit for one-time charges.
+   */
+  interval?: Interval;
+  /** Number of intervals between billings (e.g., `3` with `interval: "month"` = every 3 months). */
+  intervalCount?: number;
+};
+
+/**
+ * A polymorphic line item that can represent either a catalog reference
+ * or an inline ad-hoc charge.
+ *
+ * Provider adapters use the `isCatalogItem` type guard to determine which
+ * mapping path to follow (price ID lookup vs. inline `price_data`).
+ */
+export type LineItem = CatalogLineItem | AdHocLineItem;
+
+/**
+ * Type guard that narrows a `LineItem` to `CatalogLineItem`.
+ *
+ * Uses the presence of `priceId` as the discriminant — if it exists,
+ * the item references a pre-registered catalog price. Otherwise, it's
+ * an `AdHocLineItem` with inline pricing.
+ *
+ * @example
+ * ```ts
+ * if (isCatalogItem(item)) {
+ *   // item.priceId is available
+ * } else {
+ *   // item.name, item.amount, item.currency are available
+ * }
+ * ```
+ */
+export function isCatalogItem(item: LineItem): item is CatalogLineItem {
+  return "priceId" in item;
+}

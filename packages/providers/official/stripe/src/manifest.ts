@@ -156,10 +156,14 @@ export const manifest: ProviderManifest = {
       verification: "signature",
     },
     billing: {
-      invoiceItems: true,
-      invoices: true,
-      metered: "invoiced",
-      paymentLinks: true,
+      meteredStrategy: "invoiced_line_items",
+      features: {
+        paymentLinks: true,
+        invoices: true,
+        invoiceItems: true,
+        ingestsEvents: false,
+        requiresMeterCreation: false,
+      },
     },
     catalog: {
       syncStrategy: "inline",

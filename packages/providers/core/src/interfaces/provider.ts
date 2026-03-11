@@ -1,4 +1,5 @@
 import { ProviderContext } from "@/context";
+import { IBillingFeature } from "@/interfaces/features/billing";
 import { ICatalogFeature } from "@/interfaces/features/catalog";
 import { ICheckoutFeature } from "@/interfaces/features/checkout";
 import { ICustomerFeature } from "@/interfaces/features/customer";
@@ -23,7 +24,8 @@ export interface IProvider
     IPaymentMethodFeature,
     ICatalogFeature,
     IPromotionFeature,
-    IInvoiceFeature {
+    IInvoiceFeature,
+    IBillingFeature {
   readonly manifest: ProviderManifest;
 
   onInstall(

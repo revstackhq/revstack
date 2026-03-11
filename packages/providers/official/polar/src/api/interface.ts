@@ -54,6 +54,8 @@ import {
   PreviewSubscriptionUpdateInput,
   ProrationPreviewResult,
   CreateInvoiceInput,
+  CreateMeterInput,
+  IngestEventInput,
 } from "@revstackhq/providers-core";
 
 // ─── Namespace: Webhooks ──────────────────────────────────────────────────────
@@ -313,16 +315,29 @@ export interface PromotionsClient {
   ): Promise<AsyncActionResult<boolean>>;
 }
 
+// ─── Namespace: Billing ──────────────────────────────────────────────────────
+
+export interface BillingClient {
+  createMeter?(
+    ctx: ProviderContext,
+    input: CreateMeterInput,
+  ): Promise<AsyncActionResult<string>>;
+
+  ingestEvent?(
+    ctx: ProviderContext,
+    input: IngestEventInput,
+  ): Promise<AsyncActionResult<void>>;
+}
+
 // ─── Root ProviderClient ──────────────────────────────────────────────────────
 
 export interface ProviderClient {
   webhooks: WebhooksClient;
   customers: CustomersClient;
   checkout: CheckoutClient;
-  paymentMethods: PaymentMethodsClient;
   payments: PaymentsClient;
   subscriptions: SubscriptionsClient;
   catalog: CatalogClient;
-  invoices: InvoicesClient;
   promotions: PromotionsClient;
+  billing: BillingClient;
 }

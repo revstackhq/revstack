@@ -1,8 +1,8 @@
 <p align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://revstack.dev/logo-light.svg">
-    <source media="(prefers-color-scheme: light)" srcset="https://revstack.dev/logo-dark.svg">
-    <img alt="Revstack" src="https://revstack.dev/logo-dark.svg" width="200">
+    <source media="(prefers-color-scheme: dark)" srcset="https://avatars.githubusercontent.com/u/255006479?s=200&v=4">
+    <source media="(prefers-color-scheme: light)" srcset="https://avatars.githubusercontent.com/u/255006479?s=200&v=4">
+    <img alt="Revstack" src="https://avatars.githubusercontent.com/u/255006479?s=200&v=4" width="200">
   </picture>
 </p>
 
@@ -58,6 +58,7 @@ This monorepo contains the open-source client SDKs, the entitlement engine, and 
 | [`@revstackhq/providers-core`](packages/providers/core)             | Provider gateway interfaces |
 | [`@revstackhq/providers-registry`](packages/providers/registry)     | Provider discovery          |
 | [`@revstackhq/provider-stripe`](packages/providers/official/stripe) | Stripe provider             |
+| [`@revstackhq/provider-polar`](packages/providers/official/polar)   | Polar provider              |
 
 > Client SDKs & Ecosystem packages are MIT — use them anywhere. Core infrastructure uses the [Functional Source License](https://fsl.software/) and converts to MIT after two years. See [LICENSE.md](LICENSE.md).
 
@@ -80,10 +81,11 @@ pnpm build
 
 Requires **Node.js >= 18** and **pnpm 9**.
 
-## Contributing
+## License & Governance
 
-Bug fixes, new features, documentation, and new payment providers are all welcome. See the [Contributing Guide](CONTRIBUTING.md).
+Revstack is Source-Available, licensed under the **Functional Source License, Version 1.1, MIT Future License (FSL-1.1-MIT)**.
 
-## License
+**What this means in plain English:**
+You can read, modify, and run Revstack for your own business. You just can't build a competing billing/entitlements product with it. After 2 years, the code automatically converts to a permissive MIT license.
 
-Client SDKs are [MIT](https://opensource.org/licenses/MIT). Core infrastructure is [FSL-1.1-MIT](https://fsl.software/) — free to use, converts to MIT after two years. See [LICENSE.md](LICENSE.md) for the full breakdown.
+Please see our [CONTRIBUTING.md](CONTRIBUTING.md) for more details. Note that we are currently in a **Contribution Lock** phase while we stabilize the Core PDK, so we are not accepting Pull Requests at this time.

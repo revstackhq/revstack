@@ -78,6 +78,8 @@ export const RevstackErrorCode = {
   // --- 11. LIFECYCLE EXPIRY ---
   ResourceExpired: "resource_expired", // Coupon, payment link, or promo code has expired
   TrialExpired: "trial_expired", // Free trial period has ended without conversion
+
+  UnsupportedFeature: "unsupported_feature", // Feature not supported by provider
 } as const;
 
 export type RevstackErrorCode =

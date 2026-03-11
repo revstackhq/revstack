@@ -70,6 +70,7 @@ import {
   Invoice,
   ListInvoicesOptions,
 } from "@/types/invoices";
+import { CreateMeterInput, IngestEventInput } from "@/types/billing";
 
 export abstract class BaseProvider implements IProvider {
   private notImplemented(methodName: string): AsyncActionResult<any> {
@@ -400,5 +401,19 @@ export abstract class BaseProvider implements IProvider {
     options: ListInvoicesOptions,
   ): Promise<AsyncActionResult<PaginatedResult<Invoice>>> {
     return this.notImplemented("listInvoices");
+  }
+
+  async createMeter(
+    ctx: ProviderContext,
+    input: CreateMeterInput,
+  ): Promise<AsyncActionResult<string>> {
+    return this.notImplemented("createMeter");
+  }
+
+  async ingestEvent(
+    ctx: ProviderContext,
+    input: IngestEventInput,
+  ): Promise<AsyncActionResult<void>> {
+    return this.notImplemented("ingestEvent");
   }
 }

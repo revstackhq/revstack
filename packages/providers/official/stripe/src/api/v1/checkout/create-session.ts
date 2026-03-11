@@ -5,6 +5,8 @@ import {
   CheckoutSessionResult,
   AsyncActionResult,
   CatalogLineItem,
+  isCatalogItem,
+  RevstackErrorCode,
   getTrialDays,
   appendQueryParam,
   normalizeCurrency,
@@ -23,7 +25,7 @@ function formatLineItems(
 ): Stripe.Checkout.SessionCreateParams.LineItem[] {
   return items.map((item) => ({
     price: item.priceId,
-    quantity: item.quantity,
+    quantity: item.quantity ?? 1,
   }));
 }
 
@@ -39,6 +41,21 @@ export async function createCheckoutSession(
   input: CheckoutSessionInput,
 ): Promise<AsyncActionResult<CheckoutSessionResult>> {
   const stripe = getOrCreateClient(ctx.config.apiKey);
+
+  // Validate all line items are CatalogLineItem (pre-created price IDs)
+  if (input.lineItems && !input.lineItems.every(isCatalogItem)) {
+    return {
+      data: null,
+      status: "failed",
+      error: {
+        code: RevstackErrorCode.InvalidInput,
+        message:
+          "Stripe checkout requires all line items to be CatalogLineItems with a priceId. AdHoc line items are not supported.",
+      },
+    };
+  }
+
+  const catalogItems = input.lineItems as CatalogLineItem[];
 
   const automaticTax =
     ctx.config.useStripeTax === "true" || ctx.config.useStripeTax === true;
@@ -61,7 +78,7 @@ export async function createCheckoutSession(
       customer_email: !input.customerId ? input.customerEmail : undefined,
       allow_promotion_codes: input.allowPromotionCodes,
       line_items:
-        input.mode === "setup" ? undefined : formatLineItems(input.lineItems),
+        input.mode === "setup" ? undefined : formatLineItems(catalogItems),
       automatic_tax: automaticTax ? { enabled: true } : undefined,
       billing_address_collection: automaticTax ? "required" : "auto",
       customer_update: input.customerId

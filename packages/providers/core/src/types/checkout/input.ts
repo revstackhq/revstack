@@ -52,19 +52,40 @@ export type CheckoutSessionInput = {
 
 /**
  * Input parameters for generating a standalone, shareable payment URL.
- * Used for manual overage collection when `billing.paymentLinks` is true.
+ *
+ * Uses the polymorphic `LineItem` type so both catalog references and
+ * inline ad-hoc charges can be collected through a single payment link.
+ * The tuple syntax `[LineItem, ...LineItem[]]` enforces at least one item.
  */
 export interface CreatePaymentLinkInput {
-  /** The exact amount to collect in the smallest currency unit. */
-  amount: number;
-  /** The 3-letter ISO currency code. */
-  currency: string;
-  /** What the user is paying for (e.g., "March API Overages"). */
-  description: string;
+  /** The items to charge for in this link */
+  lineItems: [LineItem, ...LineItem[]];
+
   /** Optional: Auto-fills the checkout session if the customer ID is known. */
   customerId?: string;
   /** Optional: Auto-fills the email field if the customer ID is not provided. */
   customerEmail?: string;
-  /** Optional: The exact date/time when this link should expire and become unpayable. */
+
+  /** URL where the customer will be redirected after a successful payment. */
+  successUrl?: string;
+  /** URL where the customer will be redirected if they click "Back" or cancel. */
+  returnUrl?: string;
+
+  /** Allow promo codes input box on the hosted checkout */
+  allowPromotionCodes?: boolean;
+  /** Automatically apply a specific provider promotion code ID */
+  promotionCodeId?: string;
+
+  /** Trial interval for subscription line items */
+  trialInterval?: Interval;
+  /** Trial interval count for subscription line items */
+  trialIntervalCount?: number;
+
+  /** Optional label to distinguish links internally in the provider dashboard */
+  label?: string;
+
+  /** Optional: The exact date/time when this link should expire. (Supported by Stripe, emulated/ignored in others) */
   expiresAt?: Date;
+  /** Custom metadata for the link itself */
+  metadata?: Record<string, any>;
 }

@@ -94,10 +94,14 @@ export const manifest: ProviderManifest = {
       verification: "signature",
     },
     billing: {
-      invoiceItems: true,
-      invoices: true,
-      metered: "invoiced",
-      paymentLinks: true,
+      meteredStrategy: "native_events",
+      features: {
+        paymentLinks: true,
+        invoices: false,
+        invoiceItems: false,
+        ingestsEvents: true,
+        requiresMeterCreation: true,
+      },
     },
     catalog: {
       syncStrategy: "jit",
