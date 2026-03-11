@@ -30,6 +30,7 @@ The packages that power the Revstack platform itself — the entitlement engine,
 | `@revstackhq/providers-core`     | FSL-1.1-MIT |
 | `@revstackhq/providers-registry` | FSL-1.1-MIT |
 | `@revstackhq/provider-stripe`    | FSL-1.1-MIT |
+| `@revstackhq/provider-polar`     | FSL-1.1-MIT |
 
 ### What does FSL mean in practice?
 

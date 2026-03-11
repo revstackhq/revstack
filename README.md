@@ -2,7 +2,7 @@
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="https://avatars.githubusercontent.com/u/255006479?s=200&v=4">
     <source media="(prefers-color-scheme: light)" srcset="https://avatars.githubusercontent.com/u/255006479?s=200&v=4">
-    <img alt="Revstack" src="https://avatars.githubusercontent.com/u/255006479?s=200&v=4" width="200">
+    <img alt="Revstack" src="https://avatars.githubusercontent.com/u/255006479?s=200&v=4" width="120" style="border-radius: 12px;">
   </picture>
 </p>
 
