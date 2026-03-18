@@ -16,13 +16,13 @@
 <p align="center">
   <a href="https://docs.revstack.dev"><strong>Docs</strong></a> ·
   <a href="https://app.revstack.dev"><strong>Dashboard</strong></a> ·
-  <a href="https://github.com/revstack-dev/revstack/issues"><strong>Issues</strong></a> ·
+  <a href="https://github.com/revstackhq/revstack/issues"><strong>Issues</strong></a> ·
   <a href="CONTRIBUTING.md"><strong>Contributing</strong></a>
 </p>
 
 <p align="center">
   <a href="LICENSE.md"><img alt="License" src="https://img.shields.io/badge/license-MIT%20%2F%20FSL-0a0a0a?style=flat-square&labelColor=0a0a0a"></a>
-  <a href="https://github.com/revstack-dev/revstack"><img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-5.9-0a0a0a?style=flat-square&labelColor=0a0a0a"></a>
+  <a href="https://github.com/revstackhq/revstack"><img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-5.9-0a0a0a?style=flat-square&labelColor=0a0a0a"></a>
   <img alt="Coverage" src="./coverage/badge.svg" style="height: 20px;">
 </p>
 
@@ -80,7 +80,7 @@ The underlying engine that powers the entitlement checks and webhook orchestrati
 To get started with local development, clone the repository and build the packages:
 
 ```bash
-git clone [https://github.com/revstack-dev/revstack.git](https://github.com/revstack-dev/revstack.git)
+git clone [https://github.com/revstackhq/revstack.git](https://github.com/revstackhq/revstack.git)
 cd revstack
 pnpm install
 pnpm build
