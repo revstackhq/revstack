@@ -2,7 +2,7 @@ import { CurrencyCode } from "@/types/currency";
 import { RegionCode } from "@/types/region";
 import { ProviderCapabilities } from "@/types/capabilities";
 import { ProviderCategory } from "@/types/categories";
-import { PaymentMethodType } from "@/types/paymentMethods";
+import { PaymentMethodType } from "@/types/payment-methods";
 
 export type ProviderStatus = "stable" | "beta" | "deprecated" | "experimental";
 

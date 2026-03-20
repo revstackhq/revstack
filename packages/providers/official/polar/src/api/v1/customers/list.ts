@@ -23,33 +23,29 @@ export const listCustomers = async (
 ): Promise<AsyncActionResult<PaginatedResult<Customer>>> => {
   try {
     const polar = getOrCreateClient(ctx);
-    const targetPage =
-      options.page ||
-      (options.startingAfter && parseInt(options.startingAfter) + 1) ||
-      (options.endingBefore &&
-        Math.max(1, parseInt(options.endingBefore) - 1)) ||
-      1;
-    const limit = options.limit || 10;
+    const page = options.page ?? 1;
+    const limit = options.limit ?? 10;
 
-    const customersPage = await polar.customers.list({
+    const response = await polar.customers.list({
       limit,
-      page: targetPage,
+      page,
       ...options.filters,
     });
 
     return {
       data: buildPagePagination(
-        customersPage.result.items,
-        targetPage,
-        customersPage.result.pagination.maxPage,
+        response.result.items,
+        page,
+        response.result.pagination.maxPage,
         mapPolarCustomerToCustomer,
       ),
       status: "success",
     };
   } catch (error: any) {
-    if (error.isRevstackError) {
-      return { data: null, status: "failed", error: error.errorPayload };
-    }
-    return { data: null, status: "failed", error: mapError(error) };
+    return {
+      data: null,
+      status: "failed",
+      error: error.isRevstackError ? error.errorPayload : mapError(error),
+    };
   }
 };

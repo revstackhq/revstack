@@ -14,7 +14,7 @@ export function mapPolarSubStatusToSubscriptionStatus(
     trialing: SubscriptionStatus.Trialing,
     active: SubscriptionStatus.Active,
     past_due: SubscriptionStatus.PastDue,
-    canceled: SubscriptionStatus.Canceled,
+    canceled: SubscriptionStatus.Incomplete,
     unpaid: SubscriptionStatus.Unpaid,
   };
   return map[status] || SubscriptionStatus.Active;
@@ -28,28 +28,27 @@ export function mapPolarSubscriptionToSubscription(
   return {
     id: sub.id,
     providerId: "polar",
-    priceId: sub.prices[0]?.id,
-    endedAt: sub.endedAt ? new Date(sub.endedAt).toISOString() : undefined,
+    externalId: sub.id,
+    items: sub.prices.map((price) => ({
+      priceId: price.id,
+      quantity: 1,
+      externalId: price.id,
+      productId: price.productId,
+    })),
+    endedAt: sub.endedAt ? new Date(sub.endedAt) : undefined,
     status: mapPolarSubStatusToSubscriptionStatus(sub.status),
     amount: sub.amount || 0,
-    trialEnd: sub.trialEnd ? new Date(sub.trialEnd).toISOString() : undefined,
-    trialStart: sub.trialStart
-      ? new Date(sub.trialStart).toISOString()
-      : undefined,
+    trialEnd: sub.trialEnd ? new Date(sub.trialEnd) : undefined,
+    trialStart: sub.trialStart ? new Date(sub.trialStart) : undefined,
     currency: normalizeCurrency(sub.currency, "uppercase"),
-    interval: sub.recurringInterval === "year" ? "year" : "month",
     customerId: sub.customerId,
-    currentPeriodStart: new Date(sub.currentPeriodStart).toISOString(),
+    currentPeriodStart: new Date(sub.currentPeriodStart),
     currentPeriodEnd: sub.currentPeriodEnd
-      ? new Date(sub.currentPeriodEnd).toISOString()
-      : new Date(sub.currentPeriodStart).toISOString(),
+      ? new Date(sub.currentPeriodEnd)
+      : new Date(sub.currentPeriodStart),
     cancelAtPeriodEnd: sub.cancelAtPeriodEnd,
-    startedAt: sub.startedAt
-      ? new Date(sub.startedAt).toISOString()
-      : new Date().toISOString(),
-    canceledAt: sub.canceledAt
-      ? new Date(sub.canceledAt).toISOString()
-      : undefined,
+    startedAt: sub.startedAt ? new Date(sub.startedAt) : new Date(),
+    canceledAt: sub.canceledAt ? new Date(sub.canceledAt) : undefined,
     raw: sub,
   };
 }

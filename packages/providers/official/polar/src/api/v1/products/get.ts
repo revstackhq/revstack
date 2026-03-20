@@ -1,29 +1,29 @@
 import { mapError } from "@/shared/error-map";
 import {
   ProviderContext,
-  GetPriceInput,
-  Price,
+  GetProductInput,
+  Product,
   AsyncActionResult,
 } from "@revstackhq/providers-core";
 import { getOrCreateClient } from "@/api/v1/client";
-import { toPrice } from "@/api/v1/prices/mapper";
+import { toProduct } from "@/api/v1/products/mapper";
 
 /**
- * Retrieves a price by its external ID from the provider's catalog.
+ * Retrieves a product by its external ID from the provider's catalog.
  *
  * @param ctx - The provider execution context.
- * @param input - Contains the price ID to retrieve.
- * @returns An AsyncActionResult containing the normalized Price entity.
+ * @param input - Contains the product ID to retrieve.
+ * @returns An AsyncActionResult containing the normalized Product entity.
  */
-export async function getPrice(
+export async function getProduct(
   ctx: ProviderContext,
-  input: GetPriceInput,
-): Promise<AsyncActionResult<Price>> {
+  input: GetProductInput,
+): Promise<AsyncActionResult<Product>> {
   try {
     const polar = getOrCreateClient(ctx.config.apiKey);
-    const price = await polar.prices.retrieve(input.id);
+    const product = await polar.products.get({ id: input.id });
 
-    return { data: toPrice(price), status: "success" };
+    return { data: toProduct(product), status: "success" };
   } catch (error: any) {
     if (error.isRevstackError)
       return { data: null, status: "failed", error: error.errorPayload };

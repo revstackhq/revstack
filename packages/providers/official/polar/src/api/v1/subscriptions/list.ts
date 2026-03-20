@@ -23,33 +23,29 @@ export async function listSubscriptions(
 ): Promise<AsyncActionResult<PaginatedResult<Subscription>>> {
   try {
     const polar = getOrCreateClient(ctx);
-    const targetPage =
-      options.page ||
-      (options.startingAfter && parseInt(options.startingAfter) + 1) ||
-      (options.endingBefore &&
-        Math.max(1, parseInt(options.endingBefore) - 1)) ||
-      1;
+    const page = options.page ?? 1;
+    const limit = options.limit ?? 10;
 
-    const subsResponse = await polar.subscriptions.list({
-      organizationId: ctx.config.organizationId,
-      limit: options.limit || 10,
-      page: targetPage,
+    const response = await polar.subscriptions.list({
+      limit,
+      page,
       ...options.filters,
     });
 
     return {
       data: buildPagePagination(
-        subsResponse.result.items,
-        targetPage,
-        subsResponse.result.pagination.maxPage,
+        response.result.items,
+        page,
+        response.result.pagination.maxPage,
         mapPolarSubscriptionToSubscription,
       ),
       status: "success",
     };
   } catch (error: any) {
-    if (error.isRevstackError) {
-      return { data: null, status: "failed", error: error.errorPayload };
-    }
-    return { data: null, status: "failed", error: mapError(error) };
+    return {
+      data: null,
+      status: "failed",
+      error: error.isRevstackError ? error.errorPayload : mapError(error),
+    };
   }
 }

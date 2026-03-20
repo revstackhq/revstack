@@ -7,14 +7,19 @@ import {
 import { getOrCreateClient } from "@/api/v1/client";
 import type { MeterCreate } from "@polar-sh/sdk/models/components/metercreate";
 
+/**
+ * Creates a Meter in Polar.
+ * * @remarks
+ * In the Revstack architecture, meters are typically created during product sync.
+ * Polar tracks events by 'name', so we use the Revstack internal meter slug as the
+ * exact event name to avoid cross-tenant collisions.
+ */
 export async function createMeter(
   ctx: ProviderContext,
   input: CreateMeterInput,
 ): Promise<AsyncActionResult<string>> {
   try {
     const polar = getOrCreateClient(ctx);
-
-    // Build the Polar aggregation from our agnostic type
     const aggregation = buildAggregation(input.aggregationType);
 
     const meterPayload: MeterCreate = {
@@ -25,6 +30,7 @@ export async function createMeter(
           {
             property: "name",
             operator: "eq",
+            // We strictly map the Revstack event name to the Polar event name
             value: input.eventName,
           },
         ],
@@ -44,22 +50,13 @@ export async function createMeter(
       status: "failed",
       error: {
         code: RevstackErrorCode.UnknownError,
-        message: `Failed to create meter: ${error.message ?? error}`,
+        message: `Polar: Failed to create meter: ${error.message ?? error}`,
         providerError: JSON.stringify(error),
       },
     };
   }
 }
 
-/**
- * Maps our agnostic `MeterAggregationType` to Polar's aggregation union.
- *
- * - `"count"` → `{ func: "count" }` (CountAggregation)
- * - `"sum"` → `{ func: "sum", property: "value" }` (PropertyAggregation)
- * - `"max"` → `{ func: "max", property: "value" }` (PropertyAggregation)
- * - `"last"` → `{ func: "max", property: "value" }` (Polar has no "last",
- *    closest semantic is "max" — caller should be aware of this limitation)
- */
 function buildAggregation(
   type: CreateMeterInput["aggregationType"],
 ): MeterCreate["aggregation"] {
@@ -71,8 +68,9 @@ function buildAggregation(
     case "max":
       return { func: "max", property: "value" };
     case "last":
-      // Polar doesn't have a native "last" aggregation.
-      // We approximate with "max" — the caller should be aware.
+      // WARNING: Polar lacks a native 'last' state tracking function.
+      // Revstack mitigates this by pre-aggregating the state internally
+      // and only submitting the final resolved value to Polar at the end of the cycle.
       return { func: "max", property: "value" };
   }
 }

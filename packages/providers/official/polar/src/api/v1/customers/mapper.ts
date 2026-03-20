@@ -7,10 +7,9 @@ export function mapPolarCustomerToCustomer(customer: PolarCustomer): Customer {
     providerId: "polar",
     externalId: customer.externalId || customer.id,
     email: customer.email,
-    name: customer.name || undefined,
-    phone: undefined, // Polar doesn't store phone natively yet
+    name: customer.name ?? undefined,
     metadata: customer.metadata,
-    createdAt: new Date(customer.createdAt).toISOString(),
+    createdAt: new Date(customer.createdAt),
     deleted: false,
   };
 }

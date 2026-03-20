@@ -7,6 +7,14 @@ import {
 import { getOrCreateClient } from "@/api/v1/client";
 import type { EventCreateCustomer } from "@polar-sh/sdk/models/components/eventcreatecustomer";
 
+/**
+ * Streams a usage event to Polar.
+ * * @remarks
+ * Revstack utilizes a "Just-In-Time" (JIT) ingestion strategy for Polar.
+ * Instead of streaming raw usage continuously, the Revstack Hub aggregates usage
+ * internally and ONLY calls this function near the end of the billing cycle to
+ * report billable overages.
+ */
 export async function ingestEvent(
   ctx: ProviderContext,
   input: IngestEventInput,
@@ -17,6 +25,8 @@ export async function ingestEvent(
     const event: EventCreateCustomer = {
       name: input.eventName,
       customerId: input.customerId,
+      // Polar expects numeric values to be passed inside the metadata object
+      // so it can extract them using the PropertyAggregation clause.
       metadata: {
         value: input.value,
       },
@@ -24,10 +34,11 @@ export async function ingestEvent(
       ...(input.idempotencyKey ? { externalId: input.idempotencyKey } : {}),
     };
 
+    // Polar expects an object with an 'events' array wrapper
     await polar.events.ingest({ events: [event] });
 
     return {
-      data: undefined as any,
+      data: null,
       status: "success",
     };
   } catch (error: any) {
@@ -36,7 +47,7 @@ export async function ingestEvent(
       status: "failed",
       error: {
         code: RevstackErrorCode.UnknownError,
-        message: `Failed to ingest event: ${error.message ?? error}`,
+        message: `Polar: Failed to ingest JIT event: ${error.message ?? error}`,
         providerError: JSON.stringify(error),
       },
     };

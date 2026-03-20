@@ -5,7 +5,7 @@ import {
   PaymentMethod,
   ListPaymentMethodsOptions,
   DeletePaymentMethodInput,
-} from "@/types/paymentMethods";
+} from "@/types/payment-methods";
 import { AsyncActionResult } from "@/types/shared";
 
 /**

@@ -5,7 +5,7 @@ import { ICheckoutFeature } from "@/interfaces/features/checkout";
 import { ICustomerFeature } from "@/interfaces/features/customer";
 import { IInvoiceFeature } from "@/interfaces/features/invoice";
 import { IPaymentFeature } from "@/interfaces/features/payment";
-import { IPaymentMethodFeature } from "@/interfaces/features/paymentMethod";
+import { IPaymentMethodFeature } from "@/interfaces/features/payment-method";
 import { IBillingPortalFeature } from "@/interfaces/features/portal";
 import { IPromotionFeature } from "@/interfaces/features/promotion";
 import { ISubscriptionFeature } from "@/interfaces/features/subscription";

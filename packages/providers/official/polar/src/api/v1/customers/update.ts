@@ -23,8 +23,8 @@ export const updateCustomer = async (
       id: input.id,
       customerUpdate: {
         email: input.email,
-        name: input.name || undefined,
-        metadata: input.metadata || {},
+        name: input.name ?? undefined,
+        metadata: input.metadata ?? {},
       },
     });
 

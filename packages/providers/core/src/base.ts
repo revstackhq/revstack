@@ -38,7 +38,7 @@ import {
   SetupPaymentMethodInput,
   ListPaymentMethodsOptions,
   DeletePaymentMethodInput,
-} from "@/types/paymentMethods";
+} from "@/types/payment-methods";
 import {
   CheckoutSessionInput,
   CheckoutSessionResult,

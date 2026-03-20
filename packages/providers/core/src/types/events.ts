@@ -8,7 +8,7 @@ import { CustomerPayload } from "@/types/customers/payload";
 import {
   PaymentMethodPayload,
   MandatePayload,
-} from "@/types/paymentMethods/payload";
+} from "@/types/payment-methods/payload";
 import { ProductPayload, PricePayload } from "@/types/catalog/payload";
 
 // Re-export all payload types so consumers can import them from this central file.

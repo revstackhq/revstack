@@ -1,5 +1,5 @@
-import { LineItem } from "../catalog/model";
-import { PaymentMethod } from "../paymentMethods/model";
+import { LineItem } from "@/types/catalog/model";
+import { PaymentMethod } from "@/types/payment-methods/model";
 
 /**
  * Standardized lifecycle states for a Revstack Payment.

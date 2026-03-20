@@ -5,7 +5,7 @@ import { CheckoutSession } from "@/types/checkout/model";
 import { Subscription } from "@/types/subscriptions/model";
 import { Invoice } from "@/types/invoices/model";
 import { Customer } from "@/types/customers/model";
-import { PaymentMethod, Mandate } from "@/types/paymentMethods/model";
+import { PaymentMethod, Mandate } from "@/types/payment-methods/model";
 import { Product, Price } from "@/types/catalog/model";
 
 /**

@@ -5,7 +5,7 @@ import {
   ProviderContext,
   CheckoutSessionResult,
   CheckoutSessionInput,
-  CustomLineItem,
+  AdHocLineItem,
 } from "@revstackhq/providers-core";
 import { resolveJitProductId } from "@/utils/jit";
 import { mapError } from "@/shared/error-map";
@@ -29,7 +29,7 @@ export async function createSubscription(
   try {
     const polar = getOrCreateClient(ctx);
 
-    const lineItems = input.lineItems as CustomLineItem[];
+    const lineItems = input.lineItems as AdHocLineItem[];
 
     const totalAmount = lineItems.reduce(
       (acc, item) => acc + item.amount * (item.quantity || 1),
@@ -49,8 +49,8 @@ export async function createSubscription(
         currency: lineItems[0]?.currency || "usd",
         interval: baseInterval,
         description: "Consolidated subscription bundle",
-        trialInterval: lineItems[0]?.trialInterval,
-        trialIntervalCount: lineItems[0]?.trialIntervalCount,
+        trialInterval: lineItems[0]?.interval,
+        trialIntervalCount: lineItems[0]?.intervalCount,
       },
     });
 

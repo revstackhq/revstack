@@ -47,7 +47,8 @@ import * as checkout from "@/api/v1/checkout";
 import * as customers from "@/api/v1/customers";
 import * as webhooks from "@/api/v1/webhooks";
 import * as paymentMethods from "@/api/v1/payment-methods";
-import * as catalog from "@/api/v1/catalog";
+import * as products from "@/api/v1/products";
+import * as prices from "@/api/v1/prices";
 import * as promotions from "@/api/v1/promotions";
 import * as invoices from "@/api/v1/invoices";
 
@@ -168,28 +169,28 @@ export class StripeClientV1 implements ProviderClient {
   // ─── Catalog ────────────────────────────────────────────────────────────────
   catalog = {
     createProduct: (ctx: ProviderContext, input: CreateProductInput) =>
-      catalog.createProduct(ctx, input),
+      products.createProduct(ctx, input),
 
     getProduct: (ctx: ProviderContext, input: GetProductInput) =>
-      catalog.getProduct(ctx, input),
+      products.getProduct(ctx, input),
 
     updateProduct: (ctx: ProviderContext, input: UpdateProductInput) =>
-      catalog.updateProduct(ctx, input),
+      products.updateProduct(ctx, input),
 
     deleteProduct: (ctx: ProviderContext, input: DeleteProductInput) =>
-      catalog.deleteProduct(ctx, input),
+      products.deleteProduct(ctx, input),
 
     listProducts: (ctx: ProviderContext, options: ListProductsOptions) =>
-      catalog.listProducts(ctx, options),
+      products.listProducts(ctx, options),
 
     createPrice: (ctx: ProviderContext, input: CreatePriceInput) =>
-      catalog.createPrice(ctx, input),
+      prices.createPrice(ctx, input),
 
     getPrice: (ctx: ProviderContext, input: GetPriceInput) =>
-      catalog.getPrice(ctx, input),
+      prices.getPrice(ctx, input),
 
     listPrices: (ctx: ProviderContext, options: ListPricesOptions) =>
-      catalog.listPrices(ctx, options),
+      prices.listPrices(ctx, options),
   };
 
   // ─── Invoices ───────────────────────────────────────────────────────────────

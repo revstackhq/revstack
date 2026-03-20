@@ -21,7 +21,7 @@ export function mapPolarOrderToPayment(order: PolarOrder): Payment {
     currency: normalizeCurrency(order.currency, "uppercase"),
     status: mapPolarOrderStatusToPaymentStatus(order.status),
     customerId: order.customerId,
-    createdAt: new Date(order.createdAt).toISOString(),
+    createdAt: new Date(order.createdAt),
     raw: order,
   };
 }

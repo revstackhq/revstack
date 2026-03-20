@@ -1,5 +1,6 @@
 import { PolarProvider } from "@/provider";
-import { ProviderContext, runSmoke } from "@revstackhq/providers-core";
+import { ProviderContext } from "@revstackhq/providers-core";
+import { runSmoke } from "@revstackhq/providers-core/testing";
 import dotenv from "dotenv";
 import path from "path";
 import { fileURLToPath } from "url";

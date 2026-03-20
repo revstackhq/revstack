@@ -52,9 +52,9 @@ import { handleCustomerUpdated } from "@/api/v1/webhooks/handlers/customers/upda
 import { handleCustomerDeleted } from "@/api/v1/webhooks/handlers/customers/deleted";
 
 // ─── Payment Methods ──────────────────────────────────────────────────────────
-import { handlePaymentMethodAttached } from "@/api/v1/webhooks/handlers/paymentMethods/attached";
-import { handlePaymentMethodUpdated } from "@/api/v1/webhooks/handlers/paymentMethods/updated";
-import { handlePaymentMethodDetached } from "@/api/v1/webhooks/handlers/paymentMethods/detached";
+import { handlePaymentMethodAttached } from "@/api/v1/webhooks/handlers/payment-methods/attached";
+import { handlePaymentMethodUpdated } from "@/api/v1/webhooks/handlers/payment-methods/updated";
+import { handlePaymentMethodDetached } from "@/api/v1/webhooks/handlers/payment-methods/detached";
 
 // ─── Mandates ─────────────────────────────────────────────────────────────────
 import { handleMandateUpdated } from "@/api/v1/webhooks/handlers/mandates/updated";

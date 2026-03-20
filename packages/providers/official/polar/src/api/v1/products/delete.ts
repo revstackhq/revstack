@@ -1,29 +1,31 @@
 import { mapError } from "@/shared/error-map";
 import {
   ProviderContext,
-  GetProductInput,
-  Product,
+  DeleteProductInput,
   AsyncActionResult,
 } from "@revstackhq/providers-core";
 import { getOrCreateClient } from "@/api/v1/client";
-import { toProduct } from "@/api/v1/products/mapper";
 
 /**
- * Retrieves a product by its external ID from the provider's catalog.
+ * Deactivates (archives) a product in the provider's catalog.
+ * Polar does not truly delete products; this sets `active: false`.
  *
  * @param ctx - The provider execution context.
- * @param input - Contains the product ID to retrieve.
- * @returns An AsyncActionResult containing the normalized Product entity.
+ * @param input - Contains the product ID to deactivate.
+ * @returns An AsyncActionResult indicating success.
  */
-export async function getProduct(
+export async function deleteProduct(
   ctx: ProviderContext,
-  input: GetProductInput,
-): Promise<AsyncActionResult<Product>> {
+  input: DeleteProductInput,
+): Promise<AsyncActionResult<boolean>> {
   try {
     const polar = getOrCreateClient(ctx.config.apiKey);
-    const product = await polar.products.retrieve(input.id);
+    await polar.products.update({
+      id: input.id,
+      productUpdate: { isArchived: true },
+    });
 
-    return { data: toProduct(product), status: "success" };
+    return { data: true, status: "success" };
   } catch (error: any) {
     if (error.isRevstackError)
       return { data: null, status: "failed", error: error.errorPayload };

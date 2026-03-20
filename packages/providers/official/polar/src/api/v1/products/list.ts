@@ -10,7 +10,7 @@ import { getOrCreateClient } from "@/api/v1/client";
 import { toProduct } from "@/api/v1/products/mapper";
 
 /**
- * Lists products from the provider's catalog with cursor-based pagination.
+ * Lists products from the provider's catalog mapping offset-based pagination (page) to cursor.
  *
  * @param ctx - The provider execution context.
  * @param options - Pagination and filtering options.
@@ -24,27 +24,36 @@ export async function listProducts(
     const polar = getOrCreateClient(ctx.config.apiKey);
     const limit = options.limit ?? 10;
 
+    let page = 1;
+    if (options.cursor) {
+      const parsedPage = parseInt(options.cursor, 10);
+      if (!isNaN(parsedPage)) {
+        page = parsedPage;
+      }
+    }
+
+    if (options.direction === "backward" && page > 1) {
+      page -= 1;
+    }
+
     const list = await polar.products.list({
       limit,
-      starting_after:
-        options.cursor && options.direction !== "backward"
-          ? options.cursor
-          : undefined,
-      ending_before:
-        options.cursor && options.direction === "backward"
-          ? options.cursor
-          : undefined,
-      active: options.filters?.active,
+      page,
     });
 
-    const data = list.data.map(toProduct);
-    const lastItem = data[data.length - 1];
+    const rawItems = list.result.items || [];
+    const pagination = list.result.pagination;
+
+    const data = rawItems.map(toProduct);
+
+    const hasMore = page < pagination.maxPage;
+    const nextCursor = hasMore ? (page + 1).toString() : undefined;
 
     return {
       data: {
         data,
-        hasMore: list.has_more,
-        nextCursor: list.has_more && lastItem ? lastItem.id : undefined,
+        hasMore,
+        nextCursor,
       },
       status: "success",
     };

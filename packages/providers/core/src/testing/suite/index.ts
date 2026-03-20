@@ -223,6 +223,7 @@ export function createComplianceSuite(
         it("createPrice (one-time): satisfies Price shape", async () => {
           if (!state.productId) return;
           const res = await provider.createPrice(ctx, {
+            billingScheme: "flat",
             productId: state.productId,
             unitAmount: 1999,
             currency: "usd",

@@ -93,10 +93,14 @@ describe("configValidator", () => {
         coupons: "native",
       },
       billing: {
-        invoiceItems: true,
-        invoices: true,
-        metered: "native",
-        paymentLinks: true,
+        features: {
+          ingestsEvents: true,
+          invoices: true,
+          invoiceItems: true,
+          requiresMeterCreation: true,
+          paymentLinks: true,
+        },
+        meteredStrategy: "native_events",
       },
     },
     author: "Revstack",

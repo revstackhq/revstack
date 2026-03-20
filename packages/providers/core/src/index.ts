@@ -12,7 +12,7 @@ export * from "@/types/billing";
 export * from "@/types/portal";
 export * from "@/types/refunds";
 export * from "@/types/subscriptions";
-export * from "@/types/paymentMethods";
+export * from "@/types/payment-methods";
 export * from "@/types/promotions";
 
 // Types
@@ -52,6 +52,3 @@ export * from "@/utils/webhook";
 export * from "@/utils/url";
 export * from "@/utils/date";
 export * from "@/utils/finance";
-
-// Smoke Runner
-export * from "@/smoke-runner";

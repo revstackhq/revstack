@@ -1,6 +1,6 @@
-import { ProviderContext } from "@/context";
-import { IProvider } from "@/interfaces/provider";
-import { ProviderManifest } from "@/manifest";
+import type { ProviderContext } from "@/context";
+import type { IProvider } from "@/interfaces/provider";
+import type { ProviderManifest } from "@/manifest";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 

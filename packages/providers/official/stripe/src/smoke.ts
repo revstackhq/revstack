@@ -1,10 +1,11 @@
 import { StripeProvider } from "@/provider";
-import { ProviderContext, runSmoke } from "@revstackhq/providers-core";
+import { ProviderContext } from "@revstackhq/providers-core";
 import { runLifecycleScenario } from "@/smoke/lifecycle";
 import Stripe from "stripe";
 import dotenv from "dotenv";
 import path from "path";
 import { fileURLToPath } from "url";
+import { runSmoke } from "@revstackhq/providers-core/testing";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -76,6 +77,7 @@ runSmoke({
       // One-time price
       const oneTime = await provider.createPrice(getStepCtx("price-onetime"), {
         productId: STATE.productId,
+        billingScheme: "flat",
         unitAmount: 5000, // $50.00
         currency: "usd",
         active: true,
@@ -87,6 +89,7 @@ runSmoke({
         getStepCtx("price-recurring"),
         {
           productId: STATE.productId,
+          billingScheme: "flat",
           unitAmount: 2000, // $20.00
           currency: "usd",
           interval: "month",

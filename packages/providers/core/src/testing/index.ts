@@ -23,13 +23,13 @@
  */
 
 // Suite factory + option types
-export { createComplianceSuite } from "./suite";
+export { createComplianceSuite } from "@/testing/suite";
 export type {
   ComplianceSuiteOptions,
   WebhookFixtureMap,
   SignatureTestInput,
   ProrationScenario,
-} from "./suite";
+} from "@/testing/suite";
 
 // Domain assertion helpers
 export {
@@ -38,8 +38,9 @@ export {
   assertInvoiceShape,
   assertProductShape,
   assertPriceShape,
-} from "./assertions";
+} from "@/testing/assertions";
 
 // Certification report generator
-export { generateCertificationReport } from "./report";
-export type { CertificationReport } from "./report";
+export { generateCertificationReport } from "@/testing/report";
+export type { CertificationReport } from "@/testing/report";
+export * from "@/smoke-runner";
