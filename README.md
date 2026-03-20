@@ -16,13 +16,13 @@
 <p align="center">
   <a href="https://docs.revstack.dev"><strong>Docs</strong></a> ·
   <a href="https://app.revstack.dev"><strong>Dashboard</strong></a> ·
-  <a href="https://github.com/revstackhq/revstack-os/issues"><strong>Issues</strong></a> ·
+  <a href="https://github.com/revstackhq/revstack/issues"><strong>Issues</strong></a> ·
   <a href="CONTRIBUTING.md"><strong>Contributing</strong></a>
 </p>
 
 <p align="center">
   <a href="LICENSE.md"><img alt="License" src="https://img.shields.io/badge/license-MIT%20%2F%20FSL-0a0a0a?style=flat-square&labelColor=0a0a0a"></a>
-  <a href="https://github.com/revstackhq/revstack-os"><img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-5.9-0a0a0a?style=flat-square&labelColor=0a0a0a"></a>
+  <a href="https://github.com/revstackhq/revstack"><img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-5.9-0a0a0a?style=flat-square&labelColor=0a0a0a"></a>
   <img alt="Coverage" src="./coverage/badge.svg" style="height: 20px;">
 </p>
 
@@ -30,62 +30,57 @@
 
 ## What is Revstack?
 
-Revstack is a billing infrastructure platform for SaaS companies. Define your plans and entitlements in code, connect a payment provider, and let the platform handle entitlement checks, usage tracking, subscription lifecycle, and webhook orchestration.
+Revstack is the Terraform for billing. We are an open-source development platform that handles the entire subscription lifecycle. Define your plans in code, connect a payment provider, and we take care of the rest.
 
-This monorepo contains the open-source client SDKs, the entitlement engine, and the provider gateway that power [Revstack Cloud](https://app.revstack.dev).
+- [x] **Billing-as-Code:** Define your pricing models in a single configuration file and deploy with our CLI.
+- [x] **Entitlement Engine:** Resolve access control in milliseconds. No more fragile conditionals.
+- [x] **Webhook Orchestration:** We absorb the asynchronous noise from payment providers and normalize it into a unified state.
+- [x] **AI Auto-metering:** Sub-millisecond token deductions for AI wrappers (native Vercel AI SDK integration).
+- [x] **Bring Your Own Auth:** Works out-of-the-box with Auth0, Clerk, Supabase, Cognito, and custom JWTs.
+- [x] **Self-Hosted or Cloud:** Run the engine on your own infrastructure or use our managed Cloud.
 
-## Packages
+## How it works
 
-### Client SDKs & Ecosystem `MIT`
+The biggest bottleneck in monetization is the fragmented event architecture of different payment providers. Revstack acts as a middleware that absorbs that asynchronous noise and converts it into a synchronous, unified state. The developer simply fetches the entitlement state; Revstack orchestrates the webhooks behind the scenes.
 
-| Package                                                       | Description                                                    |
-| ------------------------------------------------------------- | -------------------------------------------------------------- |
-| [`@revstackhq/node`](packages/node)                           | Server-side SDK for Node.js                                    |
-| [`@revstackhq/next`](packages/next)                           | Next.js integration                                            |
-| [`@revstackhq/react`](packages/react)                         | React hooks and components                                     |
-| [`@revstackhq/browser`](packages/browser)                     | Browser-side SDK                                               |
-| [`@revstackhq/auth`](packages/auth)                           | JWT verification for Auth0, Clerk, Supabase, Cognito, Firebase |
-| [`@revstackhq/ai`](packages/ai)                               | AI utilities                                                   |
-| [`@revstackhq/cli`](packages/cli)                             | Command-line interface                                         |
-| [`@revstackhq/eslint-config`](packages/eslint-config)         | Shared ESLint rules                                            |
-| [`@revstackhq/typescript-config`](packages/typescript-config) | Shared TypeScript configurations                               |
+1. **Write your `revstack.config.ts`.** Define products, features, and limits.
+2. **Run `npx revstack push`.** The CLI syncs your configuration with the database and payment provider.
+3. **Use the SDK.** Call `revstack.entitlements.resolve()` in your app to guard features or track usage.
 
-### Core Infrastructure `FSL-1.1-MIT`
+## Client Libraries & Ecosystem
 
-| Package                                                             | Description                 |
-| ------------------------------------------------------------------- | --------------------------- |
-| [`@revstackhq/core`](packages/core)                                 | Entitlement engine          |
-| [`@revstackhq/providers-core`](packages/providers/core)             | Provider gateway interfaces |
-| [`@revstackhq/providers-registry`](packages/providers/registry)     | Provider discovery          |
-| [`@revstackhq/provider-stripe`](packages/providers/official/stripe) | Stripe provider             |
-| [`@revstackhq/provider-polar`](packages/providers/official/polar)   | Polar provider              |
+Our approach is modular. You only install what you need for your specific stack. The Client SDKs are fully MIT licensed.
 
-> Client SDKs & Ecosystem packages are MIT — use them anywhere. Core infrastructure uses the [Functional Source License](https://fsl.software/) and converts to MIT after two years. See [LICENSE.md](LICENSE.md).
+| Package | Description |
+| --- | --- |
+| [`@revstackhq/node`](packages/node) | Server-side SDK for Node.js |
+| [`@revstackhq/next`](packages/next) | Next.js Server Actions and API route integrations |
+| [`@revstackhq/react`](packages/react) | React hooks (`useEntitlement`, `useBilling`) and UI components |
+| [`@revstackhq/browser`](packages/browser) | Lightweight browser-side SDK |
+| [`@revstackhq/auth`](packages/auth) | JWT verification for Auth0, Clerk, Supabase, Cognito, Firebase |
+| [`@revstackhq/ai`](packages/ai) | Auto-metering utilities for LLM streams (OpenAI, Anthropic) |
+| [`@revstackhq/cli`](packages/cli) | Command-line interface for state diffing and sync |
+| [`@revstackhq/eslint-config`](packages/eslint-config) | Shared ESLint rules |
+| [`@revstackhq/typescript-config`](packages/typescript-config)| Shared TypeScript configurations |
+
+## Core Infrastructure
+
+The underlying engine that powers the entitlement checks and webhook orchestration.
+
+| Package | Description |
+| --- | --- |
+| [`@revstackhq/core`](packages/core) | The main Entitlement and Ledger engine |
+| [`@revstackhq/providers-core`](packages/providers/core) | Provider gateway interfaces and abstract classes |
+| [`@revstackhq/providers-registry`](packages/providers/registry)| Provider discovery mechanism |
+| [`@revstackhq/provider-stripe`](packages/providers/official/stripe)| Official Stripe provider |
+| [`@revstackhq/provider-polar`](packages/providers/official/polar)| Official Polar provider |
 
 ## Development
 
+To get started with local development, clone the repository and build the packages:
+
 ```bash
-git clone https://github.com/revstackhq/revstack-os.git
-cd revstack-os
+git clone [https://github.com/revstackhq/revstack.git](https://github.com/revstackhq/revstack.git)
+cd revstack
 pnpm install
 pnpm build
-```
-
-| Command                                   | Description                                 |
-| ----------------------------------------- | ------------------------------------------- |
-| `pnpm build`                              | Build all packages                          |
-| `pnpm check-types`                        | Type-check everything                       |
-| `pnpm lint`                               | Lint all packages                           |
-| `pnpm format`                             | Format with Prettier                        |
-| `pnpm build --filter=@revstackhq/auth...` | Build a single package and its dependencies |
-
-Requires **Node.js >= 18** and **pnpm 9**.
-
-## License & Governance
-
-Revstack is Source-Available, licensed under the **Functional Source License, Version 1.1, MIT Future License (FSL-1.1-MIT)**.
-
-**What this means in plain English:**
-You can read, modify, and run Revstack for your own business. You just can't build a competing billing/entitlements product with it. After 2 years, the code automatically converts to a permissive MIT license.
-
-Please see our [CONTRIBUTING.md](CONTRIBUTING.md) for more details. Note that we are currently in a **Contribution Lock** phase while we stabilize the Core PDK, so we are not accepting Pull Requests at this time.
