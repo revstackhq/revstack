@@ -1,0 +1,63 @@
+import { text, timestamp, numeric, integer, jsonb } from "drizzle-orm/pg-core";
+import { revstack } from "@/schema/namespace";
+import { generateId } from "@/utils/id";
+import { environments } from "@/schema/core";
+import { users } from "@/schema/users";
+import { entitlements } from "@/schema/entitlements";
+import { walletTxTypeEnum } from "@/schema/enums";
+
+/**
+ * Prepaid Balances / Credits for specific entitlements.
+ * Allows users to prepay for 'metered' entitlements (e.g., AI Tokens).
+ * The engine checks this balance BEFORE checking the plan's base limits.
+ */
+export const wallets = revstack.table("wallets", {
+  id: text("id")
+    .$defaultFn(() => generateId("wal"))
+    .primaryKey(),
+  environmentId: text("environment_id")
+    .references(() => environments.id, { onDelete: "cascade" })
+    .notNull(),
+  userId: text("user_id")
+    .references(() => users.id, { onDelete: "cascade" })
+    .notNull(),
+  entitlementId: text("entitlement_id")
+    .references(() => entitlements.id, { onDelete: "cascade" })
+    .notNull(),
+
+  /** The current cached balance for sub-millisecond Engine reads. */
+  balance: integer("balance").notNull().default(0),
+
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
+/**
+ * The Immutable Ledger for Wallets.
+ * Every time a wallet balance changes (credit or debit), a record MUST be inserted here.
+ */
+export const walletTransactions = revstack.table("wallet_transactions", {
+  id: text("id")
+    .$defaultFn(() => generateId("wtx"))
+    .primaryKey(),
+  walletId: text("wallet_id")
+    .references(() => wallets.id, { onDelete: "cascade" })
+    .notNull(),
+  amount: integer("amount").notNull(),
+  type: walletTxTypeEnum("type").notNull(),
+
+  /** Descriptive reason for the transaction (e.g., 'Topped up 10k tokens') */
+  description: text("description").notNull(),
+
+  /** Optional link to the usage_event or invoice that triggered this change */
+  referenceId: text("reference_id"),
+
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
