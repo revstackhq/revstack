@@ -2,29 +2,32 @@
   "name": "@revstackhq/db",
   "version": "0.1.0",
   "private": true,
+  "main": "./dist/index.mjs",
+  "types": "./dist/index.d.mts",
+  "files": [
+    "dist"
+  ],
   "exports": {
     ".": {
-      "types": "./src/index.ts",
-      "default": "./src/index.ts"
-    },
-    "./schema": {
-      "types": "./src/schema.ts",
-      "default": "./src/schema.ts"
+      "import": "./dist/index.mjs",
+      "types": "./dist/index.d.mts"
     }
   },
   "scripts": {
     "generate": "drizzle-kit generate",
     "push": "drizzle-kit push",
-    "studio": "drizzle-kit studio"
+    "studio": "drizzle-kit studio",
+    "build": "tsup"
   },
   "dependencies": {
-    "@neondatabase/serverless": "^0.9.5",
+    "@neondatabase/serverless": "^0.10.4",
     "drizzle-orm": "^0.45.1",
     "nanoid": "^5.1.7"
   },
   "devDependencies": {
     "@revstackhq/typescript-config": "workspace:*",
     "drizzle-kit": "^0.31.10",
+    "tsup": "^8.5.1",
     "tsx": "^4.7.1",
     "typescript": "^5.4.3"
   }

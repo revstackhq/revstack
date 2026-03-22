@@ -1,26 +1,22 @@
 {
-  "name": "@revstackhq/core",
-  "version": "0.6.0",
-  "private": false,
-  "license": "FSL-1.1-MIT",
+  "name": "@revstackhq/api",
+  "version": "0.1.0",
+  "private": true,
   "type": "module",
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
-  "files": [
-    "dist"
-  ],
-  "exports": {
-    ".": {
-      "import": "./dist/index.js",
-      "types": "./dist/index.d.ts"
-    }
-  },
   "scripts": {
     "build": "tsup",
-    "dev": "tsup --watch",
+    "dev": "tsx watch src/index.ts",
     "check-types": "tsc -p tsconfig.json --noEmit",
     "lint": "eslint \"src/**/*.{ts,tsx}\"",
     "test": "vitest run"
+  },
+  "dependencies": {
+    "@hono/node-server": "^1.11.1",
+    "@hono/zod-validator": "^0.7.6",
+    "@revstackhq/core": "workspace:*",
+    "@revstackhq/db": "workspace:*",
+    "hono": "^4.3.0",
+    "zod": "^3.23.8"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
@@ -31,14 +27,9 @@
     "eslint-plugin-turbo": "^2.7.1",
     "tsc-alias": "^1.8.16",
     "tsup": "^8.3.5",
+    "tsx": "^4.7.2",
     "typescript": "5.9.2",
     "typescript-eslint": "^8.50.0",
     "vitest": "^4.0.18"
-  },
-  "publishConfig": {
-    "access": "public"
-  },
-  "dependencies": {
-    "zod": "^3.23.8"
   }
 }

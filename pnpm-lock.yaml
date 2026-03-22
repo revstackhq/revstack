@@ -46,6 +46,64 @@ importers:
         specifier: ^4.0.18
         version: 4.0.18(@opentelemetry/api@1.9.0)(@types/node@20.19.30)(jiti@2.6.1)(lightningcss@1.31.1)(msw@2.12.10(@types/node@20.19.30)(typescript@5.9.2))(tsx@4.21.0)
 
+  apps/api:
+    dependencies:
+      '@hono/node-server':
+        specifier: ^1.11.1
+        version: 1.19.11(hono@4.12.8)
+      '@hono/zod-validator':
+        specifier: ^0.7.6
+        version: 0.7.6(hono@4.12.8)(zod@3.25.76)
+      '@revstackhq/core':
+        specifier: workspace:*
+        version: link:../../packages/core
+      '@revstackhq/db':
+        specifier: workspace:*
+        version: link:../../packages/db
+      hono:
+        specifier: ^4.3.0
+        version: 4.12.8
+      zod:
+        specifier: ^3.23.8
+        version: 3.25.76
+    devDependencies:
+      '@eslint/js':
+        specifier: ^9.39.1
+        version: 9.39.1
+      '@revstackhq/eslint-config':
+        specifier: workspace:*
+        version: link:../../packages/eslint-config
+      '@types/node':
+        specifier: ^20.11.30
+        version: 20.19.30
+      eslint:
+        specifier: ^9.39.1
+        version: 9.39.1(jiti@2.6.1)
+      eslint-config-prettier:
+        specifier: ^10.1.1
+        version: 10.1.1(eslint@9.39.1(jiti@2.6.1))
+      eslint-plugin-turbo:
+        specifier: ^2.7.1
+        version: 2.7.1(eslint@9.39.1(jiti@2.6.1))(turbo@2.8.1)
+      tsc-alias:
+        specifier: ^1.8.16
+        version: 1.8.16
+      tsup:
+        specifier: ^8.3.5
+        version: 8.5.1(jiti@2.6.1)(postcss@8.5.6)(tsx@4.21.0)(typescript@5.9.2)
+      tsx:
+        specifier: ^4.7.2
+        version: 4.21.0
+      typescript:
+        specifier: 5.9.2
+        version: 5.9.2
+      typescript-eslint:
+        specifier: ^8.50.0
+        version: 8.50.0(eslint@9.39.1(jiti@2.6.1))(typescript@5.9.2)
+      vitest:
+        specifier: ^4.0.18
+        version: 4.0.18(@opentelemetry/api@1.9.0)(@types/node@20.19.30)(jiti@2.6.1)(lightningcss@1.31.1)(msw@2.12.10(@types/node@20.19.30)(typescript@5.9.2))(tsx@4.21.0)
+
   apps/checkout:
     dependencies:
       '@radix-ui/react-slot':
@@ -230,8 +288,8 @@ importers:
   packages/core:
     dependencies:
       zod:
-        specifier: ^4.3.6
-        version: 4.3.6
+        specifier: ^3.23.8
+        version: 3.25.76
     devDependencies:
       '@eslint/js':
         specifier: ^9.39.1
@@ -270,11 +328,11 @@ importers:
   packages/db:
     dependencies:
       '@neondatabase/serverless':
-        specifier: ^0.9.5
-        version: 0.9.5
+        specifier: ^0.10.4
+        version: 0.10.4
       drizzle-orm:
         specifier: ^0.45.1
-        version: 0.45.1(@neondatabase/serverless@0.9.5)(@opentelemetry/api@1.9.0)(@types/pg@8.11.6)
+        version: 0.45.1(@neondatabase/serverless@0.10.4)(@opentelemetry/api@1.9.0)(@types/pg@8.11.6)
       nanoid:
         specifier: ^5.1.7
         version: 5.1.7
@@ -285,6 +343,9 @@ importers:
       drizzle-kit:
         specifier: ^0.31.10
         version: 0.31.10
+      tsup:
+        specifier: ^8.5.1
+        version: 8.5.1(jiti@2.6.1)(postcss@8.5.6)(tsx@4.21.0)(typescript@5.9.2)
       tsx:
         specifier: ^4.7.1
         version: 4.21.0
@@ -1289,6 +1350,18 @@ packages:
     resolution: {integrity: sha512-43/qtrDUokr7LJqoF2c3+RInu/t4zfrpYdoSDfYyhg52rwLV6TnOvdG4fXm7IkSB3wErkcmJS9iEhjVtOSEjjA==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
 
+  '@hono/node-server@1.19.11':
+    resolution: {integrity: sha512-dr8/3zEaB+p0D2n/IUrlPF1HZm586qgJNXK1a9fhg/PzdtkK7Ksd5l312tJX2yBuALqDYBlG20QEbayqPyxn+g==}
+    engines: {node: '>=18.14.1'}
+    peerDependencies:
+      hono: ^4
+
+  '@hono/zod-validator@0.7.6':
+    resolution: {integrity: sha512-Io1B6d011Gj1KknV4rXYz4le5+5EubcWEU/speUjuw9XMMIaP3n78yXLhjd2A3PXaXaUwEAluOiAyLqhBEJgsw==}
+    peerDependencies:
+      hono: '>=3.9.0'
+      zod: ^3.25.0 || ^4.0.0
+
   '@humanfs/core@0.19.1':
     resolution: {integrity: sha512-5DyQ4+1JEUzejeK1JGICcideyfUbGixgS9jNgex5nqkW+cY7WZhxBigmieN5Qnw9ZosSNVC9KQKyb+GUaGyKUA==}
     engines: {node: '>=18.18.0'}
@@ -1515,8 +1588,8 @@ packages:
   '@napi-rs/wasm-runtime@0.2.12':
     resolution: {integrity: sha512-ZVWUcfwY4E/yPitQJl481FjFo3K22D6qF0DuFH6Y/nbnE11GY5uguDxZMGXPQ8WQ0128MXQD7TnfHyK4oWoIJQ==}
 
-  '@neondatabase/serverless@0.9.5':
-    resolution: {integrity: sha512-siFas6gItqv6wD/pZnvdu34wEqgG3nSE6zWZdq5j2DEsa+VvX8i/5HXJOo06qrw5axPXn+lGCxeR+NLaSPIXug==}
+  '@neondatabase/serverless@0.10.4':
+    resolution: {integrity: sha512-2nZuh3VUO9voBauuh+IGYRhGU/MskWHt1IuZvHcJw6GLjDgtqj/KViKo7SIrLdGLdot7vFbiRRw+BgEy3wT9HA==}
 
   '@next/env@15.5.12':
     resolution: {integrity: sha512-pUvdJN1on574wQHjaBfNGDt9Mz5utDSZFsIIQkMzPgNS8ZvT4H2mwOrOIClwsQOb6EGx5M76/CZr6G8i6pSpLg==}
@@ -3176,6 +3249,10 @@ packages:
 
   hermes-parser@0.25.1:
     resolution: {integrity: sha512-6pEjquH3rqaI6cYAXYPcz9MS4rY6R4ngRgrgfDshRptUZIc3lw0MCIJIGDj9++mfySOuPTHB4nrSW99BCvOPIA==}
+
+  hono@4.12.8:
+    resolution: {integrity: sha512-VJCEvtrezO1IAR+kqEYnxUOoStaQPGrCmX3j4wDTNOcD1uRPFpGlwQUIW8niPuvHXaTUxeOUl5MMDGrl+tmO9A==}
+    engines: {node: '>=16.9.0'}
 
   html-escaper@2.0.2:
     resolution: {integrity: sha512-H2iMtd0I4Mt5eYiapRdIDjp+XzelXQ0tFE4JS7YFwFevXXMmOp9myNrUvCg0D6ws8iqkRPBfKHgbwig1SmlLfg==}
@@ -5381,6 +5458,15 @@ snapshots:
       '@eslint/core': 0.17.0
       levn: 0.4.1
 
+  '@hono/node-server@1.19.11(hono@4.12.8)':
+    dependencies:
+      hono: 4.12.8
+
+  '@hono/zod-validator@0.7.6(hono@4.12.8)(zod@3.25.76)':
+    dependencies:
+      hono: 4.12.8
+      zod: 3.25.76
+
   '@humanfs/core@0.19.1': {}
 
   '@humanfs/node@0.16.7':
@@ -5575,7 +5661,7 @@ snapshots:
       '@tybys/wasm-util': 0.10.1
     optional: true
 
-  '@neondatabase/serverless@0.9.5':
+  '@neondatabase/serverless@0.10.4':
     dependencies:
       '@types/pg': 8.11.6
 
@@ -5667,7 +5753,7 @@ snapshots:
   '@polar-sh/sdk@0.45.1':
     dependencies:
       standardwebhooks: 1.0.0
-      zod: 4.3.6
+      zod: 3.25.76
 
   '@radix-ui/react-compose-refs@1.1.2(@types/react@19.2.14)(react@19.2.3)':
     dependencies:
@@ -5948,7 +6034,7 @@ snapshots:
   '@typescript-eslint/project-service@8.50.0(typescript@5.9.2)':
     dependencies:
       '@typescript-eslint/tsconfig-utils': 8.50.0(typescript@5.9.2)
-      '@typescript-eslint/types': 8.50.0
+      '@typescript-eslint/types': 8.57.1
       debug: 4.4.3
       typescript: 5.9.2
     transitivePeerDependencies:
@@ -6584,9 +6670,9 @@ snapshots:
       esbuild: 0.25.12
       tsx: 4.21.0
 
-  drizzle-orm@0.45.1(@neondatabase/serverless@0.9.5)(@opentelemetry/api@1.9.0)(@types/pg@8.11.6):
+  drizzle-orm@0.45.1(@neondatabase/serverless@0.10.4)(@opentelemetry/api@1.9.0)(@types/pg@8.11.6):
     optionalDependencies:
-      '@neondatabase/serverless': 0.9.5
+      '@neondatabase/serverless': 0.10.4
       '@opentelemetry/api': 1.9.0
       '@types/pg': 8.11.6
 
@@ -7266,6 +7352,8 @@ snapshots:
   hermes-parser@0.25.1:
     dependencies:
       hermes-estree: 0.25.1
+
+  hono@4.12.8: {}
 
   html-escaper@2.0.2: {}
 
