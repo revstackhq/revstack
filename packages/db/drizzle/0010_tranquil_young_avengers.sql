@@ -1,0 +1,1 @@
+ALTER TABLE "revstack"."customers" ALTER COLUMN "name" SET NOT NULL;

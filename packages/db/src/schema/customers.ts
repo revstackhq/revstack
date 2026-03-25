@@ -24,7 +24,7 @@ export const customers = revstack.table("customers", {
   providerId: text("provider_id").notNull(),
   externalId: text("external_id").notNull(),
   email: text("email").notNull(),
-  name: text("name"),
+  name: text("name").notNull(),
   phone: text("phone"),
   metadata: jsonb("metadata").default({}),
   createdAt: timestamp("created_at", { withTimezone: true })
