@@ -1,0 +1,23 @@
+import type { ApiKeyRepository } from "@/modules/system/application/ports/ApiKeyRepository";
+import type { EventBus } from "@/common/application/ports/EventBus";
+import type { UpdateApiKeyCommand } from "@/modules/system/application/commands/UpdateApiKeyCommand";
+import { ApiKeyNotFoundError } from "@/modules/system/domain/SystemErrors";
+
+export class UpdateApiKeyHandler {
+  constructor(
+    private readonly repository: ApiKeyRepository,
+    private readonly eventBus: EventBus
+  ) {}
+
+  public async handle(command: UpdateApiKeyCommand) {
+    const apiKey = await this.repository.findById(command.keyId);
+    if (!apiKey) {
+      throw new ApiKeyNotFoundError();
+    }
+
+    apiKey.update(command.name, command.scopes);
+    await this.repository.save(apiKey);
+
+    return apiKey.toPrimitives();
+  }
+}

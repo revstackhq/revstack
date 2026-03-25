@@ -1,11 +1,11 @@
-import type { IInvoiceRepository } from "@/modules/invoices/application/ports/IInvoiceRepository";
-import type { ICacheService } from "@/common/application/ports/ICacheService";
+import type { InvoiceRepository } from "@/modules/invoices/application/ports/InvoiceRepository";
+import type { CacheService } from "@/common/application/ports/CacheService";
 import type { ListInvoicesQuery } from "@/modules/invoices/application/queries/ListInvoicesQuery";
 
 export class ListInvoicesHandler {
   constructor(
-    private readonly repository: IInvoiceRepository,
-    private readonly cache: ICacheService
+    private readonly repository: InvoiceRepository,
+    private readonly cache: CacheService
   ) {}
 
   public async handle(query: ListInvoicesQuery): Promise<any[]> {

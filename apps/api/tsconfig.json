@@ -6,10 +6,7 @@
     "rootDir": "src",
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"],
-      "@/schema": ["../../packages/db/src/schema/index.ts"],
-      "@/schema/*": ["../../packages/db/src/schema/*"],
-      "@/utils/*": ["../../packages/db/src/utils/*"]
+      "@/*": ["./src/*"]
     }
   },
   "include": ["src"],

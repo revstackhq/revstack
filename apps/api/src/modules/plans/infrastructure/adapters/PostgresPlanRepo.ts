@@ -1,7 +1,7 @@
-import type { IPlanRepository } from "@/modules/plans/application/ports/IPlanRepository";
+import type { PlanRepository } from "@/modules/plans/application/ports/PlanRepository";
 import type { PlanEntity } from "@/modules/plans/domain/PlanEntity";
 
-export class PostgresPlanRepo implements IPlanRepository {
+export class PostgresPlanRepo implements PlanRepository {
   constructor(private readonly db: any) {}
 
   async save(plan: PlanEntity): Promise<void> {

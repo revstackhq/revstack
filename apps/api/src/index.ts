@@ -2,17 +2,30 @@ import { Hono } from "hono";
 import { serve } from "@hono/node-server";
 import { buildContainer, type AppEnv } from "@/container";
 
-// Import Routers
-import { entitlementsRoutes } from "@/modules/entitlements/infrastructure/http/entitlements.routes";
-import { plansRoutes } from "@/modules/plans/infrastructure/http/plans.routes";
+import { addonEntitlementsRoutes } from "@/modules/addon_entitlements/infrastructure/http/addon_entitlements.routes";
+import { addonsRoutes } from "@/modules/addons/infrastructure/http/addons.routes";
+import { auditRoutes } from "@/modules/audit/infrastructure/http/audit.routes";
+import { authRoutes } from "@/modules/auth/infrastructure/http/auth.routes";
+import { couponsRoutes } from "@/modules/coupons/infrastructure/http/coupons.routes";
+import { creditNotesRoutes } from "@/modules/credit_notes/infrastructure/http/credit_notes.routes";
 import { customersRoutes } from "@/modules/customers/infrastructure/http/customers.routes";
-import { subscriptionsRoutes } from "@/modules/subscriptions/infrastructure/http/subscriptions.routes";
-import { usageRoutes } from "@/modules/usage/infrastructure/http/usage.routes";
-import { walletsRoutes } from "@/modules/wallets/infrastructure/http/wallets.routes";
+import { entitlementsRoutes } from "@/modules/entitlements/infrastructure/http/entitlements.routes";
+import { environmentsRoutes } from "@/modules/environments/infrastructure/http/environments.routes";
+import { integrationsRoutes } from "@/modules/integrations/infrastructure/http/integrations.routes";
 import { invoicesRoutes } from "@/modules/invoices/infrastructure/http/invoices.routes";
-import { paymentsRoutes } from "@/modules/invoices/infrastructure/http/payments.routes";
-import { webhooksRoutes } from "@/modules/webhooks/infrastructure/http/webhooks.routes";
+import { paymentsRoutes } from "@/modules/payments/infrastructure/http/payments.routes";
+import { planEntitlementsRoutes } from "@/modules/plan_entitlements/infrastructure/http/plan_entitlements.routes";
+import { plansRoutes } from "@/modules/plans/infrastructure/http/plans.routes";
+import { pricesRoutes } from "@/modules/prices/infrastructure/http/prices.routes";
+import { providerEventsRoutes } from "@/modules/provider_events/infrastructure/http/provider_events.routes";
+import { refundsRoutes } from "@/modules/refunds/infrastructure/http/refunds.routes";
+import { studioRoutes } from "@/modules/studio/infrastructure/http/studio.routes";
+import { subscriptionsRoutes } from "@/modules/subscriptions/infrastructure/http/subscriptions.routes";
 import { systemRoutes } from "@/modules/system/infrastructure/http/system.routes";
+import { usageRoutes } from "@/modules/usage/infrastructure/http/usage.routes";
+import { usersRoutes } from "@/modules/users/infrastructure/http/users.routes";
+import { walletsRoutes } from "@/modules/wallets/infrastructure/http/wallets.routes";
+import { webhooksRoutes } from "@/modules/webhooks/infrastructure/http/webhooks.routes";
 import { globalErrorHandler } from "@/common/middlewares/errorHandler";
 
 const app = new Hono<AppEnv>();
@@ -32,18 +45,31 @@ app.use("*", async (c, next) => {
   await next();
 });
 
-// 3. Mount Routes (Presentation Layer)
 const routes = app
-  .route("/v1/entitlements", entitlementsRoutes)
-  .route("/v1/plans", plansRoutes)
+  .route("/v1/addon-entitlements", addonEntitlementsRoutes)
+  .route("/v1/addons", addonsRoutes)
+  .route("/v1/audit", auditRoutes)
+  .route("/v1/auth", authRoutes)
+  .route("/v1/coupons", couponsRoutes)
+  .route("/v1/credit-notes", creditNotesRoutes)
   .route("/v1/customers", customersRoutes)
-  .route("/v1/subscriptions", subscriptionsRoutes)
-  .route("/v1/usage", usageRoutes)
-  .route("/v1/wallets", walletsRoutes)
+  .route("/v1/entitlements", entitlementsRoutes)
+  .route("/v1/environments", environmentsRoutes)
+  .route("/v1/integrations", integrationsRoutes)
   .route("/v1/invoices", invoicesRoutes)
   .route("/v1/payments", paymentsRoutes)
-  .route("/v1/webhooks", webhooksRoutes)
-  .route("/v1/system", systemRoutes);
+  .route("/v1/plan-entitlements", planEntitlementsRoutes)
+  .route("/v1/plans", plansRoutes)
+  .route("/v1/prices", pricesRoutes)
+  .route("/v1/provider-events", providerEventsRoutes)
+  .route("/v1/refunds", refundsRoutes)
+  .route("/v1/studio", studioRoutes)
+  .route("/v1/subscriptions", subscriptionsRoutes)
+  .route("/v1/system", systemRoutes)
+  .route("/v1/usage", usageRoutes)
+  .route("/v1/users", usersRoutes)
+  .route("/v1/wallets", walletsRoutes)
+  .route("/v1/webhooks", webhooksRoutes);
 
 export type AppRouter = typeof routes;
 

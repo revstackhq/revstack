@@ -2,6 +2,7 @@
   "name": "@revstackhq/api",
   "version": "0.1.0",
   "private": true,
+  "license": "FSL-1.1-MIT",
   "type": "module",
   "scripts": {
     "build": "tsup",

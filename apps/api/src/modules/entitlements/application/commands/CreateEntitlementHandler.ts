@@ -1,15 +1,15 @@
-import type { IEntitlementRepository } from "@/modules/entitlements/application/ports/IEntitlementRepository";
-import type { IEventBus } from "@/common/application/ports/IEventBus";
-import type { ICacheService } from "@/common/application/ports/ICacheService";
+import type { EntitlementRepository } from "@/modules/entitlements/application/ports/EntitlementRepository";
+import type { EventBus } from "@/common/application/ports/EventBus";
+import type { CacheService } from "@/common/application/ports/CacheService";
 import type { CreateEntitlementCommand } from "@/modules/entitlements/application/commands/CreateEntitlementCommand";
 import { EntitlementEntity } from "@/modules/entitlements/domain/EntitlementEntity";
 import { EntitlementCreatedEvent } from "@/modules/entitlements/domain/events/EntitlementCreatedEvent";
 
 export class CreateEntitlementHandler {
   constructor(
-    private readonly repository: IEntitlementRepository,
-    private readonly eventBus: IEventBus,
-    private readonly cache: ICacheService,
+    private readonly repository: EntitlementRepository,
+    private readonly eventBus: EventBus,
+    private readonly cache: CacheService,
   ) {}
 
   public async handle(command: CreateEntitlementCommand): Promise<string> {

@@ -1,8 +1,7 @@
-// src/modules/customers/infrastructure/PostgresCustomerRepository.ts
 import { eq } from "drizzle-orm";
 import { PgDatabase } from "drizzle-orm/pg-core";
 import { BasePostgresRepository } from "@/common/infrastructure/adapters/BasePostgresRepository";
-import type { ICustomerRepository } from "@/modules/customers/application/ports/ICustomerRepository";
+import type { CustomerRepository } from "@/modules/customers/application/ports/CustomerRepository";
 import { CustomerEntity } from "@/modules/customers/domain/CustomerEntity";
 import { customers } from "@revstackhq/db";
 
@@ -12,15 +11,14 @@ export class PostgresCustomerRepository
     typeof customers.$inferInsert,
     typeof customers.$inferSelect
   >
-  implements ICustomerRepository
+  implements CustomerRepository
 {
-  // Tipamos el constructor con el tipo real de tu conexión
   constructor(db: PgDatabase<any, any, any>) {
     super(db, customers);
   }
 
   protected toDomain(row: typeof customers.$inferSelect): CustomerEntity {
-    return new CustomerEntity({
+    return CustomerEntity.restore({
       id: row.id,
       environmentId: row.environmentId,
       userId: row.userId,
@@ -29,7 +27,7 @@ export class PostgresCustomerRepository
       email: row.email,
       name: row.name,
       phone: row.phone,
-      metadata: row.metadata,
+      metadata: (row.metadata as Record<string, unknown>) || {},
       createdAt: row.createdAt,
     });
   }
@@ -67,5 +65,14 @@ export class PostgresCustomerRepository
     return rows.map((row) =>
       this.toDomain(row as typeof customers.$inferSelect),
     );
+  }
+
+  async saveMany(customerEntities: CustomerEntity[]): Promise<void> {
+    if (customerEntities.length === 0) return;
+    const dbRecords = customerEntities.map(e => this.toPersistence(e));
+    await this.db
+      .insert(this.table)
+      .values(dbRecords as any[])
+      .onConflictDoNothing({ target: this.table.id });
   }
 }

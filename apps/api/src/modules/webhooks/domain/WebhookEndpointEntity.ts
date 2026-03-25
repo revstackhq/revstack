@@ -4,7 +4,8 @@ export class WebhookEndpointEntity {
     public url: string,
     public events: string[],
     public secret: string,
-    public isActive: boolean = true
+    public isActive: boolean = true,
+    public status: "active" | "inactive" = isActive ? "active" : "inactive"
   ) {}
 
   public static create(url: string, events: string[]): WebhookEndpointEntity {
@@ -18,5 +19,16 @@ export class WebhookEndpointEntity {
       throw new Error("WebhookEndpointAlreadyDisabled");
     }
     this.isActive = false;
+    this.status = "inactive";
+  }
+
+  public deactivate(): void {
+    this.disable();
+  }
+
+  public rotateSecret(): { secret: string; oldSecret: string } {
+    const oldSecret = this.secret;
+    this.secret = "whsec_" + crypto.randomUUID().replace(/-/g, "");
+    return { secret: this.secret, oldSecret };
   }
 }

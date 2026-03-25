@@ -1,13 +1,13 @@
-import type { IUsageRepository } from "@/modules/usage/application/ports/IUsageRepository";
-import type { IEventBus } from "@/common/application/ports/IEventBus";
+import type { UsageRepository } from "@/modules/usage/application/ports/UsageRepository";
+import type { EventBus } from "@/common/application/ports/EventBus";
 import type { RecordUsageCommand } from "@/modules/usage/application/commands/RecordUsageCommand";
 import { UsageRecordedEvent } from "@/modules/usage/domain/events/UsageRecordedEvent";
 import { UsageMeterEntity } from "@/modules/usage/domain/UsageMeterEntity";
 
 export class RecordUsageHandler {
   constructor(
-    private readonly repository: IUsageRepository,
-    private readonly eventBus: IEventBus
+    private readonly repository: UsageRepository,
+    private readonly eventBus: EventBus
   ) {}
 
   public async handle(command: RecordUsageCommand): Promise<string> {

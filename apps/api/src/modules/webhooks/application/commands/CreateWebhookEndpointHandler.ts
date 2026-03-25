@@ -1,13 +1,13 @@
-import type { IWebhookEndpointRepository } from "@/modules/webhooks/application/ports/IWebhookEndpointRepository";
-import type { IEventBus } from "@/common/application/ports/IEventBus";
+import type { WebhookEndpointRepository } from "@/modules/webhooks/application/ports/WebhookEndpointRepository";
+import type { EventBus } from "@/common/application/ports/EventBus";
 import type { CreateWebhookEndpointCommand } from "@/modules/webhooks/application/commands/CreateWebhookEndpointCommand";
 import { WebhookEndpointEntity } from "@/modules/webhooks/domain/WebhookEndpointEntity";
 import { WebhookEndpointCreatedEvent } from "@/modules/webhooks/domain/events/WebhookEvents";
 
 export class CreateWebhookEndpointHandler {
   constructor(
-    private readonly repository: IWebhookEndpointRepository,
-    private readonly eventBus: IEventBus
+    private readonly repository: WebhookEndpointRepository,
+    private readonly eventBus: EventBus
   ) {}
 
   public async handle(command: CreateWebhookEndpointCommand): Promise<string> {

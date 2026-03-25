@@ -1,11 +1,11 @@
-import type { IPlanRepository } from "@/modules/plans/application/ports/IPlanRepository";
-import type { ICacheService } from "@/common/application/ports/ICacheService";
+import type { PlanRepository } from "@/modules/plans/application/ports/PlanRepository";
+import type { CacheService } from "@/common/application/ports/CacheService";
 import type { ListPlansQuery } from "@/modules/plans/application/queries/ListPlansQuery";
 
 export class ListPlansHandler {
   constructor(
-    private readonly repository: IPlanRepository,
-    private readonly cache: ICacheService
+    private readonly repository: PlanRepository,
+    private readonly cache: CacheService
   ) {}
 
   public async handle(query: ListPlansQuery): Promise<any[]> {

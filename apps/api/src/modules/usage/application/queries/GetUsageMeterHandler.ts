@@ -1,12 +1,12 @@
-import type { IUsageRepository } from "@/modules/usage/application/ports/IUsageRepository";
-import type { ICacheService } from "@/common/application/ports/ICacheService";
+import type { UsageRepository } from "@/modules/usage/application/ports/UsageRepository";
+import type { CacheService } from "@/common/application/ports/CacheService";
 import type { GetUsageMeterQuery } from "@/modules/usage/application/queries/GetUsageMeterQuery";
 import { UsageMeterNotFoundError } from "@/modules/usage/domain/UsageErrors";
 
 export class GetUsageMeterHandler {
   constructor(
-    private readonly repository: IUsageRepository,
-    private readonly cache: ICacheService
+    private readonly repository: UsageRepository,
+    private readonly cache: CacheService
   ) {}
 
   public async handle(query: GetUsageMeterQuery): Promise<any> {

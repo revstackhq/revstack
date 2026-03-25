@@ -1,15 +1,15 @@
-import type { IInvoiceRepository } from "@/modules/invoices/application/ports/IInvoiceRepository";
-import type { IEventBus } from "@/common/application/ports/IEventBus";
-import type { ICacheService } from "@/common/application/ports/ICacheService";
+import type { InvoiceRepository } from "@/modules/invoices/application/ports/InvoiceRepository";
+import type { EventBus } from "@/common/application/ports/EventBus";
+import type { CacheService } from "@/common/application/ports/CacheService";
 import type { CreateDraftInvoiceCommand } from "@/modules/invoices/application/commands/CreateDraftInvoiceCommand";
 import { InvoiceEntity } from "@/modules/invoices/domain/InvoiceEntity";
 import { InvoiceCreatedEvent } from "@/modules/invoices/domain/events/InvoiceEvents";
 
 export class CreateDraftInvoiceHandler {
   constructor(
-    private readonly repository: IInvoiceRepository,
-    private readonly eventBus: IEventBus,
-    private readonly cache: ICacheService
+    private readonly repository: InvoiceRepository,
+    private readonly eventBus: EventBus,
+    private readonly cache: CacheService
   ) {}
 
   public async handle(command: CreateDraftInvoiceCommand): Promise<string> {

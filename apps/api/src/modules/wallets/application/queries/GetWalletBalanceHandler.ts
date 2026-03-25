@@ -1,12 +1,12 @@
-import type { IWalletRepository } from "@/modules/wallets/application/ports/IWalletRepository";
-import type { ICacheService } from "@/common/application/ports/ICacheService";
+import type { WalletRepository } from "@/modules/wallets/application/ports/WalletRepository";
+import type { CacheService } from "@/common/application/ports/CacheService";
 import type { GetWalletBalanceQuery } from "@/modules/wallets/application/queries/GetWalletBalanceQuery";
 import { WalletNotFoundError } from "@/modules/wallets/domain/WalletErrors";
 
 export class GetWalletBalanceHandler {
   constructor(
-    private readonly repository: IWalletRepository,
-    private readonly cache: ICacheService
+    private readonly repository: WalletRepository,
+    private readonly cache: CacheService
   ) {}
 
   public async handle(query: GetWalletBalanceQuery): Promise<any> {

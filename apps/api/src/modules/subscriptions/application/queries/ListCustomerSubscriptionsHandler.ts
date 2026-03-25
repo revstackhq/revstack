@@ -1,11 +1,11 @@
-import type { ISubscriptionRepository } from "@/modules/subscriptions/application/ports/ISubscriptionRepository";
-import type { ICacheService } from "@/common/application/ports/ICacheService";
+import type { SubscriptionRepository } from "@/modules/subscriptions/application/ports/SubscriptionRepository";
+import type { CacheService } from "@/common/application/ports/CacheService";
 import type { ListCustomerSubscriptionsQuery } from "@/modules/subscriptions/application/queries/ListCustomerSubscriptionsQuery";
 
 export class ListCustomerSubscriptionsHandler {
   constructor(
-    private readonly repository: ISubscriptionRepository,
-    private readonly cache: ICacheService
+    private readonly repository: SubscriptionRepository,
+    private readonly cache: CacheService
   ) {}
 
   public async handle(query: ListCustomerSubscriptionsQuery): Promise<any[]> {

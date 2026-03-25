@@ -1,7 +1,7 @@
-import type { IEntitlementRepository } from "@/modules/entitlements/application/ports/IEntitlementRepository";
+import type { EntitlementRepository } from "@/modules/entitlements/application/ports/EntitlementRepository";
 import type { EntitlementEntity } from "@/modules/entitlements/domain/EntitlementEntity";
 
-export class PostgresEntitlementRepo implements IEntitlementRepository {
+export class PostgresEntitlementRepo implements EntitlementRepository {
   constructor(private readonly db: any) {}
 
   async save(entitlement: EntitlementEntity): Promise<void> {

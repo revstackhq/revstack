@@ -1,11 +1,11 @@
-import type { IEntitlementRepository } from "@/modules/entitlements/application/ports/IEntitlementRepository";
-import type { ICacheService } from "@/common/application/ports/ICacheService";
+import type { EntitlementRepository } from "@/modules/entitlements/application/ports/EntitlementRepository";
+import type { CacheService } from "@/common/application/ports/CacheService";
 import type { ListEntitlementsQuery } from "@/modules/entitlements/application/queries/ListEntitlementsQuery";
 
 export class ListEntitlementsHandler {
   constructor(
-    private readonly repository: IEntitlementRepository,
-    private readonly cache: ICacheService
+    private readonly repository: EntitlementRepository,
+    private readonly cache: CacheService
   ) {}
 
   public async handle(query: ListEntitlementsQuery): Promise<any[]> {

@@ -1,21 +1,36 @@
-import type { IApiKeyRepository } from "@/modules/system/application/ports/IApiKeyRepository";
-import type { IEventBus } from "@/common/application/ports/IEventBus";
+import type { ApiKeyRepository } from "@/modules/system/application/ports/ApiKeyRepository";
+import type { EventBus } from "@/common/application/ports/EventBus";
 import type { CreateApiKeyCommand } from "@/modules/system/application/commands/CreateApiKeyCommand";
 import { ApiKeyEntity } from "@/modules/system/domain/ApiKeyEntity";
 import { ApiKeyCreatedEvent } from "@/modules/system/domain/events/ApiKeyEvents";
 
 export class CreateApiKeyHandler {
   constructor(
-    private readonly repository: IApiKeyRepository,
-    private readonly eventBus: IEventBus
+    private readonly repository: ApiKeyRepository,
+    private readonly eventBus: EventBus
   ) {}
 
-  public async handle(command: CreateApiKeyCommand): Promise<{ id: string, rawKey: string }> {
-    const { entity, rawKey } = ApiKeyEntity.create(command.tenantId, command.name);
+  public async handle(command: CreateApiKeyCommand) {
+    const { entity, rawKey } = ApiKeyEntity.create({
+      environmentId: command.environmentId,
+      name: command.name,
+      type: command.type,
+      scopes: command.scopes,
+    });
 
     await this.repository.save(entity);
-    await this.eventBus.publish(new ApiKeyCreatedEvent(entity.id, entity.tenantId));
 
-    return { id: entity.id, rawKey };
+    await this.eventBus.publish(
+      new ApiKeyCreatedEvent(entity.id, entity.environmentId)
+    );
+
+    return {
+      key: rawKey,
+      name: entity.name,
+      environmentId: entity.environmentId,
+      type: entity.type,
+      scopes: entity.scopes,
+      createdAt: entity.createdAt,
+    };
   }
 }

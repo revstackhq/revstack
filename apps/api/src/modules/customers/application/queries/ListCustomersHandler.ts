@@ -1,12 +1,12 @@
-import type { ICustomerRepository } from "@/modules/customers/application/ports/ICustomerRepository";
-import type { ICacheService } from "@/common/application/ports/ICacheService";
+import type { CustomerRepository } from "@/modules/customers/application/ports/CustomerRepository";
+import type { CacheService } from "@/common/application/ports/CacheService";
 import type { ListCustomersQuery } from "@/modules/customers/application/queries/ListCustomersQuery";
 import { CustomerEntity } from "@/modules/customers/domain/CustomerEntity";
 
 export class ListCustomersHandler {
   constructor(
-    private readonly repository: ICustomerRepository,
-    private readonly cache: ICacheService,
+    private readonly repository: CustomerRepository,
+    private readonly cache: CacheService,
   ) {}
 
   public async handle(query: ListCustomersQuery): Promise<CustomerEntity[]> {
