@@ -1,5 +1,5 @@
 import type { IPlanRepository } from "@/modules/plans/application/ports/IPlanRepository";
-import type { ICacheService } from "@/modules/plans/application/ports/ICacheService";
+import type { ICacheService } from "@/common/application/ports/ICacheService";
 import type { ListPlansQuery } from "@/modules/plans/application/queries/ListPlansQuery";
 
 export class ListPlansHandler {

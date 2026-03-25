@@ -1,5 +1,5 @@
 import type { IEntitlementRepository } from "@/modules/entitlements/application/ports/IEntitlementRepository";
-import type { ICacheService } from "@/modules/entitlements/application/ports/ICacheService";
+import type { ICacheService } from "@/common/application/ports/ICacheService";
 import type { ListEntitlementsQuery } from "@/modules/entitlements/application/queries/ListEntitlementsQuery";
 
 export class ListEntitlementsHandler {

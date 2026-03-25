@@ -1,4 +1,5 @@
 import { text, timestamp, integer, jsonb } from "drizzle-orm/pg-core";
+import { relations } from "drizzle-orm";
 import { revstack } from "@/schema/namespace";
 import { generateId } from "@/utils/id";
 import { environments } from "@/schema/core";
@@ -69,3 +70,30 @@ export const usageMeters = revstack.table("usage_meters", {
     .defaultNow()
     .notNull(),
 });
+
+export const usagesRelations = relations(usages, ({ one }) => ({
+  user: one(users, {
+    fields: [usages.userId],
+    references: [users.id],
+  }),
+  entitlement: one(entitlements, {
+    fields: [usages.entitlementId],
+    references: [entitlements.id],
+  }),
+  environment: one(environments, {
+    fields: [usages.environmentId],
+    references: [environments.id],
+  }),
+}));
+
+export const usageMetersRelations = relations(usageMeters, ({ one }) => ({
+  user: one(users, { fields: [usageMeters.userId], references: [users.id] }),
+  entitlement: one(entitlements, {
+    fields: [usageMeters.entitlementId],
+    references: [entitlements.id],
+  }),
+  environment: one(environments, {
+    fields: [usageMeters.environmentId],
+    references: [environments.id],
+  }),
+}));

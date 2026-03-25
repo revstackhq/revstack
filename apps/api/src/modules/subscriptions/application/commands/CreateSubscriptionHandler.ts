@@ -1,6 +1,6 @@
 import type { ISubscriptionRepository } from "@/modules/subscriptions/application/ports/ISubscriptionRepository";
-import type { IEventBus } from "@/modules/subscriptions/application/ports/IEventBus";
-import type { ICacheService } from "@/modules/subscriptions/application/ports/ICacheService";
+import type { IEventBus } from "@/common/application/ports/IEventBus";
+import type { ICacheService } from "@/common/application/ports/ICacheService";
 import type { CreateSubscriptionCommand } from "@/modules/subscriptions/application/commands/CreateSubscriptionCommand";
 import { SubscriptionEntity } from "@/modules/subscriptions/domain/SubscriptionEntity";
 import { SubscriptionCreatedEvent } from "@/modules/subscriptions/domain/events/SubscriptionCreatedEvent";

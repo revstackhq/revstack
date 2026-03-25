@@ -1,5 +1,5 @@
 import type { IWalletRepository } from "@/modules/wallets/application/ports/IWalletRepository";
-import type { IEventBus } from "@/modules/wallets/application/ports/IEventBus";
+import type { IEventBus } from "@/common/application/ports/IEventBus";
 import type { CreditWalletCommand } from "@/modules/wallets/application/commands/CreditWalletCommand";
 import { WalletCreditedEvent } from "@/modules/wallets/domain/events/WalletCreditedEvent";
 import { WalletNotFoundError } from "@/modules/wallets/domain/WalletErrors";

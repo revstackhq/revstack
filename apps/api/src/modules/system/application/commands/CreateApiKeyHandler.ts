@@ -1,5 +1,5 @@
 import type { IApiKeyRepository } from "@/modules/system/application/ports/IApiKeyRepository";
-import type { IEventBus } from "@/modules/system/application/ports/IEventBus";
+import type { IEventBus } from "@/common/application/ports/IEventBus";
 import type { CreateApiKeyCommand } from "@/modules/system/application/commands/CreateApiKeyCommand";
 import { ApiKeyEntity } from "@/modules/system/domain/ApiKeyEntity";
 import { ApiKeyCreatedEvent } from "@/modules/system/domain/events/ApiKeyEvents";

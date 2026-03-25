@@ -1,5 +1,5 @@
 import type { IUsageRepository } from "@/modules/usage/application/ports/IUsageRepository";
-import type { IEventBus } from "@/modules/usage/application/ports/IEventBus";
+import type { IEventBus } from "@/common/application/ports/IEventBus";
 import type { RecordUsageCommand } from "@/modules/usage/application/commands/RecordUsageCommand";
 import { UsageRecordedEvent } from "@/modules/usage/domain/events/UsageRecordedEvent";
 import { UsageMeterEntity } from "@/modules/usage/domain/UsageMeterEntity";

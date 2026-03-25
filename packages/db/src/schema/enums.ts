@@ -22,10 +22,11 @@ export const planTypeEnum = revstack.enum("plan_type", [
   "custom",
 ]);
 
-export const planStatusEnum = revstack.enum("plan_status", [
-  "draft",
+export const statusEnum = revstack.enum("status", [
   "active",
+  "inactive",
   "archived",
+  "draft",
 ]);
 
 export const subscriptionStatusEnum = revstack.enum("subscription_status", [
@@ -124,6 +125,12 @@ export const addonEntitlementTypeEnum = revstack.enum(
   "addon_entitlement_type",
   ["increment", "set"],
 );
+
+export const processingStatusEnum = revstack.enum("processing_status", [
+  "idle",
+  "processing",
+  "failed",
+]);
 
 /**
  * Defines the type of an invoice line item.

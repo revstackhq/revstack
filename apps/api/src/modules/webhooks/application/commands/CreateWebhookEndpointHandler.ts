@@ -1,5 +1,5 @@
 import type { IWebhookEndpointRepository } from "@/modules/webhooks/application/ports/IWebhookEndpointRepository";
-import type { IEventBus } from "@/modules/webhooks/application/ports/IEventBus";
+import type { IEventBus } from "@/common/application/ports/IEventBus";
 import type { CreateWebhookEndpointCommand } from "@/modules/webhooks/application/commands/CreateWebhookEndpointCommand";
 import { WebhookEndpointEntity } from "@/modules/webhooks/domain/WebhookEndpointEntity";
 import { WebhookEndpointCreatedEvent } from "@/modules/webhooks/domain/events/WebhookEvents";

@@ -1,9 +1,12 @@
 import { text, timestamp, boolean, jsonb, integer } from "drizzle-orm/pg-core";
+import { relations } from "drizzle-orm";
 import { revstack } from "@/schema/namespace";
 import { generateId } from "@/utils/id";
 import { environments } from "@/schema/core";
-import { planTypeEnum, planStatusEnum, resetPeriodEnum } from "@/schema/enums";
+import { planTypeEnum, statusEnum, resetPeriodEnum } from "@/schema/enums";
 import { entitlements } from "@/schema/entitlements";
+import { prices } from "@/schema/prices";
+import { subscriptions } from "@/schema/subscriptions";
 
 /**
  * Represents a logical grouping of prices and entitlements that a customer can subscribe to.
@@ -19,10 +22,9 @@ export const plans = revstack.table("plans", {
   name: text("name").notNull(),
   description: text("description"),
   type: planTypeEnum("type").notNull().default("paid"),
-  status: planStatusEnum("status").notNull().default("active"),
+  status: statusEnum("status").notNull().default("active"),
   isDefault: boolean("is_default").default(false).notNull(), // Ideal for "Guest" or fallback plans
   isPublic: boolean("is_public").default(true).notNull(),
-  isActive: boolean("is_active").default(true).notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true })
     .defaultNow()
     .notNull(),
@@ -61,3 +63,27 @@ export const planEntitlements = revstack.table("plan_entitlements", {
   /** Defines how often a metered entitlement resets its usage counter. */
   resetPeriod: resetPeriodEnum("reset_period"),
 });
+
+export const plansRelations = relations(plans, ({ one, many }) => ({
+  environment: one(environments, {
+    fields: [plans.environmentId],
+    references: [environments.id],
+  }),
+  entitlements: many(planEntitlements),
+  prices: many(prices),
+  subscriptions: many(subscriptions),
+}));
+
+export const planEntitlementsRelations = relations(
+  planEntitlements,
+  ({ one }) => ({
+    plan: one(plans, {
+      fields: [planEntitlements.planId],
+      references: [plans.id],
+    }),
+    entitlement: one(entitlements, {
+      fields: [planEntitlements.entitlementId],
+      references: [entitlements.id],
+    }),
+  }),
+);

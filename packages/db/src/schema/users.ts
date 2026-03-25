@@ -1,7 +1,13 @@
 import { text, timestamp, boolean, jsonb } from "drizzle-orm/pg-core";
+import { relations } from "drizzle-orm";
 import { revstack } from "@/schema/namespace";
 import { generateId } from "@/utils/id";
 import { environments } from "@/schema/core";
+import { subscriptions } from "@/schema/subscriptions";
+import { usages, usageMeters } from "@/schema/usages";
+import { invoices } from "@/schema/invoices";
+import { wallets } from "@/schema/wallets";
+import { customers } from "@/schema/customers";
 
 /**
  * End-users and organizations utilizing the billed tenant.
@@ -28,27 +34,15 @@ export const users = revstack.table("users", {
     .notNull(),
 });
 
-/**
- * Customers mapping for external gateways (e.g., Stripe, Polar).
- * Allows a single Revstack user to have multiple external customer records.
- */
-export const customers = revstack.table("customers", {
-  id: text("id")
-    .$defaultFn(() => generateId("cus"))
-    .primaryKey(),
-  environmentId: text("environment_id")
-    .references(() => environments.id, { onDelete: "cascade" })
-    .notNull(),
-  userId: text("user_id")
-    .references(() => users.id, { onDelete: "cascade" })
-    .notNull(),
-  providerId: text("provider_id").notNull(),
-  externalId: text("external_id").notNull(),
-  email: text("email").notNull(),
-  name: text("name"),
-  phone: text("phone"),
-  metadata: jsonb("metadata").default({}),
-  createdAt: timestamp("created_at", { withTimezone: true })
-    .defaultNow()
-    .notNull(),
-});
+export const usersRelations = relations(users, ({ many, one }) => ({
+  customers: many(customers),
+  subscriptions: many(subscriptions),
+  usages: many(usages),
+  usageMeters: many(usageMeters),
+  invoices: many(invoices),
+  wallets: many(wallets),
+  environment: one(environments, {
+    fields: [users.environmentId],
+    references: [environments.id],
+  }),
+}));

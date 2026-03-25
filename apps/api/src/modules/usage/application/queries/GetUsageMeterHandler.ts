@@ -1,5 +1,5 @@
 import type { IUsageRepository } from "@/modules/usage/application/ports/IUsageRepository";
-import type { ICacheService } from "@/modules/usage/application/ports/ICacheService";
+import type { ICacheService } from "@/common/application/ports/ICacheService";
 import type { GetUsageMeterQuery } from "@/modules/usage/application/queries/GetUsageMeterQuery";
 import { UsageMeterNotFoundError } from "@/modules/usage/domain/UsageErrors";
 

@@ -1,6 +1,6 @@
 import type { IEntitlementRepository } from "@/modules/entitlements/application/ports/IEntitlementRepository";
-import type { IEventBus } from "@/modules/entitlements/application/ports/IEventBus";
-import type { ICacheService } from "@/modules/entitlements/application/ports/ICacheService";
+import type { IEventBus } from "@/common/application/ports/IEventBus";
+import type { ICacheService } from "@/common/application/ports/ICacheService";
 import type { CreateEntitlementCommand } from "@/modules/entitlements/application/commands/CreateEntitlementCommand";
 import { EntitlementEntity } from "@/modules/entitlements/domain/EntitlementEntity";
 import { EntitlementCreatedEvent } from "@/modules/entitlements/domain/events/EntitlementCreatedEvent";

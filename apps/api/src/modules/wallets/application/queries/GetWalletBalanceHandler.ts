@@ -1,5 +1,5 @@
 import type { IWalletRepository } from "@/modules/wallets/application/ports/IWalletRepository";
-import type { ICacheService } from "@/modules/wallets/application/ports/ICacheService";
+import type { ICacheService } from "@/common/application/ports/ICacheService";
 import type { GetWalletBalanceQuery } from "@/modules/wallets/application/queries/GetWalletBalanceQuery";
 import { WalletNotFoundError } from "@/modules/wallets/domain/WalletErrors";
 

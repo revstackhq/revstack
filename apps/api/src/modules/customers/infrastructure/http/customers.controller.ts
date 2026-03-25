@@ -11,19 +11,24 @@ customersController.post(
   async (c) => {
     const handler = c.get("createCustomerHandler");
     const dto = c.req.valid("json");
-    
+
     // Command
     const id = await handler.handle(dto);
-    
+
     return c.json({ id, success: true }, 201);
-  }
+  },
 );
 
 customersController.get("/", async (c) => {
   const handler = c.get("listCustomersHandler");
-  
-  // Fast-path Query
-  const result = await handler.handle({});
-  
+
+  const environmentId = c.req.param("environmentId");
+
+  if (!environmentId) {
+    return c.json({ error: "Environment ID is required" }, 400);
+  }
+
+  const result = await handler.handle({ environmentId });
+
   return c.json(result, 200);
 });

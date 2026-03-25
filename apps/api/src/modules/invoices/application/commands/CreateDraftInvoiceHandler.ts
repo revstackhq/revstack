@@ -1,6 +1,6 @@
 import type { IInvoiceRepository } from "@/modules/invoices/application/ports/IInvoiceRepository";
-import type { IEventBus } from "@/modules/invoices/application/ports/IEventBus";
-import type { ICacheService } from "@/modules/invoices/application/ports/ICacheService";
+import type { IEventBus } from "@/common/application/ports/IEventBus";
+import type { ICacheService } from "@/common/application/ports/ICacheService";
 import type { CreateDraftInvoiceCommand } from "@/modules/invoices/application/commands/CreateDraftInvoiceCommand";
 import { InvoiceEntity } from "@/modules/invoices/domain/InvoiceEntity";
 import { InvoiceCreatedEvent } from "@/modules/invoices/domain/events/InvoiceEvents";

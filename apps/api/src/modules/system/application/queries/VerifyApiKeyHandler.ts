@@ -1,5 +1,5 @@
 import type { IApiKeyRepository } from "@/modules/system/application/ports/IApiKeyRepository";
-import type { ICacheService } from "@/modules/system/application/ports/ICacheService";
+import type { ICacheService } from "@/common/application/ports/ICacheService";
 import type { VerifyApiKeyQuery } from "@/modules/system/application/queries/VerifyApiKeyQuery";
 import { ApiKeyNotFoundError } from "@/modules/system/domain/SystemErrors";
 

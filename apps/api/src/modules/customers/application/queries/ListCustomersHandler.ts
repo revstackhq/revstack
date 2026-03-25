@@ -1,17 +1,18 @@
 import type { ICustomerRepository } from "@/modules/customers/application/ports/ICustomerRepository";
-import type { ICacheService } from "@/modules/customers/application/ports/ICacheService";
+import type { ICacheService } from "@/common/application/ports/ICacheService";
 import type { ListCustomersQuery } from "@/modules/customers/application/queries/ListCustomersQuery";
+import { CustomerEntity } from "@/modules/customers/domain/CustomerEntity";
 
 export class ListCustomersHandler {
   constructor(
     private readonly repository: ICustomerRepository,
-    private readonly cache: ICacheService
+    private readonly cache: ICacheService,
   ) {}
 
-  public async handle(query: ListCustomersQuery): Promise<any[]> {
-    const cacheKey = "customers_list";
-    const cached = await this.cache.get<any[]>(cacheKey);
-    
+  public async handle(query: ListCustomersQuery): Promise<CustomerEntity[]> {
+    const cacheKey = `env:${query.environmentId}:customers`;
+    const cached = await this.cache.get<CustomerEntity[]>(cacheKey);
+
     if (cached) {
       return cached;
     }

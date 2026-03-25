@@ -6,7 +6,7 @@ import { PostgresPlanRepo } from "@/modules/plans/infrastructure/adapters/Postgr
 import { CreatePlanHandler } from "@/modules/plans/application/commands/CreatePlanHandler";
 import { ListPlansHandler } from "@/modules/plans/application/queries/ListPlansHandler";
 
-import { PostgresCustomerRepo } from "@/modules/customers/infrastructure/adapters/PostgresCustomerRepo";
+import { PostgresCustomerRepository } from "@/modules/customers/infrastructure/adapters/PostgresCustomerRepository";
 import { CreateCustomerHandler } from "@/modules/customers/application/commands/CreateCustomerHandler";
 import { ListCustomersHandler } from "@/modules/customers/application/queries/ListCustomersHandler";
 
@@ -37,25 +37,25 @@ import { PostgresApiKeyRepo } from "@/modules/system/infrastructure/adapters/Pos
 import { CreateApiKeyHandler } from "@/modules/system/application/commands/CreateApiKeyHandler";
 import { VerifyApiKeyHandler } from "@/modules/system/application/queries/VerifyApiKeyHandler";
 
+import { db as PgDatabase } from "@revstackhq/db";
+
 export type AppEnv = { Variables: ReturnType<typeof buildContainer> };
 
 /**
  * Composition Root: Wires up Infrastructure Adapters into Application Query/Command Handlers lazily.
  */
 export function buildContainer() {
-  // Shared Infrastructure Stubs (To be implemented using @revstackhq/infrastructure or standard clients)
-  const db = {}; // import { db } from "@revstackhq/db"
-  const cache = { 
-    get: async () => null, 
-    set: async () => {}, 
-    invalidate: async () => {} 
+  const db = PgDatabase;
+  const cache = {
+    get: async () => null,
+    set: async () => {},
+    invalidate: async () => {},
   };
-  
-  // Environment switch for EventBus
-  const useInngest = process.env.EVENT_PROVIDER === 'inngest';
-  const eventBus = useInngest 
-    ? { publish: async (e: any) => console.log("[Inngest] Published", e) } // Replace with new InngestEventBusAdapter()
-    : { publish: async (e: any) => console.log("[Native] Published", e) }; // Replace with new NativeEventEmitterAdapter()
+
+  const useInngest = process.env.EVENT_PROVIDER === "inngest";
+  const eventBus = useInngest
+    ? { publish: async (e: any) => console.log("[Inngest] Published", e) }
+    : { publish: async (e: any) => console.log("[Native] Published", e) };
 
   return {
     // --- ENTITLEMENTS ---
@@ -80,11 +80,11 @@ export function buildContainer() {
 
     // --- CUSTOMERS ---
     get createCustomerHandler() {
-      const repo = new PostgresCustomerRepo(db);
+      const repo = new PostgresCustomerRepository(db);
       return new CreateCustomerHandler(repo, eventBus, cache);
     },
     get listCustomersHandler() {
-      const repo = new PostgresCustomerRepo(db);
+      const repo = new PostgresCustomerRepository(db);
       return new ListCustomersHandler(repo, cache);
     },
 

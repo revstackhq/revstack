@@ -1,5 +1,5 @@
 import type { IWebhookEndpointRepository } from "@/modules/webhooks/application/ports/IWebhookEndpointRepository";
-import type { ICacheService } from "@/modules/webhooks/application/ports/ICacheService";
+import type { ICacheService } from "@/common/application/ports/ICacheService";
 import type { ListWebhookEndpointsQuery } from "@/modules/webhooks/application/queries/ListWebhookEndpointsQuery";
 
 export class ListWebhookEndpointsHandler {

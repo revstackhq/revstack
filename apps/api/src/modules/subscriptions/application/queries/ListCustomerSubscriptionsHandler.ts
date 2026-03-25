@@ -1,5 +1,5 @@
 import type { ISubscriptionRepository } from "@/modules/subscriptions/application/ports/ISubscriptionRepository";
-import type { ICacheService } from "@/modules/subscriptions/application/ports/ICacheService";
+import type { ICacheService } from "@/common/application/ports/ICacheService";
 import type { ListCustomerSubscriptionsQuery } from "@/modules/subscriptions/application/queries/ListCustomerSubscriptionsQuery";
 
 export class ListCustomerSubscriptionsHandler {

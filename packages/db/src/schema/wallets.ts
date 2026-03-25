@@ -1,4 +1,5 @@
 import { text, timestamp, numeric, integer, jsonb } from "drizzle-orm/pg-core";
+import { relations } from "drizzle-orm";
 import { revstack } from "@/schema/namespace";
 import { generateId } from "@/utils/id";
 import { environments } from "@/schema/core";
@@ -60,4 +61,30 @@ export const walletTransactions = revstack.table("wallet_transactions", {
     .defaultNow()
     .notNull(),
 });
+
+export const walletsRelations = relations(wallets, ({ one, many }) => ({
+  user: one(users, {
+    fields: [wallets.userId],
+    references: [users.id],
+  }),
+  entitlement: one(entitlements, {
+    fields: [wallets.entitlementId],
+    references: [entitlements.id],
+  }),
+  environment: one(environments, {
+    fields: [wallets.environmentId],
+    references: [environments.id],
+  }),
+  transactions: many(walletTransactions),
+}));
+
+export const walletTransactionsRelations = relations(
+  walletTransactions,
+  ({ one }) => ({
+    wallet: one(wallets, {
+      fields: [walletTransactions.walletId],
+      references: [wallets.id],
+    }),
+  }),
+);
 

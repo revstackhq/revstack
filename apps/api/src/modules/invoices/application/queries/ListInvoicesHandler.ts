@@ -1,5 +1,5 @@
 import type { IInvoiceRepository } from "@/modules/invoices/application/ports/IInvoiceRepository";
-import type { ICacheService } from "@/modules/invoices/application/ports/ICacheService";
+import type { ICacheService } from "@/common/application/ports/ICacheService";
 import type { ListInvoicesQuery } from "@/modules/invoices/application/queries/ListInvoicesQuery";
 
 export class ListInvoicesHandler {

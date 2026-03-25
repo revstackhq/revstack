@@ -1,4 +1,5 @@
 import { text, timestamp, boolean, jsonb, integer } from "drizzle-orm/pg-core";
+import { relations } from "drizzle-orm";
 import { revstack } from "@/schema/namespace";
 import { generateId } from "@/utils/id";
 import { environments } from "@/schema/core";
@@ -6,8 +7,10 @@ import {
   pricingTypeEnum,
   billingIntervalEnum,
   billingSchemeEnum,
+  statusEnum,
 } from "@/schema/enums";
 import { plans } from "@/schema/plans";
+import { subscriptions } from "@/schema/subscriptions";
 
 /**
  * Defines the localized pricing, billing intervals, and structural costs for a specific Plan.
@@ -54,9 +57,17 @@ export const prices = revstack.table("prices", {
   metadata: jsonb("metadata").default({}),
 
   overageConfig: jsonb("overage_config"),
-  isActive: boolean("is_active").default(true).notNull(),
+  status: statusEnum("status").notNull().default("active"),
 
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
     .notNull(),
 });
+
+export const pricesRelations = relations(prices, ({ one, many }) => ({
+  plan: one(plans, {
+    fields: [prices.planId],
+    references: [plans.id],
+  }),
+  subscriptions: many(subscriptions),
+}));

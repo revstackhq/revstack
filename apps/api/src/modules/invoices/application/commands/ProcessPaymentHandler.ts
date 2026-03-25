@@ -1,6 +1,6 @@
 import type { IPaymentRepository } from "@/modules/invoices/application/ports/IPaymentRepository";
 import type { IInvoiceRepository } from "@/modules/invoices/application/ports/IInvoiceRepository";
-import type { IEventBus } from "@/modules/invoices/application/ports/IEventBus";
+import type { IEventBus } from "@/common/application/ports/IEventBus";
 import type { ProcessPaymentCommand } from "@/modules/invoices/application/commands/ProcessPaymentCommand";
 import { PaymentEntity } from "@/modules/invoices/domain/PaymentEntity";
 import { PaymentProcessedEvent } from "@/modules/invoices/domain/events/InvoiceEvents";
