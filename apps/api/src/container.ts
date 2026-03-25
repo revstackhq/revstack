@@ -1,4 +1,14 @@
 import { PostgresEntitlementRepo } from "@/modules/entitlements/infrastructure/adapters/PostgresEntitlementRepo";
+import { PostgresPlanEntitlementRepo } from "@/modules/plan_entitlements/infrastructure/adapters/PostgresPlanEntitlementRepo";
+import { PostgresAddonEntitlementRepo } from "@/modules/addon_entitlements/infrastructure/adapters/PostgresAddonEntitlementRepo";
+import { PostgresPriceRepo } from "@/modules/prices/infrastructure/adapters/PostgresPriceRepo";
+import { PostgresAddonRepo } from "@/modules/addons/infrastructure/adapters/PostgresAddonRepo";
+import { PostgresCouponRepo } from "@/modules/coupons/infrastructure/adapters/PostgresCouponRepo";
+import { PostgresEnvironmentRepo } from "@/modules/environments/infrastructure/adapters/PostgresEnvironmentRepo";
+import { PostgresAuthConfigRepo } from "@/modules/auth/infrastructure/adapters/PostgresAuthConfigRepo";
+import { PostgresStudioAdminRepo } from "@/modules/studio/infrastructure/adapters/PostgresStudioAdminRepo";
+import { PostgresAuditLogRepo } from "@/modules/audit/infrastructure/adapters/PostgresAuditLogRepo";
+import { PostgresUserRepo } from "@/modules/users/infrastructure/adapters/PostgresUserRepo";
 import { CreateEntitlementHandler } from "@/modules/entitlements/application/commands/CreateEntitlementHandler";
 import { DeleteEntitlementHandler } from "@/modules/entitlements/application/commands/DeleteEntitlementHandler";
 import { ListEntitlementsHandler } from "@/modules/entitlements/application/queries/ListEntitlementsHandler";
@@ -163,7 +173,12 @@ export function buildContainer() {
 
   const repos = {
     entitlements: new PostgresEntitlementRepo(db),
+    planEntitlements: new PostgresPlanEntitlementRepo(db),
+    addonEntitlements: new PostgresAddonEntitlementRepo(db),
     plans: new PostgresPlanRepo(db),
+    prices: new PostgresPriceRepo(db),
+    addons: new PostgresAddonRepo(db),
+    coupons: new PostgresCouponRepo(db),
     customers: new PostgresCustomerRepository(db),
     subscriptions: new PostgresSubscriptionRepo(db),
     usage: new PostgresUsageRepo(db),
@@ -174,6 +189,11 @@ export function buildContainer() {
     creditNotes: new PostgresCreditNoteRepo(db),
     webhooks: new PostgresWebhookEndpointRepo(db),
     apiKeys: new PostgresApiKeyRepo(db),
+    environments: new PostgresEnvironmentRepo(db),
+    authConfigs: new PostgresAuthConfigRepo(db),
+    studioAdmins: new PostgresStudioAdminRepo(db),
+    auditLogs: new PostgresAuditLogRepo(db),
+    users: new PostgresUserRepo(db),
     integrations: new PostgresIntegrationRepo(db),
     providerEvents: new PostgresProviderEventRepo(db),
   };
@@ -191,39 +211,39 @@ export function buildContainer() {
       get hide() { return new HidePlanHandler(repos.plans); },
     },
     planEntitlements: {
-      get create() { return new CreatePlanEntitlementHandler({} as any, eventBus); },
-      get updateLimits() { return new UpdatePlanEntitlementLimitsHandler({} as any, eventBus); },
-      get delete() { return new DeletePlanEntitlementHandler({} as any, eventBus); },
-      get list() { return new ListPlanEntitlementsHandler({} as any); },
-      get get() { return new GetPlanEntitlementHandler({} as any); },
+      get create() { return new CreatePlanEntitlementHandler(repos.planEntitlements, eventBus); },
+      get updateLimits() { return new UpdatePlanEntitlementLimitsHandler(repos.planEntitlements, eventBus); },
+      get delete() { return new DeletePlanEntitlementHandler(repos.planEntitlements, eventBus); },
+      get list() { return new ListPlanEntitlementsHandler(repos.planEntitlements); },
+      get get() { return new GetPlanEntitlementHandler(repos.planEntitlements); },
     },
     prices: {
-      get create() { return new CreatePriceHandler({} as any, eventBus); },
-      get update() { return new UpdatePriceHandler({} as any, eventBus); },
-      get version() { return new VersionPriceHandler({} as any, eventBus); },
-      get list() { return new ListPricesHandler({} as any); },
-      get get() { return new GetPriceHandler({} as any); },
+      get create() { return new CreatePriceHandler(repos.prices, eventBus); },
+      get update() { return new UpdatePriceHandler(repos.prices, eventBus); },
+      get version() { return new VersionPriceHandler(repos.prices, eventBus); },
+      get list() { return new ListPricesHandler(repos.prices); },
+      get get() { return new GetPriceHandler(repos.prices); },
     },
     addons: {
-      get create() { return new CreateAddonHandler({} as any, eventBus); },
-      get createMany() { return new CreateManyAddonsHandler({} as any, eventBus); },
-      get archive() { return new ArchiveAddonHandler({} as any, eventBus); },
-      get list() { return new ListAddonsHandler({} as any); },
-      get get() { return new GetAddonHandler({} as any); },
+      get create() { return new CreateAddonHandler(repos.addons, eventBus); },
+      get createMany() { return new CreateManyAddonsHandler(repos.addons, eventBus); },
+      get archive() { return new ArchiveAddonHandler(repos.addons, eventBus); },
+      get list() { return new ListAddonsHandler(repos.addons); },
+      get get() { return new GetAddonHandler(repos.addons); },
     },
     addonEntitlements: {
-      get create() { return new CreateAddonEntitlementHandler({} as any, eventBus); },
-      get delete() { return new DeleteAddonEntitlementHandler({} as any, eventBus); },
-      get list() { return new ListAddonEntitlementsHandler({} as any); },
-      get get() { return new GetAddonEntitlementHandler({} as any); },
+      get create() { return new CreateAddonEntitlementHandler(repos.addonEntitlements, eventBus); },
+      get delete() { return new DeleteAddonEntitlementHandler(repos.addonEntitlements, eventBus); },
+      get list() { return new ListAddonEntitlementsHandler(repos.addonEntitlements); },
+      get get() { return new GetAddonEntitlementHandler(repos.addonEntitlements); },
     },
     coupons: {
-      get create() { return new CreateCouponHandler({} as any, eventBus); },
-      get update() { return new UpdateCouponHandler({} as any, eventBus); },
-      get archive() { return new ArchiveCouponHandler({} as any, eventBus); },
-      get delete() { return new DeleteCouponHandler({} as any, eventBus); },
-      get list() { return new ListCouponsHandler({} as any); },
-      get get() { return new GetCouponHandler({} as any); },
+      get create() { return new CreateCouponHandler(repos.coupons, eventBus); },
+      get update() { return new UpdateCouponHandler(repos.coupons, eventBus); },
+      get archive() { return new ArchiveCouponHandler(repos.coupons, eventBus); },
+      get delete() { return new DeleteCouponHandler(repos.coupons, eventBus); },
+      get list() { return new ListCouponsHandler(repos.coupons); },
+      get get() { return new GetCouponHandler(repos.coupons); },
     },
     customers: {
       get create() { return new CreateCustomerHandler(repos.customers, eventBus, cache); },
@@ -296,32 +316,32 @@ export function buildContainer() {
       get deleteApiKey() { return new DeleteApiKeyHandler(repos.apiKeys, eventBus); },
     },
     environments: {
-      get create() { return new CreateEnvironmentHandler({} as any, eventBus); },
-      get update() { return new UpdateEnvironmentHandler({} as any); },
-      get delete() { return new DeleteEnvironmentHandler({} as any, eventBus); },
-      get get() { return new GetEnvironmentHandler({} as any); },
-      get list() { return new ListEnvironmentsHandler({} as any); },
+      get create() { return new CreateEnvironmentHandler(repos.environments, eventBus); },
+      get update() { return new UpdateEnvironmentHandler(repos.environments); },
+      get delete() { return new DeleteEnvironmentHandler(repos.environments, eventBus); },
+      get get() { return new GetEnvironmentHandler(repos.environments); },
+      get list() { return new ListEnvironmentsHandler(repos.environments); },
     },
     auth: {
-      get putConfig() { return new PutAuthConfigHandler({} as any, eventBus); },
-      get listConfigs() { return new ListAuthConfigsHandler({} as any); },
-      get getConfig() { return new GetAuthConfigHandler({} as any); },
+      get putConfig() { return new PutAuthConfigHandler(repos.authConfigs, eventBus); },
+      get listConfigs() { return new ListAuthConfigsHandler(repos.authConfigs); },
+      get getConfig() { return new GetAuthConfigHandler(repos.authConfigs); },
     },
     studio: {
-      get createAdmin() { return new CreateStudioAdminHandler({} as any, eventBus); },
-      get updateAdmin() { return new UpdateStudioAdminHandler({} as any); },
-      get listAdmins() { return new ListStudioAdminsHandler({} as any); },
-      get getAdmin() { return new GetStudioAdminHandler({} as any); },
+      get createAdmin() { return new CreateStudioAdminHandler(repos.studioAdmins, eventBus); },
+      get updateAdmin() { return new UpdateStudioAdminHandler(repos.studioAdmins); },
+      get listAdmins() { return new ListStudioAdminsHandler(repos.studioAdmins); },
+      get getAdmin() { return new GetStudioAdminHandler(repos.studioAdmins); },
     },
     audit: {
-      get listLogs() { return new ListAuditLogsHandler({} as any); },
-      get getLog() { return new GetAuditLogHandler({} as any); },
+      get listLogs() { return new ListAuditLogsHandler(repos.auditLogs); },
+      get getLog() { return new GetAuditLogHandler(repos.auditLogs); },
     },
     users: {
-      get create() { return new CreateUserHandler({} as any, eventBus); },
-      get update() { return new UpdateUserHandler({} as any, eventBus); },
-      get list() { return new ListUsersHandler({} as any); },
-      get get() { return new GetUserHandler({} as any); },
+      get create() { return new CreateUserHandler(repos.users, eventBus); },
+      get update() { return new UpdateUserHandler(repos.users, eventBus); },
+      get list() { return new ListUsersHandler(repos.users); },
+      get get() { return new GetUserHandler(repos.users); },
     },
     integrations: {
       get install() { 

@@ -1,4 +1,4 @@
-import { Hono } from "hono";
+import { OpenAPIHono } from "@hono/zod-openapi";
 import { serve } from "@hono/node-server";
 import { buildContainer, type AppEnv } from "@/container";
 
@@ -28,7 +28,7 @@ import { walletsRoutes } from "@/modules/wallets/infrastructure/http/wallets.rou
 import { webhooksRoutes } from "@/modules/webhooks/infrastructure/http/webhooks.routes";
 import { globalErrorHandler } from "@/common/middlewares/errorHandler";
 
-const app = new Hono<AppEnv>();
+const app = new OpenAPIHono<AppEnv>();
 
 // Global Error Handler
 app.onError(globalErrorHandler);
@@ -74,6 +74,17 @@ const routes = app
 export type AppRouter = typeof routes;
 
 app.get("/health", (c) => c.json({ status: "healthy" }));
+
+app.doc("/openapi.json", {
+  openapi: "3.0.0",
+  info: {
+    title: "Revstack API",
+    version: "1.0.0",
+    description:
+      "Billing engine API with subscriptions, invoicing, usage metering, and entitlements.",
+  },
+  servers: [{ url: "http://localhost:3000", description: "Local development" }],
+});
 
 const port = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
 

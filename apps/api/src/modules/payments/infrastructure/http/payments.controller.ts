@@ -1,39 +1,51 @@
-import { Hono } from "hono";
-import { zValidator } from "@hono/zod-validator";
+import { OpenAPIHono, createRoute, z } from "@hono/zod-openapi";
 import { processPaymentSchema } from "@/modules/payments/application/commands/ProcessPaymentCommand";
-import { listPaymentsSchema } from "@/modules/payments/application/queries/ListPaymentsQuery";
 import type { AppEnv } from "@/container";
 
-export const paymentsController = new Hono<AppEnv>();
+export const paymentsController = new OpenAPIHono<AppEnv>();
 
-paymentsController.post(
-  "/",
-  zValidator("json", processPaymentSchema),
-  async (c) => {
-    const handler = c.get("payments").process;
-    const dto = c.req.valid("json");
-    
-    // Command
-    const id = await handler.handle(dto);
-    
-    return c.json({ id, success: true }, 201);
-  }
-);
+const processPaymentRoute = createRoute({
+  method: "post", path: "/", tags: ["Payments"],
+  summary: "Process a payment",
+  description: "Processes a payment against an invoice. Supports idempotency keys to prevent duplicate charges.",
+  request: { body: { content: { "application/json": { schema: processPaymentSchema } } } },
+  responses: {
+    201: { description: "Payment processed", content: { "application/json": { schema: z.any() } } },
+    400: { description: "Validation error" },
+    409: { description: "Idempotency conflict" },
+  },
+});
+paymentsController.openapi(processPaymentRoute, async (c) => {
+  const handler = c.get("payments").process;
+  const dto = c.req.valid("json");
+  const result = await handler.handle(dto);
+  return c.json(result, 201);
+});
 
-paymentsController.get(
-  "/",
-  zValidator("query", listPaymentsSchema),
-  async (c) => {
-    const handler = c.get("payments").list;
-    const query = c.req.valid("query");
-    
-    const result = await handler.handle(query);
-    return c.json(result, 200);
-  }
-);
+const listPaymentsRoute = createRoute({
+  method: "get", path: "/", tags: ["Payments"],
+  summary: "List payments",
+  description: "Retrieves all payments, optionally filtered by invoice or customer.",
+  request: { query: z.object({ invoiceId: z.string().optional().openapi({ example: "inv_abc123" }), customerId: z.string().optional().openapi({ example: "cust_abc123" }) }) },
+  responses: { 200: { description: "List of payments", content: { "application/json": { schema: z.array(z.any()) } } } },
+});
+paymentsController.openapi(listPaymentsRoute, async (c) => {
+  const handler = c.get("payments").list;
+  const query = c.req.valid("query");
+  const result = await handler.handle(query);
+  return c.json(result, 200);
+});
 
-paymentsController.get("/:id", async (c) => {
+const getPaymentRoute = createRoute({
+  method: "get", path: "/{id}", tags: ["Payments"],
+  summary: "Get a payment",
+  description: "Retrieves a single payment by ID.",
+  request: { params: z.object({ id: z.string().openapi({ example: "pay_abc123" }) }) },
+  responses: { 200: { description: "Payment details", content: { "application/json": { schema: z.any() } } } },
+});
+paymentsController.openapi(getPaymentRoute, async (c) => {
   const handler = c.get("payments").get;
-  const result = await handler.handle({ id: c.req.param("id") });
+  const { id } = c.req.valid("param");
+  const result = await handler.handle({ id });
   return c.json(result, 200);
 });

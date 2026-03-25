@@ -1,47 +1,110 @@
-import { Hono } from "hono";
-import { zValidator } from "@hono/zod-validator";
+import { OpenAPIHono, createRoute, z } from "@hono/zod-openapi";
 import { creditWalletSchema } from "@/modules/wallets/application/commands/CreditWalletCommand";
 import { debitWalletSchema } from "@/modules/wallets/application/commands/DebitWalletCommand";
-import { listWalletTransactionsSchema } from "@/modules/wallets/application/queries/ListWalletTransactionsQuery";
 import type { AppEnv } from "@/container";
 
-export const walletsController = new Hono<AppEnv>();
+export const walletsController = new OpenAPIHono<AppEnv>();
 
-walletsController.post(
-  "/:id/credit",
-  zValidator("json", creditWalletSchema),
-  async (c) => {
-    const handler = c.get("wallets").credit;
-    const dto = c.req.valid("json");
-    const result = await handler.handle({ walletId: c.req.param("id"), ...dto });
-    return c.json(result, 201);
-  }
-);
+const creditWalletRoute = createRoute({
+  method: "post",
+  path: "/{walletId}/credit",
+  tags: ["Wallets"],
+  summary: "Credit a wallet",
+  description:
+    "Adds funds to a customer wallet. Creates an ACID-compliant transaction record.",
+  request: {
+    params: z.object({ walletId: z.string().openapi({ example: "wal_abc123" }) }),
+    body: { content: { "application/json": { schema: creditWalletSchema } } },
+  },
+  responses: {
+    201: {
+      description: "Wallet credited",
+      content: { "application/json": { schema: z.any() } },
+    },
+    400: { description: "Validation error" },
+  },
+});
 
-walletsController.post(
-  "/:id/debit",
-  zValidator("json", debitWalletSchema),
-  async (c) => {
-    const handler = c.get("wallets").debit;
-    const dto = c.req.valid("json");
-    const result = await handler.handle({ walletId: c.req.param("id"), ...dto });
-    return c.json(result, 201);
-  }
-);
+walletsController.openapi(creditWalletRoute, async (c) => {
+  const handler = c.get("wallets").credit;
+  const { walletId } = c.req.valid("param");
+  const dto = c.req.valid("json");
+  const result = await handler.handle({ walletId, ...dto });
+  return c.json(result, 201);
+});
 
-walletsController.get("/:id", async (c) => {
+const debitWalletRoute = createRoute({
+  method: "post",
+  path: "/{walletId}/debit",
+  tags: ["Wallets"],
+  summary: "Debit a wallet",
+  description:
+    "Withdraws funds from a customer wallet. Fails if insufficient balance.",
+  request: {
+    params: z.object({ walletId: z.string().openapi({ example: "wal_abc123" }) }),
+    body: { content: { "application/json": { schema: debitWalletSchema } } },
+  },
+  responses: {
+    201: {
+      description: "Wallet debited",
+      content: { "application/json": { schema: z.any() } },
+    },
+    400: { description: "Insufficient balance or validation error" },
+  },
+});
+
+walletsController.openapi(debitWalletRoute, async (c) => {
+  const handler = c.get("wallets").debit;
+  const { walletId } = c.req.valid("param");
+  const dto = c.req.valid("json");
+  const result = await handler.handle({ walletId, ...dto });
+  return c.json(result, 201);
+});
+
+const getBalanceRoute = createRoute({
+  method: "get",
+  path: "/{customerId}/balance",
+  tags: ["Wallets"],
+  summary: "Get wallet balance",
+  description: "Retrieves the current balance of a customer wallet.",
+  request: {
+    params: z.object({ customerId: z.string().openapi({ example: "cust_abc123" }) }),
+  },
+  responses: {
+    200: {
+      description: "Wallet balance",
+      content: { "application/json": { schema: z.any() } },
+    },
+  },
+});
+
+walletsController.openapi(getBalanceRoute, async (c) => {
   const handler = c.get("wallets").getBalance;
-  const result = await handler.handle({ customerId: c.req.param("id") }); // Usually customerId or walletId depending on current system
+  const { customerId } = c.req.valid("param");
+  const result = await handler.handle({ customerId });
   return c.json(result, 200);
 });
 
-walletsController.get(
-  "/:id/transactions",
-  zValidator("query", listWalletTransactionsSchema),
-  async (c) => {
-    const handler = c.get("wallets").listTransactions;
-    const query = c.req.valid("query");
-    const result = await handler.handle({ walletId: c.req.param("id"), ...query });
-    return c.json(result, 200);
-  }
-);
+const listTransactionsRoute = createRoute({
+  method: "get",
+  path: "/{walletId}/transactions",
+  tags: ["Wallets"],
+  summary: "List wallet transactions",
+  description: "Retrieves the transaction history for a specific wallet.",
+  request: {
+    params: z.object({ walletId: z.string().openapi({ example: "wal_abc123" }) }),
+  },
+  responses: {
+    200: {
+      description: "Transaction history",
+      content: { "application/json": { schema: z.array(z.any()) } },
+    },
+  },
+});
+
+walletsController.openapi(listTransactionsRoute, async (c) => {
+  const handler = c.get("wallets").listTransactions;
+  const { walletId } = c.req.valid("param");
+  const result = await handler.handle({ walletId });
+  return c.json(result, 200);
+});
