@@ -8,7 +8,7 @@ import { auditRoutes } from "@/modules/audit/infrastructure/http/audit.routes";
 import { authRoutes } from "@/modules/auth/infrastructure/http/auth.routes";
 import { couponsRoutes } from "@/modules/coupons/infrastructure/http/coupons.routes";
 import { creditNotesRoutes } from "@/modules/credit_notes/infrastructure/http/credit_notes.routes";
-import { customersRoutes } from "@/modules/customers/infrastructure/http/customers.routes";
+import { customersRoutes } from "@/modules/customers/infrastructure/http";
 import { entitlementsRoutes } from "@/modules/entitlements/infrastructure/http/entitlements.routes";
 import { environmentsRoutes } from "@/modules/environments/infrastructure/http/environments.routes";
 import { integrationsRoutes } from "@/modules/integrations/infrastructure/http/integrations.routes";
@@ -75,20 +75,35 @@ export type AppRouter = typeof routes;
 
 app.get("/health", (c) => c.json({ status: "healthy" }));
 
+const port = process.env.PORT ? parseInt(process.env.PORT, 10) : 6900;
+const environment = process.env.NODE_ENV || "development";
+const isRevstackCloud = process.env.REVSTACK_CLOUD === "true";
+const appUrl = process.env.APP_URL || `http://localhost:${port}`;
+
+const hostingEnvironment = isRevstackCloud
+  ? "Revstack Cloud"
+  : environment === "production"
+    ? "Self-Hosted"
+    : "Local Development";
+
 app.doc("/openapi.json", {
   openapi: "3.0.0",
   info: {
     title: "Revstack API",
     version: "1.0.0",
     description:
-      "Billing engine API with subscriptions, invoicing, usage metering, and entitlements.",
+      "Open Source Billing OS for Developers. The scalable, developer-first billing engine with subscriptions, invoicing, usage metering, and entitlements.",
   },
-  servers: [{ url: "http://localhost:3000", description: "Local development" }],
+  servers: [
+    {
+      url: appUrl,
+      description: `Revstack API (${hostingEnvironment})`,
+    },
+  ],
 });
 
-const port = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
-
-console.log(`Running on http://localhost:${port}`);
+console.log(`🚀 Revstack API running on ${appUrl}`);
+console.log(`🌍 Environment: ${environment} (${hostingEnvironment})`);
 
 serve({
   fetch: app.fetch,

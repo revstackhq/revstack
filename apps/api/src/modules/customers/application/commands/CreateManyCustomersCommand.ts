@@ -1,7 +1,6 @@
 import { z } from "zod";
 
-export const customerBaseSchema = z.object({
-  environmentId: z.string().min(1, "Environment is required"),
+export const customerPayloadSchema = z.object({
   userId: z.string().min(1, "User ID is required"),
   providerId: z.string().min(1, "Provider ID is required"),
   externalId: z.string().min(1, "External ID is required"),
@@ -11,8 +10,13 @@ export const customerBaseSchema = z.object({
   metadata: z.record(z.any()).optional(),
 });
 
-export const createManyCustomersSchema = z.object({
-  customers: z.array(customerBaseSchema).min(1, "At least one customer is required"),
+export const createManyCustomersCommandSchema = z.object({
+  environmentId: z.string().min(1, "Environment is required"),
+  customers: z
+    .array(customerPayloadSchema)
+    .min(1, "At least one customer is required"),
 });
 
-export type CreateManyCustomersCommand = z.infer<typeof createManyCustomersSchema>;
+export type CreateManyCustomersCommand = z.infer<
+  typeof createManyCustomersCommandSchema
+>;

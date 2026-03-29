@@ -2,7 +2,12 @@ import { text, timestamp, boolean, jsonb } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { revstack } from "@/schema/namespace";
 import { generateId } from "@/utils/id";
-import { authProviderEnum, signingStrategyEnum, statusEnum } from "@/schema/enums";
+import {
+  apiKeyTypeEnum,
+  authProviderEnum,
+  signingStrategyEnum,
+  statusEnum,
+} from "@/schema/enums";
 
 import { users } from "@/schema/users";
 import { customers } from "@/schema/customers";
@@ -25,8 +30,10 @@ export const environments = revstack.table("environments", {
   id: text("id")
     .$defaultFn(() => generateId("env"))
     .primaryKey(),
-  projectId: text("project_id"), // Null if self-hosted, populated if running in Revstack Cloud
+  projectId: text("project_id"),
   name: text("name").notNull(),
+  isDefault: boolean("is_default").notNull().default(false),
+  slug: text("slug").notNull(),
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
     .notNull(),
@@ -42,7 +49,7 @@ export const apiKeys = revstack.table("api_keys", {
   environmentId: text("environment_id")
     .references(() => environments.id, { onDelete: "cascade" })
     .notNull(),
-  type: text("type").notNull(), // 'secret' | 'public'
+  type: apiKeyTypeEnum("type").notNull(),
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
     .notNull(),

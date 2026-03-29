@@ -1,5 +1,10 @@
 import { revstack } from "@/schema/namespace";
 
+export const apiKeyTypeEnum = revstack.enum("api_key_type", [
+  "secret",
+  "public",
+]);
+
 export const entitlementTypeEnum = revstack.enum("entitlement_type", [
   "boolean",
   "metered",

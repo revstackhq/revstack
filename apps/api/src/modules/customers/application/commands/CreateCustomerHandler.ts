@@ -1,19 +1,23 @@
-import type { CustomerRepository } from "@/modules/customers/application/ports/CustomerRepository";
-import type { EventBus } from "@/common/application/ports/EventBus";
-import type { CacheService } from "@/common/application/ports/CacheService";
-import type { CreateCustomerCommand } from "@/modules/customers/application/commands/CreateCustomerCommand";
+import { CacheService } from "@/common/application/ports/CacheService";
+import { EventBus } from "@/common/application/ports/EventBus";
+import { CreateCustomerCommand } from "@/modules/customers/application/commands/CreateCustomerCommand";
+import { CustomerRepository } from "@/modules/customers/application/ports/CustomerRepository";
 import { CustomerEntity } from "@/modules/customers/domain/CustomerEntity";
-import { CustomerCreatedEvent } from "@/modules/customers/domain/events/CustomerCreatedEvent";
+import { CustomerCreatedEvent } from "@/modules/customers/domain/events/CustomerEvents";
 
 export class CreateCustomerHandler {
   constructor(
     private readonly repository: CustomerRepository,
     private readonly eventBus: EventBus,
-    private readonly cache: CacheService
+    private readonly cache: CacheService,
   ) {}
 
   public async handle(command: CreateCustomerCommand): Promise<string> {
-    const existing = await this.repository.findByEmail(command.email);
+    const existing = await this.repository.findByEmail(
+      command.email,
+      command.environmentId,
+    );
+
     if (existing) {
       throw new Error("Customer with this email already exists");
     }
@@ -26,12 +30,20 @@ export class CreateCustomerHandler {
       email: command.email,
       name: command.name,
       phone: command.phone,
+      metadata: command.metadata,
     });
 
-    await this.repository.save(customer);
-    await this.cache.invalidate("customers_list");
-    await this.eventBus.publish(new CustomerCreatedEvent(customer.id));
+    const customerId = await this.repository.save(customer);
 
-    return customer.id;
+    await this.cache.deletePrefix(`env:${command.environmentId}:customers:`);
+
+    await this.eventBus.publish(
+      new CustomerCreatedEvent({
+        id: customerId,
+        environmentId: customer.val.environmentId,
+      }),
+    );
+
+    return customerId;
   }
 }

@@ -1,41 +1,27 @@
-import type { ApiKeyRepository } from "@/modules/system/application/ports/ApiKeyRepository";
-import type { EventBus } from "@/common/application/ports/EventBus";
-import { ApiKeyNotFoundError } from "@/modules/system/domain/SystemErrors";
-import { ApiKeyEntity } from "@/modules/system/domain/ApiKeyEntity";
+import { EventBus } from "@/common/application/ports/EventBus";
+import { NotFoundError } from "@/common/errors/DomainError";
+import { RotateApiKeyCommand } from "@/modules/system/application/commands/RotateApiKeyCommand";
+import { ApiKeyRepository } from "@/modules/system/application/ports/ApiKeyRepository";
 
 export class RotateApiKeyHandler {
   constructor(
-    private readonly repository: ApiKeyRepository,
-    private readonly eventBus: EventBus
+    private readonly repo: ApiKeyRepository,
+    private readonly eventBus: EventBus,
   ) {}
 
-  public async handle(command: { keyId: string }) {
-    const oldApiKey = await this.repository.findById(command.keyId);
-    if (!oldApiKey) {
-      throw new ApiKeyNotFoundError();
+  async handle(command: RotateApiKeyCommand): Promise<string> {
+    const apiKey = await this.repo.findById(command.id);
+
+    if (!apiKey) {
+      throw new NotFoundError("Api key not found", "NOT_FOUND");
     }
 
-    // Create a new key with same specs
-    const { entity: newApiKey, rawKey } = ApiKeyEntity.create({
-      environmentId: oldApiKey.environmentId,
-      name: oldApiKey.name,
-      type: oldApiKey.type,
-      scopes: oldApiKey.scopes,
-    });
+    const newRawKey = await apiKey.rotate(command.actor_id);
 
-    // Save new
-    await this.repository.save(newApiKey);
+    await this.repo.save(apiKey);
 
-    // Delete old
-    await this.repository.delete(oldApiKey.id);
+    await this.eventBus.publish(apiKey.pullEvents());
 
-    return {
-      key: rawKey,
-      name: newApiKey.name,
-      environmentId: newApiKey.environmentId,
-      type: newApiKey.type,
-      scopes: newApiKey.scopes,
-      createdAt: newApiKey.createdAt,
-    };
+    return newRawKey;
   }
 }

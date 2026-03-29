@@ -6,26 +6,29 @@ import { CustomerEntity } from "@/modules/customers/domain/CustomerEntity";
 export class CreateManyCustomersHandler {
   constructor(
     private readonly repository: CustomerRepository,
-    private readonly eventBus: EventBus
+    private readonly eventBus: EventBus,
   ) {}
 
   public async handle(command: CreateManyCustomersCommand) {
-    const customers = command.customers.map(dto => CustomerEntity.create(dto));
-    
-    if (this.repository.saveMany) {
-      await this.repository.saveMany(customers);
-    } else {
-      // Fallback if saveMany is not yet properly surfaced in DB repo interface context
-      for (const customer of customers) {
-        await this.repository.save(customer);
-      }
+    const customers = command.customers.map((customerPayload) =>
+      CustomerEntity.create({
+        ...customerPayload,
+        environmentId: command.environmentId,
+      }),
+    );
+
+    if (!this.repository.saveMany) {
+      throw new Error("Method not implemented");
     }
 
-    // Publish events
-    for (const customer of customers) {
-      await this.eventBus.publish({ eventName: "customer.created", id: customer.id, environmentId: customer.environmentId });
+    await this.repository.saveMany(customers);
+
+    const allEvents = customers.flatMap((customer) => customer.pullEvents());
+
+    if (allEvents.length > 0) {
+      await this.eventBus.publish(allEvents);
     }
 
-    return customers.map(c => c.toPrimitives());
+    return customers.map((c) => c.val);
   }
 }

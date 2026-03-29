@@ -2,35 +2,32 @@ import type { ApiKeyRepository } from "@/modules/system/application/ports/ApiKey
 import type { EventBus } from "@/common/application/ports/EventBus";
 import type { CreateApiKeyCommand } from "@/modules/system/application/commands/CreateApiKeyCommand";
 import { ApiKeyEntity } from "@/modules/system/domain/ApiKeyEntity";
-import { ApiKeyCreatedEvent } from "@/modules/system/domain/events/ApiKeyEvents";
 
 export class CreateApiKeyHandler {
   constructor(
     private readonly repository: ApiKeyRepository,
-    private readonly eventBus: EventBus
+    private readonly eventBus: EventBus,
   ) {}
 
-  public async handle(command: CreateApiKeyCommand) {
-    const { entity, rawKey } = ApiKeyEntity.create({
-      environmentId: command.environmentId,
+  public async handle(command: CreateApiKeyCommand, environmentId: string) {
+    const { entity, rawKey } = await ApiKeyEntity.create({
       name: command.name,
       type: command.type,
       scopes: command.scopes,
+      environmentId,
     });
 
     await this.repository.save(entity);
 
-    await this.eventBus.publish(
-      new ApiKeyCreatedEvent(entity.id, entity.environmentId)
-    );
+    await this.eventBus.publish(entity.pullEvents());
 
     return {
       key: rawKey,
-      name: entity.name,
-      environmentId: entity.environmentId,
-      type: entity.type,
-      scopes: entity.scopes,
-      createdAt: entity.createdAt,
+      name: entity.val.name,
+      environmentId: entity.val.environmentId,
+      type: entity.val.type,
+      scopes: entity.val.scopes,
+      createdAt: entity.val.createdAt,
     };
   }
 }

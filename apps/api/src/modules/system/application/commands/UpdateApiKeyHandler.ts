@@ -6,18 +6,21 @@ import { ApiKeyNotFoundError } from "@/modules/system/domain/SystemErrors";
 export class UpdateApiKeyHandler {
   constructor(
     private readonly repository: ApiKeyRepository,
-    private readonly eventBus: EventBus
+    private readonly eventBus: EventBus,
   ) {}
 
   public async handle(command: UpdateApiKeyCommand) {
-    const apiKey = await this.repository.findById(command.keyId);
+    const apiKey = await this.repository.findById(command.id);
     if (!apiKey) {
       throw new ApiKeyNotFoundError();
     }
 
     apiKey.update(command.name, command.scopes);
+
     await this.repository.save(apiKey);
 
-    return apiKey.toPrimitives();
+    await this.eventBus.publish(apiKey.pullEvents());
+
+    return apiKey.val.keyHash;
   }
 }

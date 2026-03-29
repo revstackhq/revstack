@@ -14,7 +14,10 @@ export class PostgresCustomerRepository
   implements CustomerRepository
 {
   constructor(db: PgDatabase<any, any, any>) {
-    super(db, customers);
+    super(db, customers, {
+      id: customers.id,
+      environmentId: customers.environmentId,
+    });
   }
 
   protected toDomain(row: typeof customers.$inferSelect): CustomerEntity {
@@ -36,16 +39,16 @@ export class PostgresCustomerRepository
     entity: CustomerEntity,
   ): typeof customers.$inferInsert {
     return {
-      id: entity.id,
-      environmentId: entity.environmentId,
-      userId: entity.userId,
-      providerId: entity.providerId,
-      externalId: entity.externalId,
-      email: entity.email,
-      name: entity.name,
-      phone: entity.phone,
-      metadata: entity.metadata,
-      createdAt: entity.createdAt,
+      id: entity.val.id,
+      environmentId: entity.val.environmentId,
+      userId: entity.val.userId,
+      providerId: entity.val.providerId,
+      externalId: entity.val.externalId,
+      email: entity.val.email,
+      name: entity.val.name,
+      phone: entity.val.phone,
+      metadata: entity.val.metadata,
+      createdAt: entity.val.createdAt,
     };
   }
 
@@ -65,14 +68,5 @@ export class PostgresCustomerRepository
     return rows.map((row) =>
       this.toDomain(row as typeof customers.$inferSelect),
     );
-  }
-
-  async saveMany(customerEntities: CustomerEntity[]): Promise<void> {
-    if (customerEntities.length === 0) return;
-    const dbRecords = customerEntities.map(e => this.toPersistence(e));
-    await this.db
-      .insert(this.table)
-      .values(dbRecords as any[])
-      .onConflictDoNothing({ target: this.table.id });
   }
 }

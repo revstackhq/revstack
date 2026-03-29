@@ -1,94 +1,93 @@
-import { BadRequestError } from "@/common/errors/DomainError";
+import { Entity } from "@/common/domain/Entity";
+import { generateRawApiKey, hashString } from "@/common/utils/crypto";
+import {
+  ApiKeyCreatedEvent,
+  ApiKeyRotatedEvent,
+  ApiKeyUpdatedEvent,
+} from "@/modules/system/domain/events/ApiKeyEvents";
 
 export interface ApiKeyProps {
-  id: string;
-  environmentId: string;
-  keyPrefix: string;
+  id?: string;
   keyHash: string;
+  displayKey: string;
+  environmentId: string;
   name: string;
   type: "public" | "secret";
   scopes: string[];
-  isActive: boolean;
   createdAt: Date;
 }
 
-export class ApiKeyEntity {
-  private constructor(private readonly props: ApiKeyProps) {}
-
-  get id() {
-    return this.props.id;
-  }
-  get environmentId() {
-    return this.props.environmentId;
-  }
-  get keyPrefix() {
-    return this.props.keyPrefix;
-  }
-  get keyHash() {
-    return this.props.keyHash;
-  }
-  get name() {
-    return this.props.name;
-  }
-  get type() {
-    return this.props.type;
-  }
-  get scopes() {
-    return this.props.scopes;
-  }
-  get isActive() {
-    return this.props.isActive;
-  }
-  get createdAt() {
-    return this.props.createdAt;
+export class ApiKeyEntity extends Entity<ApiKeyProps> {
+  private constructor(props: ApiKeyProps) {
+    super(props);
   }
 
   public static restore(props: ApiKeyProps): ApiKeyEntity {
     return new ApiKeyEntity(props);
   }
 
-  public static create(
-    props: Omit<
-      ApiKeyProps,
-      "id" | "keyPrefix" | "keyHash" | "isActive" | "createdAt"
-    >,
-  ): { entity: ApiKeyEntity; rawKey: string } {
-    if (!props.environmentId) {
-      throw new BadRequestError("Environment ID is required", "MISSING_ENV_ID");
-    }
-    if (!props.name) {
-      throw new BadRequestError("API Key name is required", "MISSING_NAME");
-    }
+  public static async create(
+    props: Omit<ApiKeyProps, "id" | "keyHash" | "displayKey" | "createdAt">,
+  ): Promise<{ entity: ApiKeyEntity; rawKey: string }> {
+    const rawKey = generateRawApiKey(props.type);
 
-    const rawKey = `rvstk_${props.type}_${crypto.randomUUID().replace(/-/g, "")}`;
-    const keyPrefix = rawKey.substring(0, 15);
-    const keyHash = `hashed_${rawKey}`;
+    const keyHash = await hashString(rawKey);
+
+    const prefix = props.type === "public" ? "rv_pk" : "rv_sk";
+    const displayKey = `${prefix}_********${rawKey.slice(-4)}`;
 
     const entity = new ApiKeyEntity({
       ...props,
-      id: crypto.randomUUID(),
-      keyPrefix,
       keyHash,
-      isActive: true,
+      displayKey,
       createdAt: new Date(),
     });
+
+    entity.addEvent(
+      new ApiKeyCreatedEvent({
+        key: entity.val.keyHash,
+        environmentId: entity.val.environmentId,
+      }),
+    );
 
     return { entity, rawKey };
   }
 
-  public update(name?: string, scopes?: string[]): void {
-    if (name !== undefined) this.props.name = name;
-    if (scopes !== undefined) this.props.scopes = scopes;
+  public async rotate(actorId: string): Promise<string> {
+    const newRawKey = generateRawApiKey(this.props.type);
+
+    this.props.keyHash = await hashString(newRawKey);
+    this.props.displayKey = `${this.props.type === "public" ? "rv_pk" : "rv_sk"}_********${newRawKey.slice(-4)}`;
+    this.props.createdAt = new Date();
+
+    this.addEvent(
+      new ApiKeyRotatedEvent({
+        key: this.val.keyHash,
+        actorId,
+        environmentId: this.val.environmentId,
+      }),
+    );
+
+    return newRawKey;
   }
 
-  public revoke(): void {
-    if (!this.isActive) {
-      throw new BadRequestError("ApiKeyAlreadyRevoked", "ALREADY_REVOKED");
+  public async update(name?: string, scopes?: string[]) {
+    if (name) {
+      this.props.name = name;
     }
-    this.props.isActive = false;
-  }
+    if (scopes) {
+      this.props.scopes = scopes;
+    }
 
-  public toPrimitives(): ApiKeyProps {
-    return { ...this.props };
+    if (!name && !scopes) {
+      return;
+    }
+
+    this.addEvent(
+      new ApiKeyUpdatedEvent({
+        key: this.val.keyHash,
+        environmentId: this.val.environmentId,
+      }),
+    );
   }
 }

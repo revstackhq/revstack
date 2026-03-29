@@ -8,7 +8,6 @@ import {
 } from "@revstackhq/providers-core";
 import { getOrCreateClient } from "@/api/v1/client";
 
-// 🔥 Importamos los tipos estrictos de creación de Polar
 import type { ProductPriceFixedCreate } from "@polar-sh/sdk/models/components/productpricefixedcreate.js";
 import type { ProductPriceMeteredUnitCreate } from "@polar-sh/sdk/models/components/productpricemeteredunitcreate.js";
 import type { ProductPriceFreeCreate } from "@polar-sh/sdk/models/components/productpricefreecreate.js";
@@ -30,7 +29,7 @@ export async function createPrice(
     const product = await polar.products.get({ id: input.productId });
 
     // Polar expects an array of objects with just the ID for existing prices
-    const existingPrices = product.prices.map((p: any) => ({ id: p.id }));
+    const existingPrices = product.prices.map((p) => ({ id: p.id }));
 
     const currency = normalizeCurrency(input.currency, "lowercase");
 
@@ -80,7 +79,7 @@ export async function createPrice(
 
     const originalPriceIds = new Set(existingPrices.map((p) => p.id));
     const createdPrice = updatedProduct.prices.find(
-      (p: any) => !originalPriceIds.has(p.id),
+      (p) => !originalPriceIds.has(p.id),
     );
 
     if (!createdPrice) {

@@ -1,7 +1,8 @@
-import { BadRequestError, DomainError } from "@/common/errors/DomainError";
+import { BadRequestError } from "@/common/errors/DomainError";
+import { Entity } from "@/common/domain/Entity";
 
 export interface CustomerProps {
-  id: string;
+  id?: string;
   environmentId: string;
   userId: string;
   providerId: string;
@@ -13,38 +14,9 @@ export interface CustomerProps {
   createdAt: Date;
 }
 
-export class CustomerEntity {
-  private constructor(private readonly props: CustomerProps) {}
-
-  get id() {
-    return this.props.id;
-  }
-  get email() {
-    return this.props.email;
-  }
-  get environmentId() {
-    return this.props.environmentId;
-  }
-  get userId() {
-    return this.props.userId;
-  }
-  get providerId() {
-    return this.props.providerId;
-  }
-  get externalId() {
-    return this.props.externalId;
-  }
-  get name() {
-    return this.props.name;
-  }
-  get phone() {
-    return this.props.phone;
-  }
-  get metadata() {
-    return this.props.metadata ?? {};
-  }
-  get createdAt() {
-    return this.props.createdAt;
+export class CustomerEntity extends Entity<CustomerProps> {
+  private constructor(props: CustomerProps) {
+    super(props);
   }
 
   public static restore(props: CustomerProps): CustomerEntity {
@@ -70,7 +42,6 @@ export class CustomerEntity {
 
     return new CustomerEntity({
       ...props,
-      id: crypto.randomUUID(),
       metadata: props.metadata || {},
       createdAt: new Date(),
     });
@@ -78,9 +49,5 @@ export class CustomerEntity {
 
   public updateName(newName: string) {
     this.props.name = newName;
-  }
-
-  public toPrimitives(): CustomerProps {
-    return { ...this.props };
   }
 }

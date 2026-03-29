@@ -8,6 +8,7 @@ export const createCustomerSchema = z.object({
   email: z.string().email(),
   name: z.string().min(1),
   phone: z.string().optional(),
+  metadata: z.record(z.string(), z.any()).optional(),
 });
 
 export type CreateCustomerCommand = z.infer<typeof createCustomerSchema>;

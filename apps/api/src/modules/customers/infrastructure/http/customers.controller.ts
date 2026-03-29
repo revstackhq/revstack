@@ -1,109 +1,93 @@
-import { OpenAPIHono, createRoute, z } from "@hono/zod-openapi";
+import { OpenAPIHono, z } from "@hono/zod-openapi";
 import { createCustomerSchema } from "@/modules/customers/application/commands/CreateCustomerCommand";
-import { createManyCustomersSchema } from "@/modules/customers/application/commands/CreateManyCustomersCommand";
+import { createManyCustomersCommandSchema } from "@/modules/customers/application/commands/CreateManyCustomersCommand";
 import type { AppEnv } from "@/container";
+import { apiKeyMiddleware } from "@/common/middlewares/api-key";
+import {
+  bulkCreateRoute,
+  createCustomerRoute,
+  deleteCustomerRoute,
+  getCustomerRoute,
+  listCustomersRoute,
+  updateCustomerRoute,
+} from "@/modules/customers/infrastructure/http/customers.routes";
 
 export const customersController = new OpenAPIHono<AppEnv>();
 
-// --- POST / ---
-const createCustomerRoute = createRoute({
-  method: "post",
-  path: "/",
-  tags: ["Customers"],
-  summary: "Create a customer",
-  description: "Creates a new customer record linked to an environment.",
-  request: {
-    body: { content: { "application/json": { schema: createCustomerSchema } } },
-  },
-  responses: {
-    201: {
-      description: "Customer created successfully",
-      content: { "application/json": { schema: z.object({ id: z.string(), success: z.boolean() }) } },
-    },
-    400: { description: "Validation error" },
-  },
-});
+customersController.use("*", apiKeyMiddleware);
 
+// POST /
 customersController.openapi(createCustomerRoute, async (c) => {
-  const handler = c.get("customers").create;
-  const dto = c.req.valid("json");
-  const id = await handler.handle(dto);
-  return c.json({ id, success: true }, 201);
+  const body = await c.req.json();
+  const environmentId = c.get("environmentId");
+
+  const command = createCustomerSchema.parse({
+    ...body,
+    environmentId,
+  });
+
+  const result = await c.get("customers").create.handle(command);
+
+  return c.json({ id: result }, 201);
 });
 
-// --- GET / ---
-const listCustomersRoute = createRoute({
-  method: "get",
-  path: "/",
-  tags: ["Customers"],
-  summary: "List customers",
-  description: "Retrieves all customers for a given environment.",
-  request: {
-    query: z.object({ environmentId: z.string().openapi({ example: "env_abc123" }) }),
-  },
-  responses: {
-    200: {
-      description: "List of customers",
-      content: { "application/json": { schema: z.array(z.any()) } },
-    },
-    400: { description: "Missing environmentId" },
-  },
-});
-
+// GET / (List)
 customersController.openapi(listCustomersRoute, async (c) => {
-  const handler = c.get("customers").list;
-  const { environmentId } = c.req.valid("query");
-  const result = await handler.handle({ environmentId });
+  const environmentId = c.get("environmentId");
+  const { limit, offset } = c.req.valid("query");
+
+  const result = await c.get("customers").list.handle({
+    environmentId,
+    limit: Number(limit) || 10,
+    offset: Number(offset) || 0,
+  });
+
   return c.json(result, 200);
 });
 
-// --- POST /bulk ---
-const bulkCreateCustomersRoute = createRoute({
-  method: "post",
-  path: "/bulk",
-  tags: ["Customers"],
-  summary: "Bulk create customers",
-  description: "Creates multiple customer records in a single request.",
-  request: {
-    body: { content: { "application/json": { schema: createManyCustomersSchema } } },
-  },
-  responses: {
-    201: {
-      description: "Customers created",
-      content: { "application/json": { schema: z.any() } },
-    },
-    400: { description: "Validation error" },
-  },
-});
-
-customersController.openapi(bulkCreateCustomersRoute, async (c) => {
-  const handler = c.get("customers").createMany;
-  const dto = c.req.valid("json");
-  const result = await handler.handle(dto);
-  return c.json(result, 201);
-});
-
-// --- DELETE /:id ---
-const deleteCustomerRoute = createRoute({
-  method: "delete",
-  path: "/{id}",
-  tags: ["Customers"],
-  summary: "Delete a customer",
-  description: "Permanently deletes a customer by their ID.",
-  request: {
-    params: z.object({ id: z.string().openapi({ example: "cust_abc123" }) }),
-  },
-  responses: {
-    200: {
-      description: "Customer deleted",
-      content: { "application/json": { schema: z.object({ success: z.boolean(), message: z.string() }) } },
-    },
-  },
-});
-
-customersController.openapi(deleteCustomerRoute, async (c) => {
-  const handler = c.get("customers").delete;
+// GET /:id (Retrieve)
+customersController.openapi(getCustomerRoute, async (c) => {
+  const environmentId = c.get("environmentId");
   const { id } = c.req.valid("param");
-  await handler.handle({ id });
-  return c.json({ success: true, message: "Customer deleted successfully" }, 200);
+
+  const result = await c.get("customers").get.handle({ id, environmentId });
+
+  if (!result) return c.json({ error: "Customer not found" }, 404);
+  return c.json(result, 200);
+});
+
+// PATCH /:id (Update)
+customersController.openapi(updateCustomerRoute, async (c) => {
+  const environmentId = c.get("environmentId");
+  const { id } = c.req.valid("param");
+  const body = c.req.valid("json");
+
+  const result = await c
+    .get("customers")
+    .update.handle({ id, environmentId, ...body });
+
+  return c.json(result, 200);
+});
+
+// POST /bulk (Bulk Create)
+customersController.openapi(bulkCreateRoute, async (c) => {
+  const body = await c.req.json();
+  const environmentId = c.get("environmentId");
+
+  const command = createManyCustomersCommandSchema.parse({
+    environmentId,
+    customers: body.customers,
+  });
+
+  const result = await c.get("customers").createMany.handle(command);
+  return c.json(result);
+});
+
+// DELETE /:id ---
+customersController.openapi(deleteCustomerRoute, async (c) => {
+  const environmentId = c.get("environmentId");
+  const { id } = c.req.valid("param");
+
+  await c.get("customers").delete.handle({ id, environmentId });
+  return c.json({ success: true }, 200);
 });
