@@ -1,25 +1,40 @@
-export class WebhookEndpointEntity {
-  constructor(
-    public readonly id: string,
-    public url: string,
-    public events: string[],
-    public secret: string,
-    public isActive: boolean = true,
-    public status: "active" | "inactive" = isActive ? "active" : "inactive"
-  ) {}
+import { Entity } from "@/common/domain/Entity";
+
+export interface WebhookEndpointProps {
+  id?: string;
+  url: string;
+  events: string[];
+  secret: string;
+  isActive: boolean;
+  status: "active" | "inactive";
+}
+
+export class WebhookEndpointEntity extends Entity<WebhookEndpointProps> {
+  private constructor(props: WebhookEndpointProps) {
+    super(props);
+  }
+
+  public static restore(props: WebhookEndpointProps): WebhookEndpointEntity {
+    return new WebhookEndpointEntity(props);
+  }
 
   public static create(url: string, events: string[]): WebhookEndpointEntity {
-    // Basic secret generation for scaffolding
     const secret = "whsec_" + crypto.randomUUID().replace(/-/g, "");
-    return new WebhookEndpointEntity(crypto.randomUUID(), url, events, secret, true);
+    return new WebhookEndpointEntity({
+      url,
+      events,
+      secret,
+      isActive: true,
+      status: "active",
+    });
   }
 
   public disable(): void {
-    if (!this.isActive) {
+    if (!this.props.isActive) {
       throw new Error("WebhookEndpointAlreadyDisabled");
     }
-    this.isActive = false;
-    this.status = "inactive";
+    this.props.isActive = false;
+    this.props.status = "inactive";
   }
 
   public deactivate(): void {
@@ -27,8 +42,8 @@ export class WebhookEndpointEntity {
   }
 
   public rotateSecret(): { secret: string; oldSecret: string } {
-    const oldSecret = this.secret;
-    this.secret = "whsec_" + crypto.randomUUID().replace(/-/g, "");
-    return { secret: this.secret, oldSecret };
+    const oldSecret = this.props.secret;
+    this.props.secret = "whsec_" + crypto.randomUUID().replace(/-/g, "");
+    return { secret: this.props.secret, oldSecret };
   }
 }

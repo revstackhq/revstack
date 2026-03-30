@@ -1,28 +1,48 @@
-export class PlanEntity {
-  constructor(
-    public readonly id: string,
-    public name: string,
-    public isArchived: boolean = false,
-    public isHidden: boolean = false,
-    public description?: string,
-    public currency?: string
-  ) {}
+import { Entity } from "@/common/domain/Entity";
 
-  public static create(name: string, description?: string, currency?: string): PlanEntity {
-    return new PlanEntity(crypto.randomUUID(), name, false, false, description, currency);
+export interface PlanProps {
+  id?: string;
+  name: string;
+  isArchived: boolean;
+  isHidden: boolean;
+  description?: string;
+  currency?: string;
+}
+
+export class PlanEntity extends Entity<PlanProps> {
+  private constructor(props: PlanProps) {
+    super(props);
+  }
+
+  public static restore(props: PlanProps): PlanEntity {
+    return new PlanEntity(props);
+  }
+
+  public static create(
+    name: string,
+    description?: string,
+    currency?: string,
+  ): PlanEntity {
+    return new PlanEntity({
+      name,
+      isArchived: false,
+      isHidden: false,
+      description,
+      currency,
+    });
   }
 
   public archive(): void {
-    if (this.isArchived) {
+    if (this.props.isArchived) {
       throw new Error("PlanAlreadyArchived");
     }
-    this.isArchived = true;
+    this.props.isArchived = true;
   }
 
   public hide(): void {
-    if (this.isHidden) {
+    if (this.props.isHidden) {
       throw new Error("PlanAlreadyHidden");
     }
-    this.isHidden = true;
+    this.props.isHidden = true;
   }
 }

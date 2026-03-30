@@ -1,5 +1,5 @@
 import { OpenAPIHono, createRoute, z } from "@hono/zod-openapi";
-import { createWebhookEndpointSchema } from "@/modules/webhooks/application/commands/CreateWebhookEndpointCommand";
+import { createWebhookEndpointSchema } from "@/modules/webhooks/application/use-cases/CreateWebhookEndpoint/CreateWebhookEndpoint.schema";
 import type { AppEnv } from "@/container";
 
 export const webhooksController = new OpenAPIHono<AppEnv>();
@@ -31,7 +31,7 @@ const createEndpointRoute = createRoute({
 webhooksController.openapi(createEndpointRoute, async (c) => {
   const handler = c.get("webhooks").createEndpoint;
   const dto = c.req.valid("json");
-  const id = await handler.handle(dto);
+  const id = await handler.execute(dto);
   return c.json({ id, success: true }, 201);
 });
 
@@ -51,7 +51,7 @@ const listEndpointsRoute = createRoute({
 
 webhooksController.openapi(listEndpointsRoute, async (c) => {
   const handler = c.get("webhooks").listEndpoints;
-  const result = await handler.handle({});
+  const result = await handler.execute({});
   return c.json(result, 200);
 });
 
@@ -75,7 +75,7 @@ const deactivateEndpointRoute = createRoute({
 webhooksController.openapi(deactivateEndpointRoute, async (c) => {
   const handler = c.get("webhooks").deactivateEndpoint;
   const { id } = c.req.valid("param");
-  const result = await handler.handle({ id });
+  const result = await handler.execute({ id });
   return c.json(result, 200);
 });
 
@@ -99,7 +99,7 @@ const rotateSecretRoute = createRoute({
 webhooksController.openapi(rotateSecretRoute, async (c) => {
   const handler = c.get("webhooks").rotateSecret;
   const { id } = c.req.valid("param");
-  const result = await handler.handle({ id });
+  const result = await handler.execute({ id });
   return c.json(result, 200);
 });
 
@@ -123,6 +123,6 @@ const listDeliveriesRoute = createRoute({
 webhooksController.openapi(listDeliveriesRoute, async (c) => {
   const handler = c.get("webhooks").listDeliveries;
   const { id } = c.req.valid("param");
-  const result = await handler.handle({ endpointId: id });
+  const result = await handler.execute({ endpointId: id });
   return c.json(result, 200);
 });

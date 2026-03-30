@@ -1,6 +1,6 @@
 import { OpenAPIHono, createRoute, z } from "@hono/zod-openapi";
-import { putAuthConfigSchema } from "@/modules/auth/application/commands/PutAuthConfigCommand";
-import { listAuthConfigsSchema } from "@/modules/auth/application/queries/ListAuthConfigsQuery";
+import { putAuthConfigSchema } from "@/modules/auth/application/use-cases/PutAuthConfig/PutAuthConfig.schema";
+import { listAuthConfigsSchema } from "@/modules/auth/application/use-cases/ListAuthConfigs/ListAuthConfigs.schema";
 import type { AppEnv } from "@/container";
 
 export const authController = new OpenAPIHono<AppEnv>();
@@ -25,7 +25,7 @@ const putAuthConfigRoute = createRoute({
 authController.openapi(putAuthConfigRoute, async (c) => {
   const handler = c.get("auth").putConfig;
   const dto = c.req.valid("json");
-  const result = await handler.handle(dto);
+  const result = await handler.execute(dto);
   return c.json(result, 200);
 });
 
@@ -47,7 +47,7 @@ const listAuthConfigsRoute = createRoute({
 authController.openapi(listAuthConfigsRoute, async (c) => {
   const handler = c.get("auth").listConfigs;
   const query = c.req.valid("query");
-  const result = await handler.handle(query);
+  const result = await handler.execute(query);
   return c.json(result, 200);
 });
 
@@ -70,6 +70,6 @@ const getAuthConfigRoute = createRoute({
 authController.openapi(getAuthConfigRoute, async (c) => {
   const handler = c.get("auth").getConfig;
   const { id } = c.req.valid("param");
-  const result = await handler.handle({ id });
+  const result = await handler.execute({ id });
   return c.json(result, 200);
 });

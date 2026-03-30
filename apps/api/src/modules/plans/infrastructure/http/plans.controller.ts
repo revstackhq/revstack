@@ -1,5 +1,5 @@
 import { OpenAPIHono, createRoute, z } from "@hono/zod-openapi";
-import { createPlanSchema } from "@/modules/plans/application/commands/CreatePlanCommand";
+import { createPlanSchema } from "@/modules/plans/application/use-cases/CreatePlan/CreatePlan.schema";
 import type { AppEnv } from "@/container";
 
 export const plansController = new OpenAPIHono<AppEnv>();
@@ -25,7 +25,7 @@ const createPlanRoute = createRoute({
 plansController.openapi(createPlanRoute, async (c) => {
   const handler = c.get("plans").create;
   const dto = c.req.valid("json");
-  const id = await handler.handle(dto);
+  const id = await handler.execute(dto);
   return c.json({ id, success: true }, 201);
 });
 
@@ -45,7 +45,7 @@ const listPlansRoute = createRoute({
 
 plansController.openapi(listPlansRoute, async (c) => {
   const handler = c.get("plans").list;
-  const result = await handler.handle({});
+  const result = await handler.execute({});
   return c.json(result, 200);
 });
 
@@ -69,7 +69,7 @@ const archivePlanRoute = createRoute({
 plansController.openapi(archivePlanRoute, async (c) => {
   const handler = c.get("plans").archive;
   const { id } = c.req.valid("param");
-  await handler.handle({ id });
+  await handler.execute({ id });
   return c.json({ success: true, message: "Plan archived successfully" }, 200);
 });
 
@@ -93,6 +93,6 @@ const hidePlanRoute = createRoute({
 plansController.openapi(hidePlanRoute, async (c) => {
   const handler = c.get("plans").hide;
   const { id } = c.req.valid("param");
-  await handler.handle({ id });
+  await handler.execute({ id });
   return c.json({ success: true, message: "Plan hidden successfully" }, 200);
 });

@@ -8,6 +8,7 @@ export interface EnvironmentProps {
   slug: string;
   isDefault: boolean;
   createdAt: Date;
+  updatedAt: Date;
 }
 
 export class EnvironmentEntity extends Entity<EnvironmentProps> {
@@ -20,7 +21,7 @@ export class EnvironmentEntity extends Entity<EnvironmentProps> {
   }
 
   public static create(
-    props: Omit<EnvironmentProps, "id" | "createdAt">,
+    props: Omit<EnvironmentProps, "id" | "createdAt" | "updatedAt">,
   ): EnvironmentEntity {
     if (!props.name) {
       throw new BadRequestError("Environment name is required", "MISSING_NAME");
@@ -30,9 +31,21 @@ export class EnvironmentEntity extends Entity<EnvironmentProps> {
       throw new BadRequestError("Environment slug is required", "MISSING_SLUG");
     }
 
+    if (
+      props.isDefault &&
+      props.slug !== "sandbox" &&
+      props.slug !== "production"
+    ) {
+      throw new BadRequestError(
+        "Default environment slug must be sandbox or production",
+        "INVALID_DEFAULT_ENV_SLUG",
+      );
+    }
+
     return new EnvironmentEntity({
       ...props,
       createdAt: new Date(),
+      updatedAt: new Date(),
     });
   }
 
@@ -49,7 +62,7 @@ export class EnvironmentEntity extends Entity<EnvironmentProps> {
   public canBeDeleted(): void {
     if (this.val.isDefault) {
       throw new BadRequestError(
-        "Cannot delete default environment",
+        "Cannot delete default environments",
         "DEFAULT_ENV_LOCKED",
       );
     }

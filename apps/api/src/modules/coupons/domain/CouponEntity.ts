@@ -1,10 +1,11 @@
+import { Entity } from "@/common/domain/Entity";
 import { BadRequestError } from "@/common/errors/DomainError";
 
 export interface CouponProps {
-  id: string;
+  id?: string;
   environmentId: string;
   code: string;
-  type: string; // "percent" or "fixed"
+  type: string;
   amount: number;
   isActive: boolean;
   isArchived: boolean;
@@ -13,26 +14,17 @@ export interface CouponProps {
   updatedAt: Date;
 }
 
-export class CouponEntity {
-  private constructor(private readonly props: CouponProps) {}
-
-  get id() { return this.props.id; }
-  get environmentId() { return this.props.environmentId; }
-  get code() { return this.props.code; }
-  get type() { return this.props.type; }
-  get amount() { return this.props.amount; }
-  get isActive() { return this.props.isActive; }
-  get isArchived() { return this.props.isArchived; }
-  get metadata() { return this.props.metadata || {}; }
-  get createdAt() { return this.props.createdAt; }
-  get updatedAt() { return this.props.updatedAt; }
+export class CouponEntity extends Entity<CouponProps> {
+  private constructor(props: CouponProps) {
+    super(props);
+  }
 
   public static restore(props: CouponProps): CouponEntity {
     return new CouponEntity(props);
   }
 
   public static create(
-    props: Omit<CouponProps, "id" | "isActive" | "isArchived" | "createdAt" | "updatedAt">
+    props: Omit<CouponProps, "id" | "isActive" | "isArchived" | "createdAt" | "updatedAt">,
   ): CouponEntity {
     if (!props.code) {
       throw new BadRequestError("Coupon code is required");
@@ -46,8 +38,7 @@ export class CouponEntity {
 
     return new CouponEntity({
       ...props,
-      id: crypto.randomUUID(),
-      isActive: true, // Default to active
+      isActive: true,
       isArchived: false,
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -56,7 +47,8 @@ export class CouponEntity {
 
   public update(props: Partial<Pick<CouponProps, "isActive" | "metadata">>): void {
     if (props.isActive !== undefined) this.props.isActive = props.isActive;
-    if (props.metadata !== undefined) this.props.metadata = { ...this.props.metadata, ...props.metadata };
+    if (props.metadata !== undefined)
+      this.props.metadata = { ...this.props.metadata, ...props.metadata };
     this.props.updatedAt = new Date();
   }
 
@@ -65,11 +57,7 @@ export class CouponEntity {
       throw new BadRequestError("Coupon is already archived", "ALREADY_ARCHIVED");
     }
     this.props.isArchived = true;
-    this.props.isActive = false; // Auto deactivate when archived
+    this.props.isActive = false;
     this.props.updatedAt = new Date();
-  }
-
-  public toPrimitives(): CouponProps {
-    return { ...this.props };
   }
 }

@@ -1,34 +1,32 @@
+import { Entity } from "@/common/domain/Entity";
 import { BadRequestError } from "@/common/errors/DomainError";
+import {
+  AddonCreatedEvent,
+  AddonArchivedEvent,
+} from "@/modules/addons/domain/events/AddonEvents";
 
 export interface AddonProps {
-  id: string;
+  id?: string;
   environmentId: string;
   name: string;
-  type: string; // e.g. "flat", "metered"
+  type: string;
   isArchived: boolean;
   metadata?: Record<string, any>;
   createdAt: Date;
   updatedAt: Date;
 }
 
-export class AddonEntity {
-  private constructor(private readonly props: AddonProps) {}
-
-  get id() { return this.props.id; }
-  get environmentId() { return this.props.environmentId; }
-  get name() { return this.props.name; }
-  get type() { return this.props.type; }
-  get isArchived() { return this.props.isArchived; }
-  get metadata() { return this.props.metadata || {}; }
-  get createdAt() { return this.props.createdAt; }
-  get updatedAt() { return this.props.updatedAt; }
+export class AddonEntity extends Entity<AddonProps> {
+  private constructor(props: AddonProps) {
+    super(props);
+  }
 
   public static restore(props: AddonProps): AddonEntity {
     return new AddonEntity(props);
   }
 
   public static create(
-    props: Omit<AddonProps, "id" | "isArchived" | "createdAt" | "updatedAt">
+    props: Omit<AddonProps, "id" | "isArchived" | "createdAt" | "updatedAt">,
   ): AddonEntity {
     if (!props.name) {
       throw new BadRequestError("Addon name is required", "NAME_REQUIRED");
@@ -37,24 +35,37 @@ export class AddonEntity {
       throw new BadRequestError("Addon type is required", "TYPE_REQUIRED");
     }
 
-    return new AddonEntity({
+    const entity = new AddonEntity({
       ...props,
-      id: crypto.randomUUID(),
       isArchived: false,
       createdAt: new Date(),
       updatedAt: new Date(),
     });
+
+    entity.addEvent(
+      new AddonCreatedEvent({
+        environment_id: props.environmentId,
+      }),
+    );
+
+    return entity;
   }
 
   public archive(): void {
     if (this.props.isArchived) {
-      throw new BadRequestError("Addon is already archived", "ALREADY_ARCHIVED");
+      throw new BadRequestError(
+        "Addon is already archived",
+        "ALREADY_ARCHIVED",
+      );
     }
     this.props.isArchived = true;
     this.props.updatedAt = new Date();
-  }
 
-  public toPrimitives(): AddonProps {
-    return { ...this.props };
+    this.addEvent(
+      new AddonArchivedEvent({
+        id: this.val.id!,
+        environment_id: this.val.environmentId,
+      }),
+    );
   }
 }

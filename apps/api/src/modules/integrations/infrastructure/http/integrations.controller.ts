@@ -1,7 +1,7 @@
 import { OpenAPIHono, createRoute, z } from "@hono/zod-openapi";
-import { installIntegrationSchema } from "@/modules/integrations/application/commands/InstallIntegrationCommand";
-import { updateIntegrationConfigSchema } from "@/modules/integrations/application/commands/UpdateIntegrationConfigCommand";
-import { listIntegrationsSchema } from "@/modules/integrations/application/queries/ListIntegrationsQuery";
+import { installIntegrationSchema } from "@/modules/integrations/application/use-cases/InstallIntegration/InstallIntegration.schema";
+import { updateIntegrationConfigSchema } from "@/modules/integrations/application/use-cases/UpdateIntegrationConfig/UpdateIntegrationConfig.schema";
+import { listIntegrationsSchema } from "@/modules/integrations/application/use-cases/ListIntegrations/ListIntegrations.schema";
 import type { AppEnv } from "@/container";
 
 export const integrationsController = new OpenAPIHono<AppEnv>();
@@ -16,7 +16,7 @@ const installIntegrationRoute = createRoute({
 integrationsController.openapi(installIntegrationRoute, async (c) => {
   const handler = c.get("integrations").install;
   const dto = c.req.valid("json");
-  const result = await handler.handle(dto);
+  const result = await handler.execute(dto);
   return c.json(result, 201);
 });
 
@@ -30,7 +30,7 @@ const listIntegrationsRoute = createRoute({
 integrationsController.openapi(listIntegrationsRoute, async (c) => {
   const handler = c.get("integrations").list;
   const query = c.req.valid("query");
-  const result = await handler.handle(query);
+  const result = await handler.execute(query);
   return c.json(result, 200);
 });
 
@@ -44,7 +44,7 @@ const getIntegrationRoute = createRoute({
 integrationsController.openapi(getIntegrationRoute, async (c) => {
   const handler = c.get("integrations").get;
   const { id } = c.req.valid("param");
-  const result = await handler.handle({ id });
+  const result = await handler.execute({ id });
   return c.json(result, 200);
 });
 
@@ -62,6 +62,6 @@ integrationsController.openapi(updateIntegrationConfigRoute, async (c) => {
   const handler = c.get("integrations").updateConfig;
   const { id } = c.req.valid("param");
   const dto = c.req.valid("json");
-  const result = await handler.handle({ id, ...dto });
+  const result = await handler.execute({ id, ...dto });
   return c.json(result, 200);
 });

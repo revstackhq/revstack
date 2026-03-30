@@ -1,34 +1,46 @@
 import { eq, and } from "drizzle-orm";
 import { PgDatabase } from "drizzle-orm/pg-core";
+import { BasePostgresRepository } from "@/common/infrastructure/adapters/BasePostgresRepository";
 import type { AuditLogRepository } from "@/modules/audit/application/ports/AuditLogRepository";
 import { AuditLogEntity } from "@/modules/audit/domain/AuditLogEntity";
 import { auditLogs } from "@revstackhq/db";
 
+type AuditLogInsert = typeof auditLogs.$inferInsert;
 type AuditLogSelect = typeof auditLogs.$inferSelect;
 
-export class PostgresAuditLogRepo implements AuditLogRepository {
-  constructor(private readonly db: PgDatabase<any, any, any>) {}
-
-  private toDomain(row: AuditLogSelect): AuditLogEntity {
-    return AuditLogEntity.restore({
-      id: row.id,
-      environmentId: row.environmentId,
-      actorId: row.actorId || "",
-      action: row.action,
-      resource: row.resource,
-      metadata: (row.metadata as Record<string, any>) || {},
-      createdAt: row.createdAt,
+export class PostgresAuditLogRepo
+  extends BasePostgresRepository<AuditLogEntity, AuditLogInsert, AuditLogSelect>
+  implements AuditLogRepository
+{
+  constructor(db: PgDatabase<any, any, any>) {
+    super(db, auditLogs, {
+      id: auditLogs.id,
+      environmentId: auditLogs.environmentId,
     });
   }
 
-  async findById(id: string): Promise<AuditLogEntity | null> {
-    const rows = await this.db
-      .select()
-      .from(auditLogs)
-      .where(eq(auditLogs.id, id));
+  protected toDomain(row: AuditLogSelect): AuditLogEntity {
+    return AuditLogEntity.restore({
+      id: row.id,
+      environment_id: row.environmentId,
+      actor_id: row.actorId || "",
+      action: row.action,
+      resource: row.resource,
+      metadata: (row.metadata as Record<string, any>) || {},
+      created_at: row.createdAt,
+    });
+  }
 
-    const row = rows[0];
-    return row ? this.toDomain(row) : null;
+  protected toPersistence(entity: AuditLogEntity): AuditLogInsert {
+    return {
+      id: entity.val.id,
+      environmentId: entity.val.environment_id,
+      actorId: entity.val.actor_id,
+      action: entity.val.action,
+      resource: entity.val.resource,
+      metadata: entity.val.metadata,
+      createdAt: entity.val.created_at,
+    };
   }
 
   async find(filters: {
@@ -38,15 +50,22 @@ export class PostgresAuditLogRepo implements AuditLogRepository {
     resource?: string;
   }): Promise<AuditLogEntity[]> {
     const conditions = [];
-    if (filters.environmentId) conditions.push(eq(auditLogs.environmentId, filters.environmentId));
-    if (filters.actorId) conditions.push(eq(auditLogs.actorId, filters.actorId));
+    if (filters.environmentId)
+      conditions.push(eq(auditLogs.environmentId, filters.environmentId));
+    if (filters.actorId)
+      conditions.push(eq(auditLogs.actorId, filters.actorId));
     if (filters.action) conditions.push(eq(auditLogs.action, filters.action));
-    if (filters.resource) conditions.push(eq(auditLogs.resource, filters.resource));
+    if (filters.resource)
+      conditions.push(eq(auditLogs.resource, filters.resource));
 
-    const rows = conditions.length > 0
-      ? await this.db.select().from(auditLogs).where(and(...conditions))
-      : await this.db.select().from(auditLogs);
+    const rows =
+      conditions.length > 0
+        ? await this.db
+            .select()
+            .from(this.table)
+            .where(and(...conditions))
+        : await this.db.select().from(this.table);
 
-    return rows.map((row) => this.toDomain(row));
+    return rows.map((row) => this.toDomain(row as AuditLogSelect));
   }
 }

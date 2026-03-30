@@ -1,13 +1,13 @@
 export class InvoiceLineItemEntity {
   constructor(
-    public readonly id: string,
+    public readonly id: string | undefined,
     public invoiceId: string,
     public name: string,
     public periodStart: Date,
     public periodEnd: Date,
     public amount: number,
     public currency: string,
-    public quantity: number = 1
+    public quantity: number = 1,
   ) {}
 
   public static create(
@@ -17,17 +17,17 @@ export class InvoiceLineItemEntity {
     periodEnd: Date,
     amount: number,
     currency: string,
-    quantity: number = 1
+    quantity: number = 1,
   ): InvoiceLineItemEntity {
     return new InvoiceLineItemEntity(
-      crypto.randomUUID(),
+      undefined,
       invoiceId,
       name,
       periodStart,
       periodEnd,
       amount,
       currency,
-      quantity
+      quantity,
     );
   }
 

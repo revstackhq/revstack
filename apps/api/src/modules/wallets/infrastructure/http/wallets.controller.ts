@@ -1,6 +1,6 @@
 import { OpenAPIHono, createRoute, z } from "@hono/zod-openapi";
-import { creditWalletSchema } from "@/modules/wallets/application/commands/CreditWalletCommand";
-import { debitWalletSchema } from "@/modules/wallets/application/commands/DebitWalletCommand";
+import { creditWalletSchema } from "@/modules/wallets/application/use-cases/CreditWallet/CreditWallet.schema";
+import { debitWalletSchema } from "@/modules/wallets/application/use-cases/DebitWallet/DebitWallet.schema";
 import type { AppEnv } from "@/container";
 
 export const walletsController = new OpenAPIHono<AppEnv>();
@@ -29,7 +29,7 @@ walletsController.openapi(creditWalletRoute, async (c) => {
   const handler = c.get("wallets").credit;
   const { walletId } = c.req.valid("param");
   const dto = c.req.valid("json");
-  const result = await handler.handle({ walletId, ...dto });
+  const result = await handler.execute({ walletId, ...dto });
   return c.json(result, 201);
 });
 
@@ -57,7 +57,7 @@ walletsController.openapi(debitWalletRoute, async (c) => {
   const handler = c.get("wallets").debit;
   const { walletId } = c.req.valid("param");
   const dto = c.req.valid("json");
-  const result = await handler.handle({ walletId, ...dto });
+  const result = await handler.execute({ walletId, ...dto });
   return c.json(result, 201);
 });
 
@@ -81,7 +81,7 @@ const getBalanceRoute = createRoute({
 walletsController.openapi(getBalanceRoute, async (c) => {
   const handler = c.get("wallets").getBalance;
   const { customerId } = c.req.valid("param");
-  const result = await handler.handle({ customerId });
+  const result = await handler.execute({ customerId });
   return c.json(result, 200);
 });
 
@@ -105,6 +105,6 @@ const listTransactionsRoute = createRoute({
 walletsController.openapi(listTransactionsRoute, async (c) => {
   const handler = c.get("wallets").listTransactions;
   const { walletId } = c.req.valid("param");
-  const result = await handler.handle({ walletId });
+  const result = await handler.execute({ walletId });
   return c.json(result, 200);
 });

@@ -1,7 +1,7 @@
 import { OpenAPIHono, createRoute, z } from "@hono/zod-openapi";
-import { createSubscriptionSchema } from "@/modules/subscriptions/application/commands/CreateSubscriptionCommand";
-import { updateSubscriptionSchema } from "@/modules/subscriptions/application/commands/UpdateSubscriptionCommand";
-import { listSubscriptionsSchema } from "@/modules/subscriptions/application/queries/ListSubscriptionsQuery";
+import { createSubscriptionSchema } from "@/modules/subscriptions/application/use-cases/CreateSubscription/CreateSubscription.schema";
+import { updateSubscriptionSchema } from "@/modules/subscriptions/application/use-cases/UpdateSubscription/UpdateSubscription.schema";
+import { listSubscriptionsSchema } from "@/modules/subscriptions/application/use-cases/ListSubscriptions/ListSubscriptions.schema";
 import type { AppEnv } from "@/container";
 
 export const subscriptionsController = new OpenAPIHono<AppEnv>();
@@ -28,7 +28,7 @@ const createSubscriptionRoute = createRoute({
 subscriptionsController.openapi(createSubscriptionRoute, async (c) => {
   const handler = c.get("subscriptions").create;
   const dto = c.req.valid("json");
-  const id = await handler.handle(dto);
+  const id = await handler.execute(dto);
   return c.json({ id, success: true }, 201);
 });
 
@@ -52,7 +52,7 @@ const listCustomerSubscriptionsRoute = createRoute({
 subscriptionsController.openapi(listCustomerSubscriptionsRoute, async (c) => {
   const handler = c.get("subscriptions").listCustomerSubscriptions;
   const { customerId } = c.req.valid("param");
-  const result = await handler.handle({ customerId });
+  const result = await handler.execute({ customerId });
   return c.json(result, 200);
 });
 
@@ -76,7 +76,7 @@ const listSubscriptionsRoute = createRoute({
 subscriptionsController.openapi(listSubscriptionsRoute, async (c) => {
   const handler = c.get("subscriptions").list;
   const query = c.req.valid("query");
-  const result = await handler.handle(query);
+  const result = await handler.execute(query);
   return c.json(result, 200);
 });
 
@@ -100,7 +100,7 @@ const getSubscriptionRoute = createRoute({
 subscriptionsController.openapi(getSubscriptionRoute, async (c) => {
   const handler = c.get("subscriptions").get;
   const { id } = c.req.valid("param");
-  const result = await handler.handle({ id });
+  const result = await handler.execute({ id });
   return c.json(result, 200);
 });
 
@@ -124,7 +124,7 @@ const cancelSubscriptionRoute = createRoute({
 subscriptionsController.openapi(cancelSubscriptionRoute, async (c) => {
   const handler = c.get("subscriptions").cancel;
   const { id } = c.req.valid("param");
-  const result = await handler.handle({ id });
+  const result = await handler.execute({ id });
   return c.json(result, 200);
 });
 
@@ -150,6 +150,6 @@ subscriptionsController.openapi(updateSubscriptionRoute, async (c) => {
   const handler = c.get("subscriptions").update;
   const { id } = c.req.valid("param");
   const dto = c.req.valid("json");
-  const result = await handler.handle({ id, ...dto });
+  const result = await handler.execute({ id, ...dto });
   return c.json(result, 200);
 });

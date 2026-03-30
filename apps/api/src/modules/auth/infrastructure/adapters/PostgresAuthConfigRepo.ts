@@ -9,11 +9,7 @@ type AuthConfigInsert = typeof authConfigs.$inferInsert;
 type AuthConfigSelect = typeof authConfigs.$inferSelect;
 
 export class PostgresAuthConfigRepo
-  extends BasePostgresRepository<
-    AuthConfigEntity,
-    AuthConfigInsert,
-    AuthConfigSelect
-  >
+  extends BasePostgresRepository<AuthConfigEntity, AuthConfigInsert, AuthConfigSelect>
   implements AuthConfigRepository
 {
   constructor(db: PgDatabase<any, any, any>) {
@@ -26,31 +22,31 @@ export class PostgresAuthConfigRepo
   protected toDomain(row: AuthConfigSelect): AuthConfigEntity {
     return AuthConfigEntity.restore({
       id: row.id,
-      environmentId: row.environmentId,
+      environment_id: row.environmentId,
       provider: row.provider,
       strategy: row.strategy,
-      jwksUri: row.jwksUri ?? undefined,
-      signingSecret: row.signingSecret ?? undefined,
+      jwks_uri: row.jwksUri ?? undefined,
+      signing_secret: row.signingSecret ?? undefined,
       issuer: row.issuer ?? undefined,
       audience: row.audience ?? undefined,
-      userIdClaim: row.userIdClaim,
+      user_id_claim: row.userIdClaim,
       status: row.status,
-      createdAt: row.createdAt,
-      updatedAt: row.updatedAt,
+      created_at: row.createdAt,
+      updated_at: row.updatedAt,
     });
   }
 
   protected toPersistence(entity: AuthConfigEntity): AuthConfigInsert {
     return {
       id: entity.val.id,
-      environmentId: entity.val.environmentId,
+      environmentId: entity.val.environment_id,
       provider: entity.val.provider,
       strategy: entity.val.strategy,
-      jwksUri: entity.val.jwksUri ?? null,
-      signingSecret: entity.val.signingSecret ?? null,
+      jwksUri: entity.val.jwks_uri ?? null,
+      signingSecret: entity.val.signing_secret ?? null,
       issuer: entity.val.issuer ?? null,
       audience: entity.val.audience ?? null,
-      userIdClaim: entity.val.userIdClaim,
+      userIdClaim: entity.val.user_id_claim,
       status: entity.val.status,
     };
   }

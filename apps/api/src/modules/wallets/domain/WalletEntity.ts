@@ -1,29 +1,46 @@
-export class WalletEntity {
-  constructor(
-    public readonly id: string,
-    public customerId: string,
-    public balance: number,
-    public currency: string
-  ) {}
+import { Entity } from "@/common/domain/Entity";
 
-  public static create(customerId: string, currency: string): WalletEntity {
-    return new WalletEntity(crypto.randomUUID(), customerId, 0, currency);
+export interface WalletProps {
+  id?: string;
+  customerId: string;
+  balance: number;
+  currency: string;
+}
+
+export class WalletEntity extends Entity<WalletProps> {
+  private constructor(props: WalletProps) {
+    super(props);
+  }
+
+  public static restore(props: WalletProps): WalletEntity {
+    return new WalletEntity(props);
+  }
+
+  public static create(
+    customerId: string,
+    currency: string,
+  ): WalletEntity {
+    return new WalletEntity({
+      customerId,
+      balance: 0,
+      currency,
+    });
   }
 
   public credit(amount: number): void {
     if (amount <= 0) {
       throw new Error("CreditAmountMustBePositive");
     }
-    this.balance += amount;
+    this.props.balance += amount;
   }
 
   public debit(amount: number): void {
     if (amount <= 0) {
       throw new Error("DebitAmountMustBePositive");
     }
-    if (this.balance < amount) {
+    if (this.props.balance < amount) {
       throw new Error("InsufficientFunds");
     }
-    this.balance -= amount;
+    this.props.balance -= amount;
   }
 }

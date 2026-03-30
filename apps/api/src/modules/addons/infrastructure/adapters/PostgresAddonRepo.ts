@@ -13,54 +13,60 @@ export class PostgresAddonRepo
   implements AddonRepository
 {
   constructor(db: PgDatabase<any, any, any>) {
-    super(db, addons);
+    super(db, addons, {
+      id: addons.id,
+      environmentId: addons.environmentId,
+    });
   }
 
   protected toDomain(row: AddonSelect): AddonEntity {
     return AddonEntity.restore({
       id: row.id,
-      environmentId: row.environmentId,
+      environment_id: row.environmentId,
       name: row.name,
       type: row.type,
-      isArchived: row.status === "archived",
-      createdAt: row.updatedAt,
-      updatedAt: row.updatedAt,
+      is_archived: row.status === "archived",
+      created_at: row.updatedAt,
+      updated_at: row.updatedAt,
     });
   }
 
   protected toPersistence(entity: AddonEntity): AddonInsert {
     return {
-      id: entity.id,
-      environmentId: entity.environmentId,
-      slug: entity.name.toLowerCase().replace(/\s+/g, "-"),
-      name: entity.name,
-      type: entity.type as any,
+      id: entity.val.id,
+      environmentId: entity.val.environment_id,
+      slug: entity.val.name.toLowerCase().replace(/\s+/g, "-"),
+      name: entity.val.name,
+      type: entity.val.type as any,
       amount: 0,
       currency: "USD",
-      status: entity.isArchived ? ("archived" as const) : ("active" as const),
+      status: entity.val.is_archived
+        ? ("archived" as const)
+        : ("active" as const),
     };
   }
 
-  async find(filters: { environmentId?: string; isArchived?: boolean }): Promise<AddonEntity[]> {
+  async find(filters: {
+    environmentId?: string;
+    isArchived?: boolean;
+  }): Promise<AddonEntity[]> {
     const conditions = [];
-    if (filters.environmentId) conditions.push(eq(addons.environmentId, filters.environmentId));
+    if (filters.environmentId)
+      conditions.push(eq(addons.environmentId, filters.environmentId));
     if (filters.isArchived !== undefined) {
-      conditions.push(eq(addons.status, filters.isArchived ? "archived" : "active"));
+      conditions.push(
+        eq(addons.status, filters.isArchived ? "archived" : "active"),
+      );
     }
 
-    const rows = conditions.length > 0
-      ? await this.db.select().from(this.table).where(and(...conditions))
-      : await this.db.select().from(this.table);
+    const rows =
+      conditions.length > 0
+        ? await this.db
+            .select()
+            .from(this.table)
+            .where(and(...conditions))
+        : await this.db.select().from(this.table);
 
     return rows.map((row) => this.toDomain(row as AddonSelect));
-  }
-
-  async saveMany(addonEntities: AddonEntity[]): Promise<void> {
-    if (addonEntities.length === 0) return;
-    const dbRecords = addonEntities.map((e) => this.toPersistence(e));
-    await this.db
-      .insert(this.table)
-      .values(dbRecords as any[])
-      .onConflictDoNothing({ target: this.table.id });
   }
 }

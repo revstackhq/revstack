@@ -1,7 +1,8 @@
+import { Entity } from "@/common/domain/Entity";
 import { BadRequestError } from "@/common/errors/DomainError";
 
 export interface StudioAdminProps {
-  id: string;
+  id?: string;
   email: string;
   passwordHash: string;
   name?: string;
@@ -10,29 +11,23 @@ export interface StudioAdminProps {
   createdAt: Date;
 }
 
-export class StudioAdminEntity {
-  private constructor(private readonly props: StudioAdminProps) {}
-
-  get id() { return this.props.id; }
-  get email() { return this.props.email; }
-  get passwordHash() { return this.props.passwordHash; }
-  get name() { return this.props.name; }
-  get isSuperadmin() { return this.props.isSuperadmin; }
-  get isActive() { return this.props.isActive; }
-  get createdAt() { return this.props.createdAt; }
+export class StudioAdminEntity extends Entity<StudioAdminProps> {
+  private constructor(props: StudioAdminProps) {
+    super(props);
+  }
 
   public static restore(props: StudioAdminProps): StudioAdminEntity {
     return new StudioAdminEntity(props);
   }
 
   public static create(
-    props: Omit<StudioAdminProps, "id" | "isActive" | "createdAt">
+    props: Omit<StudioAdminProps, "id" | "isActive" | "createdAt">,
   ): StudioAdminEntity {
-    if (!props.email.includes("@")) throw new BadRequestError("Invalid email", "INVALID_EMAIL");
+    if (!props.email.includes("@"))
+      throw new BadRequestError("Invalid email", "INVALID_EMAIL");
 
     return new StudioAdminEntity({
       ...props,
-      id: crypto.randomUUID(),
       isActive: true,
       createdAt: new Date(),
     });
@@ -40,11 +35,6 @@ export class StudioAdminEntity {
 
   public update(name?: string, passwordHash?: string): void {
     if (name) this.props.name = name;
-    // Password hashing should be done securely before passing to entity
     if (passwordHash) this.props.passwordHash = passwordHash;
-  }
-
-  public toPrimitives(): StudioAdminProps {
-    return { ...this.props };
   }
 }

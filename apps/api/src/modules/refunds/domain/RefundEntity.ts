@@ -1,34 +1,55 @@
-export class RefundEntity {
-  constructor(
-    public readonly id: string,
-    public paymentId: string,
-    public amount: number,
-    public reason: string | null,
-    public status: "pending" | "succeeded" | "failed",
-    public createdAt: Date = new Date(),
-    public updatedAt: Date = new Date()
-  ) {}
+import { Entity } from "@/common/domain/Entity";
 
-  public static create(paymentId: string, amount: number, reason?: string): RefundEntity {
+export interface RefundProps {
+  id?: string;
+  paymentId: string;
+  amount: number;
+  reason: string | null;
+  status: "pending" | "succeeded" | "failed";
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export class RefundEntity extends Entity<RefundProps> {
+  private constructor(props: RefundProps) {
+    super(props);
+  }
+
+  public static restore(props: RefundProps): RefundEntity {
+    return new RefundEntity(props);
+  }
+
+  public static create(
+    paymentId: string,
+    amount: number,
+    reason?: string,
+  ): RefundEntity {
     if (amount <= 0) {
       throw new Error("RefundAmountMustBePositive");
     }
-    return new RefundEntity(crypto.randomUUID(), paymentId, amount, reason || null, "pending");
+    return new RefundEntity({
+      paymentId,
+      amount,
+      reason: reason || null,
+      status: "pending",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
   }
 
   public markAsSucceeded(): void {
-    if (this.status !== "pending") {
+    if (this.props.status !== "pending") {
       throw new Error("OnlyPendingRefundsCanSucceed");
     }
-    this.status = "succeeded";
-    this.updatedAt = new Date();
+    this.props.status = "succeeded";
+    this.props.updatedAt = new Date();
   }
 
   public markAsFailed(): void {
-    if (this.status !== "pending") {
+    if (this.props.status !== "pending") {
       throw new Error("OnlyPendingRefundsCanFail");
     }
-    this.status = "failed";
-    this.updatedAt = new Date();
+    this.props.status = "failed";
+    this.props.updatedAt = new Date();
   }
 }

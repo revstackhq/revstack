@@ -13,41 +13,53 @@ export class PostgresCouponRepo
   implements CouponRepository
 {
   constructor(db: PgDatabase<any, any, any>) {
-    super(db, coupons);
+    super(db, coupons, {
+      id: coupons.id,
+      environmentId: coupons.environmentId,
+    });
   }
 
   protected toDomain(row: CouponSelect): CouponEntity {
     return CouponEntity.restore({
       id: row.id,
-      environmentId: row.environmentId,
+      environment_id: row.environmentId,
       code: row.code,
       type: row.type,
       amount: row.value,
-      isActive: row.status === "active",
-      isArchived: row.status === "archived",
-      createdAt: new Date(),
-      updatedAt: new Date(),
+      is_active: row.status === "active",
+      is_archived: row.status === "archived",
+      created_at: new Date(),
+      updated_at: new Date(),
     });
   }
 
   protected toPersistence(entity: CouponEntity): CouponInsert {
     return {
-      id: entity.id,
-      environmentId: entity.environmentId,
-      code: entity.code,
-      name: entity.code,
-      type: entity.type as any,
-      value: entity.amount,
+      id: entity.val.id,
+      environmentId: entity.val.environment_id,
+      code: entity.val.code,
+      name: entity.val.code,
+      type: entity.val.type as any,
+      value: entity.val.amount,
       duration: "forever" as any,
-      status: entity.isArchived ? ("archived" as const) : entity.isActive ? ("active" as const) : ("inactive" as const),
+      status: entity.val.is_archived
+        ? ("archived" as const)
+        : entity.val.is_active
+          ? ("active" as const)
+          : ("inactive" as const),
     };
   }
 
-  async findByCode(environmentId: string, code: string): Promise<CouponEntity | null> {
+  async findByCode(
+    environmentId: string,
+    code: string,
+  ): Promise<CouponEntity | null> {
     const rows = await this.db
       .select()
       .from(this.table)
-      .where(and(eq(coupons.environmentId, environmentId), eq(coupons.code, code)));
+      .where(
+        and(eq(coupons.environmentId, environmentId), eq(coupons.code, code)),
+      );
 
     const row = rows[0];
     return row ? this.toDomain(row as CouponSelect) : null;
@@ -59,15 +71,22 @@ export class PostgresCouponRepo
     isArchived?: boolean;
   }): Promise<CouponEntity[]> {
     const conditions = [];
-    if (filters.environmentId) conditions.push(eq(coupons.environmentId, filters.environmentId));
+    if (filters.environmentId)
+      conditions.push(eq(coupons.environmentId, filters.environmentId));
     if (filters.isArchived) conditions.push(eq(coupons.status, "archived"));
     else if (filters.isActive !== undefined) {
-      conditions.push(eq(coupons.status, filters.isActive ? "active" : "inactive"));
+      conditions.push(
+        eq(coupons.status, filters.isActive ? "active" : "inactive"),
+      );
     }
 
-    const rows = conditions.length > 0
-      ? await this.db.select().from(this.table).where(and(...conditions))
-      : await this.db.select().from(this.table);
+    const rows =
+      conditions.length > 0
+        ? await this.db
+            .select()
+            .from(this.table)
+            .where(and(...conditions))
+        : await this.db.select().from(this.table);
 
     return rows.map((row) => this.toDomain(row as CouponSelect));
   }

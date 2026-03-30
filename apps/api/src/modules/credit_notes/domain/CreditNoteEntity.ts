@@ -1,24 +1,44 @@
-export class CreditNoteEntity {
-  constructor(
-    public readonly id: string,
-    public invoiceId: string,
-    public amount: number,
-    public reason: string | null,
-    public status: "issued" | "void",
-    public createdAt: Date = new Date()
-  ) {}
+import { Entity } from "@/common/domain/Entity";
 
-  public static issue(invoiceId: string, amount: number, reason?: string): CreditNoteEntity {
+export interface CreditNoteProps {
+  id?: string;
+  invoiceId: string;
+  amount: number;
+  reason: string | null;
+  status: "issued" | "void";
+  createdAt: Date;
+}
+
+export class CreditNoteEntity extends Entity<CreditNoteProps> {
+  private constructor(props: CreditNoteProps) {
+    super(props);
+  }
+
+  public static restore(props: CreditNoteProps): CreditNoteEntity {
+    return new CreditNoteEntity(props);
+  }
+
+  public static issue(
+    invoiceId: string,
+    amount: number,
+    reason?: string,
+  ): CreditNoteEntity {
     if (amount <= 0) {
       throw new Error("CreditNoteAmountMustBePositive");
     }
-    return new CreditNoteEntity(crypto.randomUUID(), invoiceId, amount, reason || null, "issued");
+    return new CreditNoteEntity({
+      invoiceId,
+      amount,
+      reason: reason || null,
+      status: "issued",
+      createdAt: new Date(),
+    });
   }
 
   public void(): void {
-    if (this.status === "void") {
+    if (this.props.status === "void") {
       throw new Error("CreditNoteAlreadyVoided");
     }
-    this.status = "void";
+    this.props.status = "void";
   }
 }

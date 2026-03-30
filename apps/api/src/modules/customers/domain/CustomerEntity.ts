@@ -1,5 +1,5 @@
-import { BadRequestError } from "@/common/errors/DomainError";
 import { Entity } from "@/common/domain/Entity";
+import { BadRequestError } from "@/common/errors/DomainError";
 
 export interface CustomerProps {
   id?: string;

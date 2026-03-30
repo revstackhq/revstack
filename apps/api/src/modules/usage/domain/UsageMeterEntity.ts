@@ -1,21 +1,42 @@
-export class UsageMeterEntity {
-  constructor(
-    public readonly id: string,
-    public customerId: string,
-    public featureId: string,
-    public currentUsage: number,
-    public periodStart: Date,
-    public periodEnd: Date
-  ) {}
+import { Entity } from "@/common/domain/Entity";
 
-  public static create(customerId: string, featureId: string, periodStart: Date, periodEnd: Date): UsageMeterEntity {
-    return new UsageMeterEntity(crypto.randomUUID(), customerId, featureId, 0, periodStart, periodEnd);
+export interface UsageMeterProps {
+  id?: string;
+  customerId: string;
+  featureId: string;
+  currentUsage: number;
+  periodStart: Date;
+  periodEnd: Date;
+}
+
+export class UsageMeterEntity extends Entity<UsageMeterProps> {
+  private constructor(props: UsageMeterProps) {
+    super(props);
+  }
+
+  public static restore(props: UsageMeterProps): UsageMeterEntity {
+    return new UsageMeterEntity(props);
+  }
+
+  public static create(
+    customerId: string,
+    featureId: string,
+    periodStart: Date,
+    periodEnd: Date,
+  ): UsageMeterEntity {
+    return new UsageMeterEntity({
+      customerId,
+      featureId,
+      currentUsage: 0,
+      periodStart,
+      periodEnd,
+    });
   }
 
   public record(amount: number): void {
     if (amount <= 0) {
       throw new Error("UsageAmountMustBePositive");
     }
-    this.currentUsage += amount;
+    this.props.currentUsage += amount;
   }
 }

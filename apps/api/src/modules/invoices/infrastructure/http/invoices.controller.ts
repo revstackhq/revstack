@@ -1,8 +1,8 @@
 import { OpenAPIHono, createRoute, z } from "@hono/zod-openapi";
-import { createInvoiceSchema } from "@/modules/invoices/application/commands/CreateDraftInvoiceCommand";
-import { updateInvoiceSchema } from "@/modules/invoices/application/commands/UpdateInvoiceCommand";
-import { addInvoiceLineItemSchema } from "@/modules/invoices/application/commands/AddInvoiceLineItemCommand";
-import { updateInvoiceLineItemSchema } from "@/modules/invoices/application/commands/UpdateInvoiceLineItemCommand";
+import { createInvoiceSchema } from "@/modules/invoices/application/use-cases/CreateDraftInvoice/CreateDraftInvoice.schema";
+import { updateInvoiceSchema } from "@/modules/invoices/application/use-cases/UpdateInvoice/UpdateInvoice.schema";
+import { addInvoiceLineItemSchema } from "@/modules/invoices/application/use-cases/AddInvoiceLineItem/AddInvoiceLineItem.schema";
+import { updateInvoiceLineItemSchema } from "@/modules/invoices/application/use-cases/UpdateInvoiceLineItem/UpdateInvoiceLineItem.schema";
 import type { AppEnv } from "@/container";
 
 export const invoicesController = new OpenAPIHono<AppEnv>();
@@ -20,7 +20,7 @@ const createDraftRoute = createRoute({
 invoicesController.openapi(createDraftRoute, async (c) => {
   const handler = c.get("invoices").createDraft;
   const dto = c.req.valid("json");
-  const id = await handler.handle(dto);
+  const id = await handler.execute(dto);
   return c.json({ id, success: true }, 201);
 });
 
@@ -34,7 +34,7 @@ const listInvoicesRoute = createRoute({
 invoicesController.openapi(listInvoicesRoute, async (c) => {
   const handler = c.get("invoices").list;
   const { customerId } = c.req.valid("query");
-  const result = await handler.handle({ customerId });
+  const result = await handler.execute({ customerId });
   return c.json(result, 200);
 });
 
@@ -48,7 +48,7 @@ const getInvoiceRoute = createRoute({
 invoicesController.openapi(getInvoiceRoute, async (c) => {
   const handler = c.get("invoices").get;
   const { id } = c.req.valid("param");
-  const result = await handler.handle({ id });
+  const result = await handler.execute({ id });
   return c.json(result, 200);
 });
 
@@ -66,7 +66,7 @@ invoicesController.openapi(updateInvoiceRoute, async (c) => {
   const handler = c.get("invoices").update;
   const { id } = c.req.valid("param");
   const dto = c.req.valid("json");
-  const result = await handler.handle({ id, ...dto });
+  const result = await handler.execute({ id, ...dto });
   return c.json(result, 200);
 });
 
@@ -80,7 +80,7 @@ const finalizeInvoiceRoute = createRoute({
 invoicesController.openapi(finalizeInvoiceRoute, async (c) => {
   const handler = c.get("invoices").finalize;
   const { id } = c.req.valid("param");
-  const result = await handler.handle({ id });
+  const result = await handler.execute({ id });
   return c.json(result, 200);
 });
 
@@ -94,7 +94,7 @@ const voidInvoiceRoute = createRoute({
 invoicesController.openapi(voidInvoiceRoute, async (c) => {
   const handler = c.get("invoices").void;
   const { id } = c.req.valid("param");
-  const result = await handler.handle({ id });
+  const result = await handler.execute({ id });
   return c.json(result, 200);
 });
 
@@ -112,7 +112,7 @@ invoicesController.openapi(addLineItemRoute, async (c) => {
   const handler = c.get("invoices").addLineItem;
   const { id } = c.req.valid("param");
   const dto = c.req.valid("json");
-  const result = await handler.handle({ invoiceId: id, ...dto });
+  const result = await handler.execute({ invoiceId: id, ...dto });
   return c.json(result, 201);
 });
 
@@ -130,7 +130,7 @@ invoicesController.openapi(updateLineItemRoute, async (c) => {
   const handler = c.get("invoices").updateLineItem;
   const { id, lineId } = c.req.valid("param");
   const dto = c.req.valid("json");
-  const result = await handler.handle({ invoiceId: id, lineId, ...dto });
+  const result = await handler.execute({ invoiceId: id, lineId, ...dto });
   return c.json(result, 200);
 });
 
@@ -146,6 +146,6 @@ const deleteLineItemRoute = createRoute({
 invoicesController.openapi(deleteLineItemRoute, async (c) => {
   const handler = c.get("invoices").deleteLineItem;
   const { id, lineId } = c.req.valid("param");
-  const result = await handler.handle({ invoiceId: id, lineId });
+  const result = await handler.execute({ invoiceId: id, lineId });
   return c.json(result, 200);
 });

@@ -1,29 +1,50 @@
-export class InvoiceEntity {
-  constructor(
-    public readonly id: string,
-    public customerId: string,
-    public totalAmount: number,
-    public currency: string,
-    public status: "draft" | "open" | "paid" | "void" | "uncollectible",
-    public dueDate?: Date,
-    public createdAt: Date = new Date()
-  ) {}
+import { Entity } from "@/common/domain/Entity";
 
-  public static createDraft(customerId: string, currency: string, dueDate?: Date): InvoiceEntity {
-    return new InvoiceEntity(crypto.randomUUID(), customerId, 0, currency, "draft", dueDate);
+export interface InvoiceProps {
+  id?: string;
+  customerId: string;
+  totalAmount: number;
+  currency: string;
+  status: "draft" | "open" | "paid" | "void" | "uncollectible";
+  dueDate?: Date;
+  createdAt: Date;
+}
+
+export class InvoiceEntity extends Entity<InvoiceProps> {
+  private constructor(props: InvoiceProps) {
+    super(props);
+  }
+
+  public static restore(props: InvoiceProps): InvoiceEntity {
+    return new InvoiceEntity(props);
+  }
+
+  public static createDraft(
+    customerId: string,
+    currency: string,
+    dueDate?: Date,
+  ): InvoiceEntity {
+    return new InvoiceEntity({
+      customerId,
+      totalAmount: 0,
+      currency,
+      status: "draft",
+      dueDate,
+      createdAt: new Date(),
+    });
   }
 
   public markAsPaid(): void {
-    if (this.status === "paid") {
+    if (this.props.status === "paid") {
       throw new Error("InvoiceAlreadyPaid");
     }
-    this.status = "paid";
+    this.props.status = "paid";
   }
 
   public markAsVoid(): void {
-    if (this.status === "paid" || this.status === "void") {
+    if (this.props.status === "paid" || this.props.status === "void") {
       throw new Error("CannotVoidInvoice");
     }
-    this.status = "void";
+    this.props.status = "void";
   }
 }

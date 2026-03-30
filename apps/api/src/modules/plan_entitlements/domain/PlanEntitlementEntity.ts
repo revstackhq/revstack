@@ -1,7 +1,8 @@
+import { Entity } from "@/common/domain/Entity";
 import { BadRequestError } from "@/common/errors/DomainError";
 
 export interface PlanEntitlementProps {
-  id: string;
+  id?: string;
   planId: string;
   entitlementId: string;
   limit?: number;
@@ -10,23 +11,17 @@ export interface PlanEntitlementProps {
   updatedAt: Date;
 }
 
-export class PlanEntitlementEntity {
-  private constructor(private readonly props: PlanEntitlementProps) {}
-
-  get id() { return this.props.id; }
-  get planId() { return this.props.planId; }
-  get entitlementId() { return this.props.entitlementId; }
-  get limit() { return this.props.limit; }
-  get metadata() { return this.props.metadata || {}; }
-  get createdAt() { return this.props.createdAt; }
-  get updatedAt() { return this.props.updatedAt; }
+export class PlanEntitlementEntity extends Entity<PlanEntitlementProps> {
+  private constructor(props: PlanEntitlementProps) {
+    super(props);
+  }
 
   public static restore(props: PlanEntitlementProps): PlanEntitlementEntity {
     return new PlanEntitlementEntity(props);
   }
 
   public static create(
-    props: Omit<PlanEntitlementProps, "id" | "createdAt" | "updatedAt">
+    props: Omit<PlanEntitlementProps, "id" | "createdAt" | "updatedAt">,
   ): PlanEntitlementEntity {
     if (!props.planId || !props.entitlementId) {
       throw new BadRequestError("Both planId and entitlementId are required");
@@ -34,7 +29,6 @@ export class PlanEntitlementEntity {
 
     return new PlanEntitlementEntity({
       ...props,
-      id: crypto.randomUUID(),
       createdAt: new Date(),
       updatedAt: new Date(),
     });
@@ -43,9 +37,5 @@ export class PlanEntitlementEntity {
   public updateLimits(limit?: number): void {
     this.props.limit = limit;
     this.props.updatedAt = new Date();
-  }
-
-  public toPrimitives(): PlanEntitlementProps {
-    return { ...this.props };
   }
 }

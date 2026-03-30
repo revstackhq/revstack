@@ -1,35 +1,52 @@
-export class ProviderEventEntity {
-  constructor(
-    public readonly id: string,
-    public providerId: string,
-    public externalEventId: string,
-    public eventType: string,
-    public payload: Record<string, any>,
-    public status: "pending" | "processed" | "failed",
-    public errorMessage: string | null = null,
-    public createdAt: Date = new Date(),
-    public processedAt: Date | null = null
-  ) {}
+import { Entity } from "@/common/domain/Entity";
 
-  public static ingest(providerId: string, externalEventId: string, eventType: string, payload: Record<string, any>): ProviderEventEntity {
-    return new ProviderEventEntity(
-      crypto.randomUUID(),
+export interface ProviderEventProps {
+  id?: string;
+  providerId: string;
+  externalEventId: string;
+  eventType: string;
+  payload: Record<string, any>;
+  status: "pending" | "processed" | "failed";
+  errorMessage: string | null;
+  createdAt: Date;
+  processedAt: Date | null;
+}
+
+export class ProviderEventEntity extends Entity<ProviderEventProps> {
+  private constructor(props: ProviderEventProps) {
+    super(props);
+  }
+
+  public static restore(props: ProviderEventProps): ProviderEventEntity {
+    return new ProviderEventEntity(props);
+  }
+
+  public static ingest(
+    providerId: string,
+    externalEventId: string,
+    eventType: string,
+    payload: Record<string, any>,
+  ): ProviderEventEntity {
+    return new ProviderEventEntity({
       providerId,
       externalEventId,
       eventType,
       payload,
-      "pending"
-    );
+      status: "pending",
+      errorMessage: null,
+      createdAt: new Date(),
+      processedAt: null,
+    });
   }
 
   public markAsProcessed(): void {
-    this.status = "processed";
-    this.processedAt = new Date();
+    this.props.status = "processed";
+    this.props.processedAt = new Date();
   }
 
   public markAsFailed(errorMessage: string): void {
-    this.status = "failed";
-    this.errorMessage = errorMessage;
-    this.processedAt = new Date();
+    this.props.status = "failed";
+    this.props.errorMessage = errorMessage;
+    this.props.processedAt = new Date();
   }
 }

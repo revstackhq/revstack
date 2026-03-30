@@ -1,6 +1,6 @@
 import { OpenAPIHono, createRoute, z } from "@hono/zod-openapi";
-import { createStudioAdminSchema } from "@/modules/studio/application/commands/CreateStudioAdminCommand";
-import { updateStudioAdminSchema } from "@/modules/studio/application/commands/UpdateStudioAdminCommand";
+import { createStudioAdminSchema } from "@/modules/studio/application/use-cases/CreateStudioAdmin/CreateStudioAdmin.schema";
+import { updateStudioAdminSchema } from "@/modules/studio/application/use-cases/UpdateStudioAdmin/UpdateStudioAdmin.schema";
 import type { AppEnv } from "@/container";
 
 export const studioController = new OpenAPIHono<AppEnv>();
@@ -27,7 +27,7 @@ const createAdminRoute = createRoute({
 studioController.openapi(createAdminRoute, async (c) => {
   const handler = c.get("studio").createAdmin;
   const dto = c.req.valid("json");
-  const result = await handler.handle(dto);
+  const result = await handler.execute(dto);
   return c.json(result, 201);
 });
 
@@ -46,7 +46,7 @@ const listAdminsRoute = createRoute({
 });
 studioController.openapi(listAdminsRoute, async (c) => {
   const handler = c.get("studio").listAdmins;
-  const result = await handler.handle({});
+  const result = await handler.execute({});
   return c.json(result, 200);
 });
 
@@ -72,7 +72,7 @@ const getAdminRoute = createRoute({
 studioController.openapi(getAdminRoute, async (c) => {
   const handler = c.get("studio").getAdmin;
   const { idOrEmail } = c.req.valid("param");
-  const result = await handler.handle({ idOrEmail });
+  const result = await handler.execute({ idOrEmail });
   return c.json(result, 200);
 });
 
@@ -100,6 +100,6 @@ studioController.openapi(updateAdminRoute, async (c) => {
   const handler = c.get("studio").updateAdmin;
   const { id } = c.req.valid("param");
   const dto = c.req.valid("json");
-  const result = await handler.handle({ adminId: id, ...dto });
+  const result = await handler.execute({ adminId: id, ...dto });
   return c.json(result, 200);
 });

@@ -1,8 +1,8 @@
 import { OpenAPIHono, createRoute, z } from "@hono/zod-openapi";
-import { recordUsageSchema } from "@/modules/usage/application/commands/RecordUsageCommand";
-import { createUsageMeterSchema } from "@/modules/usage/application/commands/CreateUsageMeterCommand";
-import { updateUsageMeterSchema } from "@/modules/usage/application/commands/UpdateUsageMeterCommand";
-import { listUsagesSchema } from "@/modules/usage/application/queries/ListUsagesQuery";
+import { recordUsageSchema } from "@/modules/usage/application/use-cases/RecordUsage/RecordUsage.schema";
+import { createUsageMeterSchema } from "@/modules/usage/application/use-cases/CreateUsageMeter/CreateUsageMeter.schema";
+import { updateUsageMeterSchema } from "@/modules/usage/application/use-cases/UpdateUsageMeter/UpdateUsageMeter.schema";
+import { listUsagesSchema } from "@/modules/usage/application/use-cases/ListUsages/ListUsages.schema";
 import type { AppEnv } from "@/container";
 
 export const usageController = new OpenAPIHono<AppEnv>();
@@ -32,7 +32,7 @@ const recordUsageRoute = createRoute({
 usageController.openapi(recordUsageRoute, async (c) => {
   const handler = c.get("usage").record;
   const dto = c.req.valid("json");
-  const id = await handler.handle(dto);
+  const id = await handler.execute(dto);
   return c.json({ id, success: true }, 200);
 });
 
@@ -59,7 +59,7 @@ const getUsageMeterRoute = createRoute({
 usageController.openapi(getUsageMeterRoute, async (c) => {
   const handler = c.get("usage").getMeter;
   const { customerId, featureId } = c.req.valid("param");
-  const result = await handler.handle({ customerId, featureId });
+  const result = await handler.execute({ customerId, featureId });
   return c.json(result, 200);
 });
 
@@ -81,7 +81,7 @@ const listUsagesRoute = createRoute({
 usageController.openapi(listUsagesRoute, async (c) => {
   const handler = c.get("usage").list;
   const query = c.req.valid("query");
-  const result = await handler.handle(query);
+  const result = await handler.execute(query);
   return c.json(result, 200);
 });
 
@@ -108,7 +108,7 @@ const createUsageMeterRoute = createRoute({
 usageController.openapi(createUsageMeterRoute, async (c) => {
   const handler = c.get("usage").createMeter;
   const dto = c.req.valid("json");
-  const result = await handler.handle(dto);
+  const result = await handler.execute(dto);
   return c.json(result, 201);
 });
 
@@ -136,6 +136,6 @@ usageController.openapi(updateUsageMeterRoute, async (c) => {
   const handler = c.get("usage").updateMeter;
   const { id } = c.req.valid("param");
   const dto = c.req.valid("json");
-  const result = await handler.handle({ id, ...dto });
+  const result = await handler.execute({ id, ...dto });
   return c.json(result, 200);
 });

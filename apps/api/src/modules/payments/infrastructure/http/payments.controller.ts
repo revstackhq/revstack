@@ -1,5 +1,5 @@
 import { OpenAPIHono, createRoute, z } from "@hono/zod-openapi";
-import { processPaymentSchema } from "@/modules/payments/application/commands/ProcessPaymentCommand";
+import { processPaymentSchema } from "@/modules/payments/application/use-cases/ProcessPayment/ProcessPayment.schema";
 import type { AppEnv } from "@/container";
 
 export const paymentsController = new OpenAPIHono<AppEnv>();
@@ -18,7 +18,7 @@ const processPaymentRoute = createRoute({
 paymentsController.openapi(processPaymentRoute, async (c) => {
   const handler = c.get("payments").process;
   const dto = c.req.valid("json");
-  const result = await handler.handle(dto);
+  const result = await handler.execute(dto);
   return c.json(result, 201);
 });
 
@@ -32,7 +32,7 @@ const listPaymentsRoute = createRoute({
 paymentsController.openapi(listPaymentsRoute, async (c) => {
   const handler = c.get("payments").list;
   const query = c.req.valid("query");
-  const result = await handler.handle(query);
+  const result = await handler.execute(query);
   return c.json(result, 200);
 });
 
@@ -46,6 +46,6 @@ const getPaymentRoute = createRoute({
 paymentsController.openapi(getPaymentRoute, async (c) => {
   const handler = c.get("payments").get;
   const { id } = c.req.valid("param");
-  const result = await handler.handle({ id });
+  const result = await handler.execute({ id });
   return c.json(result, 200);
 });

@@ -5,5 +5,5 @@ export interface EnvironmentRepository {
   findById(id: string): Promise<EnvironmentEntity | null>;
   findByProjectId(projectId: string): Promise<EnvironmentEntity[]>;
   delete(id: string): Promise<boolean>;
-  findAll(): Promise<EnvironmentEntity[]>;
+  findAll(params?: { projectId?: string }): Promise<EnvironmentEntity[]>;
 }

@@ -1,4 +1,4 @@
-import { text, timestamp, boolean } from "drizzle-orm/pg-core";
+import { text, timestamp, boolean, jsonb } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { revstack } from "@/schema/namespace";
 import { generateId } from "@/utils/id";
@@ -22,15 +22,22 @@ export const entitlements = revstack.table("entitlements", {
   type: entitlementTypeEnum("type").notNull(),
   unitType: unitTypeEnum("unit_type").notNull(),
   isActive: boolean("is_active").default(true).notNull(),
+  metadata: jsonb("metadata").default({}),
   updatedAt: timestamp("updated_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
     .notNull(),
 });
 
-export const entitlementsRelations = relations(entitlements, ({ one, many }) => ({
-  environment: one(environments, {
-    fields: [entitlements.environmentId],
-    references: [environments.id],
+export const entitlementsRelations = relations(
+  entitlements,
+  ({ one, many }) => ({
+    environment: one(environments, {
+      fields: [entitlements.environmentId],
+      references: [environments.id],
+    }),
+    usageMeters: many(usageMeters),
   }),
-  usageMeters: many(usageMeters),
-}));
+);

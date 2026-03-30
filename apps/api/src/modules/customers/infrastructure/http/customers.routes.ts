@@ -1,9 +1,9 @@
-import { createCustomerSchema } from "@/modules/customers/application/commands/CreateCustomerCommand";
-import { createManyCustomersCommandSchema } from "@/modules/customers/application/commands/CreateManyCustomersCommand";
-import { deleteCustomerCommandSchema } from "@/modules/customers/application/commands/DeleteCustomerCommand";
-import { customerResponseSchema } from "@/modules/customers/application/queries/CustomerResponseDTO";
-import { listCustomersQuerySchema } from "@/modules/customers/application/queries/ListCustomersQuery";
+import { CreateCustomerCommandSchema } from "@/modules/customers/application/use-cases/CreateCustomer/CreateCustomer.schema";
+import { CreateManyCustomersCommandSchema } from "@/modules/customers/application/use-cases/CreateManyCustomers/CreateManyCustomers.schema";
+import { DeleteCustomerCommandSchema } from "@/modules/customers/application/use-cases/DeleteCustomer/DeleteCustomer.schema";
+import { CustomerResponseSchema, ListCustomersQuerySchema } from "@/modules/customers/application/use-cases/ListCustomers/ListCustomers.schema";
 import { createRoute, z } from "@hono/zod-openapi";
+
 
 export const createCustomerRoute = createRoute({
   method: "post",
@@ -11,7 +11,7 @@ export const createCustomerRoute = createRoute({
   tags: ["Customers"],
   summary: "Create a customer",
   request: {
-    body: { content: { "application/json": { schema: createCustomerSchema } } },
+    body: { content: { "application/json": { schema: CreateCustomerCommandSchema } } },
   },
   responses: {
     201: {
@@ -27,14 +27,14 @@ export const listCustomersRoute = createRoute({
   tags: ["Customers"],
   summary: "List customers",
   request: {
-    query: listCustomersQuerySchema,
+    query: ListCustomersQuerySchema,
   },
   responses: {
     200: {
       description: "Customer List",
       content: {
         "application/json": {
-          schema: z.array(customerResponseSchema),
+          schema: z.array(CustomerResponseSchema),
         },
       },
     },
@@ -93,7 +93,7 @@ export const bulkCreateRoute = createRoute({
   request: {
     body: {
       content: {
-        "application/json": { schema: createManyCustomersCommandSchema },
+        "application/json": { schema: CreateManyCustomersCommandSchema },
       },
     },
   },
@@ -108,7 +108,7 @@ export const deleteCustomerRoute = createRoute({
   tags: ["Customers"],
   summary: "Delete a customer",
   request: {
-    params: deleteCustomerCommandSchema,
+    params: DeleteCustomerCommandSchema,
   },
   responses: {
     200: { description: "Deleted" },

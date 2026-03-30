@@ -1,6 +1,6 @@
 import { OpenAPIHono, createRoute, z } from "@hono/zod-openapi";
-import { createRefundSchema } from "@/modules/refunds/application/commands/CreateRefundCommand";
-import { updateRefundSchema } from "@/modules/refunds/application/commands/UpdateRefundCommand";
+import { createRefundSchema } from "@/modules/refunds/application/use-cases/CreateRefund/CreateRefund.schema";
+import { updateRefundSchema } from "@/modules/refunds/application/use-cases/UpdateRefund/UpdateRefund.schema";
 import type { AppEnv } from "@/container";
 
 export const refundsController = new OpenAPIHono<AppEnv>();
@@ -23,7 +23,7 @@ refundsController.openapi(createRefundRoute, async (c) => {
   const handler = c.get("refunds").create;
   const { paymentId } = c.req.valid("param");
   const dto = c.req.valid("json");
-  const result = await handler.handle({ paymentId, ...dto });
+  const result = await handler.execute({ paymentId, ...dto });
   return c.json(result, 201);
 });
 
@@ -41,7 +41,7 @@ refundsController.openapi(updateRefundRoute, async (c) => {
   const handler = c.get("refunds").update;
   const { id } = c.req.valid("param");
   const dto = c.req.valid("json");
-  const result = await handler.handle({ id, ...dto });
+  const result = await handler.execute({ id, ...dto });
   return c.json(result, 200);
 });
 
@@ -55,7 +55,7 @@ const listRefundsRoute = createRoute({
 refundsController.openapi(listRefundsRoute, async (c) => {
   const handler = c.get("refunds").list;
   const query = c.req.valid("query");
-  const result = await handler.handle(query);
+  const result = await handler.execute(query);
   return c.json(result, 200);
 });
 
@@ -69,6 +69,6 @@ const getRefundRoute = createRoute({
 refundsController.openapi(getRefundRoute, async (c) => {
   const handler = c.get("refunds").get;
   const { id } = c.req.valid("param");
-  const result = await handler.handle({ id });
+  const result = await handler.execute({ id });
   return c.json(result, 200);
 });

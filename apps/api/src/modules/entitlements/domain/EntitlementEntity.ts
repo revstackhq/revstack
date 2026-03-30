@@ -1,20 +1,33 @@
-export class EntitlementEntity {
-  constructor(
-    public readonly id: string,
-    public name: string,
-    public featureId: string,
-    public type: "boolean" | "metered",
-    public limit?: number
-  ) {}
+import { Entity } from "@/common/domain/Entity";
 
-  public static create(name: string, featureId: string, type: "boolean" | "metered", limit?: number): EntitlementEntity {
-    return new EntitlementEntity(crypto.randomUUID(), name, featureId, type, limit);
+export interface EntitlementProps {
+  id?: string;
+  name: string;
+  slug: string;
+  environmentId: string;
+  description?: string;
+  type: "boolean" | "metered" | "static" | "json";
+  unitType: "count" | "bytes" | "seconds" | "tokens" | "requests" | "custom";
+  metadata?: Record<string, any>;
+  createdAt: Date;
+}
+
+export class EntitlementEntity extends Entity<EntitlementProps> {
+  private constructor(props: EntitlementProps) {
+    super(props);
   }
 
-  public updateLimit(newLimit: number): void {
-    if (this.type !== "metered") {
-      throw new Error("Cannot set limit on a boolean entitlement");
-    }
-    this.limit = newLimit;
+  public static restore(props: EntitlementProps): EntitlementEntity {
+    return new EntitlementEntity(props);
+  }
+
+  public static create(
+    props: Omit<EntitlementProps, "id" | "createdAt">,
+  ): EntitlementEntity {
+    return new EntitlementEntity({
+      ...props,
+      metadata: props.metadata || {},
+      createdAt: new Date(),
+    });
   }
 }

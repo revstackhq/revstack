@@ -1,8 +1,8 @@
 import { OpenAPIHono, createRoute, z } from "@hono/zod-openapi";
-import { createPriceSchema } from "@/modules/prices/application/commands/CreatePriceCommand";
-import { updatePriceSchema } from "@/modules/prices/application/commands/UpdatePriceCommand";
-import { versionPriceSchema } from "@/modules/prices/application/commands/VersionPriceCommand";
-import { listPricesSchema } from "@/modules/prices/application/queries/ListPricesQuery";
+import { createPriceSchema } from "@/modules/prices/application/use-cases/CreatePrice/CreatePrice.schema";
+import { updatePriceSchema } from "@/modules/prices/application/use-cases/UpdatePrice/UpdatePrice.schema";
+import { versionPriceSchema } from "@/modules/prices/application/use-cases/VersionPrice/VersionPrice.schema";
+import { listPricesSchema } from "@/modules/prices/application/use-cases/ListPrices/ListPrices.schema";
 import type { AppEnv } from "@/container";
 
 export const pricesController = new OpenAPIHono<AppEnv>();
@@ -27,7 +27,7 @@ const createPriceRoute = createRoute({
 pricesController.openapi(createPriceRoute, async (c) => {
   const handler = c.get("prices").create;
   const dto = c.req.valid("json");
-  const result = await handler.handle(dto);
+  const result = await handler.execute(dto);
   return c.json(result, 201);
 });
 
@@ -52,7 +52,7 @@ pricesController.openapi(updatePriceRoute, async (c) => {
   const handler = c.get("prices").update;
   const { id } = c.req.valid("param");
   const dto = c.req.valid("json");
-  const result = await handler.handle({ priceId: id, ...dto });
+  const result = await handler.execute({ priceId: id, ...dto });
   return c.json(result, 200);
 });
 
@@ -78,7 +78,7 @@ pricesController.openapi(versionPriceRoute, async (c) => {
   const handler = c.get("prices").version;
   const { id } = c.req.valid("param");
   const dto = c.req.valid("json");
-  const result = await handler.handle({ priceId: id, ...dto });
+  const result = await handler.execute({ priceId: id, ...dto });
   return c.json(result, 201);
 });
 
@@ -100,7 +100,7 @@ const listPricesRoute = createRoute({
 pricesController.openapi(listPricesRoute, async (c) => {
   const handler = c.get("prices").list;
   const query = c.req.valid("query");
-  const result = await handler.handle(query);
+  const result = await handler.execute(query);
   return c.json(result, 200);
 });
 
@@ -124,6 +124,6 @@ const getPriceRoute = createRoute({
 pricesController.openapi(getPriceRoute, async (c) => {
   const handler = c.get("prices").get;
   const { id } = c.req.valid("param");
-  const result = await handler.handle({ id });
+  const result = await handler.execute({ id });
   return c.json(result, 200);
 });

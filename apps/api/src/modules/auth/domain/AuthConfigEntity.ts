@@ -58,10 +58,6 @@ export class AuthConfigEntity extends Entity<AuthConfigProps> {
     return new AuthConfigEntity({
       ...props,
       status: "active",
-      strategy: props.strategy,
-      provider: props.provider,
-      userIdClaim: props.userIdClaim,
-      environmentId: props.environmentId,
       createdAt: new Date(),
       updatedAt: new Date(),
     });

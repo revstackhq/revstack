@@ -1,7 +1,7 @@
 import { OpenAPIHono, createRoute, z } from "@hono/zod-openapi";
-import { createUserSchema } from "@/modules/users/application/commands/CreateUserCommand";
-import { updateUserSchema } from "@/modules/users/application/commands/UpdateUserCommand";
-import { listUsersSchema } from "@/modules/users/application/queries/ListUsersQuery";
+import { createUserSchema } from "@/modules/users/application/use-cases/CreateUser/CreateUser.schema";
+import { updateUserSchema } from "@/modules/users/application/use-cases/UpdateUser/UpdateUser.schema";
+import { listUsersSchema } from "@/modules/users/application/use-cases/ListUsers/ListUsers.schema";
 import type { AppEnv } from "@/container";
 
 export const usersController = new OpenAPIHono<AppEnv>();
@@ -26,7 +26,7 @@ const createUserRoute = createRoute({
 usersController.openapi(createUserRoute, async (c) => {
   const handler = c.get("users").create;
   const dto = c.req.valid("json");
-  const result = await handler.handle(dto);
+  const result = await handler.execute(dto);
   return c.json(result, 201);
 });
 
@@ -49,7 +49,7 @@ const listUsersRoute = createRoute({
 usersController.openapi(listUsersRoute, async (c) => {
   const handler = c.get("users").list;
   const query = c.req.valid("query");
-  const result = await handler.handle(query);
+  const result = await handler.execute(query);
   return c.json(result, 200);
 });
 
@@ -73,7 +73,7 @@ const getUserRoute = createRoute({
 usersController.openapi(getUserRoute, async (c) => {
   const handler = c.get("users").get;
   const { id } = c.req.valid("param");
-  const result = await handler.handle({ id });
+  const result = await handler.execute({ id });
   return c.json(result, 200);
 });
 
@@ -99,6 +99,6 @@ usersController.openapi(updateUserRoute, async (c) => {
   const handler = c.get("users").update;
   const { id } = c.req.valid("param");
   const dto = c.req.valid("json");
-  const result = await handler.handle({ userId: id, ...dto });
+  const result = await handler.execute({ userId: id, ...dto });
   return c.json(result, 200);
 });

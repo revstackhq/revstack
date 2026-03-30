@@ -1,7 +1,7 @@
 import { OpenAPIHono, createRoute, z } from "@hono/zod-openapi";
-import { createPlanEntitlementSchema } from "@/modules/plan_entitlements/application/commands/CreatePlanEntitlementCommand";
-import { updatePlanEntitlementLimitsSchema } from "@/modules/plan_entitlements/application/commands/UpdatePlanEntitlementLimitsCommand";
-import { listPlanEntitlementsSchema } from "@/modules/plan_entitlements/application/queries/ListPlanEntitlementsQuery";
+import { createPlanEntitlementSchema } from "@/modules/plan_entitlements/application/use-cases/CreatePlanEntitlement/CreatePlanEntitlement.schema";
+import { updatePlanEntitlementLimitsSchema } from "@/modules/plan_entitlements/application/use-cases/UpdatePlanEntitlementLimits/UpdatePlanEntitlementLimits.schema";
+import { listPlanEntitlementsSchema } from "@/modules/plan_entitlements/application/use-cases/ListPlanEntitlements/ListPlanEntitlements.schema";
 import type { AppEnv } from "@/container";
 
 export const planEntitlementsController = new OpenAPIHono<AppEnv>();
@@ -33,7 +33,7 @@ planEntitlementsController.openapi(createPlanEntitlementRoute, async (c) => {
   const handler = c.get("planEntitlements").create;
   const { planId } = c.req.valid("param");
   const dto = c.req.valid("json");
-  const result = await handler.handle({ ...dto, planId });
+  const result = await handler.execute({ ...dto, planId });
   return c.json(result, 201);
 });
 
@@ -55,7 +55,7 @@ const listPlanEntitlementsRoute = createRoute({
 planEntitlementsController.openapi(listPlanEntitlementsRoute, async (c) => {
   const handler = c.get("planEntitlements").list;
   const query = c.req.valid("query");
-  const result = await handler.handle(query);
+  const result = await handler.execute(query);
   return c.json(result, 200);
 });
 
@@ -83,7 +83,7 @@ const getPlanEntitlementRoute = createRoute({
 planEntitlementsController.openapi(getPlanEntitlementRoute, async (c) => {
   const handler = c.get("planEntitlements").get;
   const { planId, entitlementId } = c.req.valid("param");
-  const result = await handler.handle({ planId, entitlementId });
+  const result = await handler.execute({ planId, entitlementId });
   return c.json(result, 200);
 });
 
@@ -117,7 +117,7 @@ planEntitlementsController.openapi(
     const handler = c.get("planEntitlements").updateLimits;
     const { planId, entitlementId } = c.req.valid("param");
     const dto = c.req.valid("json");
-    const result = await handler.handle({ ...dto, planId, entitlementId });
+    const result = await handler.execute({ ...dto, planId, entitlementId });
     return c.json(result, 200);
   },
 );
@@ -144,6 +144,6 @@ const deletePlanEntitlementRoute = createRoute({
 planEntitlementsController.openapi(deletePlanEntitlementRoute, async (c) => {
   const handler = c.get("planEntitlements").delete;
   const { planId, entitlementId } = c.req.valid("param");
-  const result = await handler.handle({ planId, entitlementId });
+  const result = await handler.execute({ planId, entitlementId });
   return c.json(result, 200);
 });

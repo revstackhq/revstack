@@ -1,10 +1,13 @@
 import { OpenAPIHono, createRoute, z } from "@hono/zod-openapi";
-import { createApiKeySchema } from "@/modules/system/application/commands/CreateApiKeyCommand";
-import { updateApiKeySchema } from "@/modules/system/application/commands/UpdateApiKeyCommand";
-import { listApiKeysSchema } from "@/modules/system/application/queries/ListApiKeysQuery";
+import { createApiKeySchema } from "@/modules/system/application/use-cases/CreateApiKey/CreateApiKey.schema";
+import { updateApiKeySchema } from "@/modules/system/application/use-cases/UpdateApiKey/UpdateApiKey.schema";
+import { listApiKeysSchema } from "@/modules/system/application/use-cases/ListApiKeys/ListApiKeys.schema";
 import type { AppEnv } from "@/container";
+import { apiKeyMiddleware } from "@/common/middlewares/api-key";
 
 export const systemController = new OpenAPIHono<AppEnv>();
+
+systemController.use("*", apiKeyMiddleware);
 
 const createApiKeyRoute = createRoute({
   method: "post",
@@ -23,10 +26,15 @@ const createApiKeyRoute = createRoute({
     },
   },
 });
+
 systemController.openapi(createApiKeyRoute, async (c) => {
   const handler = c.get("system").createApiKey;
-  const dto = c.req.valid("json");
-  const result = await handler.handle(dto);
+  const payload = c.req.valid("json");
+  const environmentId = c.get("environmentId");
+  const result = await handler.execute({
+    ...payload,
+    environment_id: environmentId,
+  });
   return c.json({ ...result, success: true }, 201);
 });
 
@@ -48,7 +56,7 @@ const listApiKeysRoute = createRoute({
 systemController.openapi(listApiKeysRoute, async (c) => {
   const handler = c.get("system").listApiKeys;
   const query = c.req.valid("query");
-  const result = await handler.handle(query);
+  const result = await handler.execute(query);
   return c.json(result, 200);
 });
 
@@ -73,7 +81,7 @@ const getApiKeyRoute = createRoute({
 systemController.openapi(getApiKeyRoute, async (c) => {
   const handler = c.get("system").getApiKey;
   const { key } = c.req.valid("param");
-  const result = await handler.handle({ keyId: key });
+  const result = await handler.execute({ keyId: key });
   return c.json(result, 200);
 });
 
@@ -99,8 +107,13 @@ const updateApiKeyRoute = createRoute({
 systemController.openapi(updateApiKeyRoute, async (c) => {
   const handler = c.get("system").updateApiKey;
   const { key } = c.req.valid("param");
-  const dto = c.req.valid("json");
-  const result = await handler.handle({ keyId: key, ...dto });
+  const environmentId = c.get("environmentId");
+  const payload = c.req.valid("json");
+  const result = await handler.execute({
+    ...payload,
+    id: key,
+    environment_id: environmentId,
+  });
   return c.json(result, 200);
 });
 
@@ -122,10 +135,19 @@ const rotateApiKeyRoute = createRoute({
     },
   },
 });
+
 systemController.openapi(rotateApiKeyRoute, async (c) => {
   const handler = c.get("system").rotateApiKey;
   const { key } = c.req.valid("param");
-  const result = await handler.handle({ keyId: key });
+  const environmentId = c.get("environmentId");
+  const actorId = c.get("actorId");
+
+  const result = await handler.execute({
+    id: key,
+    environment_id: environmentId,
+    actor_id: actorId!,
+  });
+
   return c.json(result, 200);
 });
 
@@ -151,10 +173,17 @@ const deleteApiKeyRoute = createRoute({
     },
   },
 });
+
 systemController.openapi(deleteApiKeyRoute, async (c) => {
   const handler = c.get("system").deleteApiKey;
   const { key } = c.req.valid("param");
-  await handler.handle({ keyId: key });
+  const environmentId = c.get("environmentId");
+
+  await handler.execute({
+    id: key,
+    environment_id: environmentId,
+  });
+
   return c.json(
     { success: true, message: "API key deleted successfully" },
     200,
@@ -175,10 +204,11 @@ const verifyApiKeyRoute = createRoute({
     },
   },
 });
+
 systemController.openapi(verifyApiKeyRoute, async (c) => {
   const handler = c.get("system").verifyApiKey;
   const authHeader = c.req.header("Authorization");
   const apiKey = authHeader?.replace("Bearer ", "") || "";
-  const result = await handler.handle({ apiKey });
+  const result = await handler.execute({ apiKey });
   return c.json(result, 200);
 });

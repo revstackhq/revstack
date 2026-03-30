@@ -1,44 +1,103 @@
-export class WebhookDeliveryEntity {
-  constructor(
-    public readonly id: string,
-    public endpointId: string,
-    public eventId: string,
-    public payload: Record<string, any>,
-    public status: "pending" | "success" | "failed",
-    public statusCode: number | null,
-    public responseBody: string | null,
-    public durationMs: number | null,
-    public createdAt: Date = new Date(),
-    public nextRetryAt: Date | null = null,
-    public retryCount: number = 0
-  ) {}
+import { Entity } from "@/common/domain/Entity";
 
-  public static create(endpointId: string, eventId: string, payload: Record<string, any>): WebhookDeliveryEntity {
-    return new WebhookDeliveryEntity(
-      crypto.randomUUID(),
-      endpointId,
-      eventId,
-      payload,
-      "pending",
-      null,
-      null,
-      null
+export interface WebhookDeliveryProps {
+  id?: string;
+  endpointId: string;
+  eventId: string;
+  payload: Record<string, any>;
+  status: "pending" | "success" | "failed";
+  statusCode: number | null;
+  responseBody: string | null;
+  durationMs: number | null;
+  createdAt: Date;
+  nextRetryAt: Date | null;
+  retryCount: number;
+}
+
+type CreateWebhookProps = Pick<
+  WebhookDeliveryProps,
+  "endpointId" | "eventId" | "payload"
+>;
+type WebhookResultProps = Pick<
+  WebhookDeliveryProps,
+  "statusCode" | "responseBody" | "durationMs"
+>;
+
+export class WebhookDeliveryEntity extends Entity<WebhookDeliveryProps> {
+  private static readonly MAX_RETRIES = 3;
+
+  private constructor(props: WebhookDeliveryProps) {
+    super(props);
+  }
+
+  public static create(props: CreateWebhookProps): WebhookDeliveryEntity {
+    return new WebhookDeliveryEntity({
+      ...props,
+      status: "pending",
+      statusCode: null,
+      responseBody: null,
+      durationMs: null,
+      createdAt: new Date(),
+      nextRetryAt: null,
+      retryCount: 0,
+    });
+  }
+
+  public recordSuccess(props: WebhookResultProps): void {
+    this.update({
+      ...props,
+      status: "success",
+    });
+  }
+
+  public recordFailure(
+    props: WebhookResultProps & { nextRetryAt: Date | null },
+  ): void {
+    this.update({
+      ...props,
+      status: "failed",
+    });
+  }
+
+  public static restore(props: WebhookDeliveryProps): WebhookDeliveryEntity {
+    return new WebhookDeliveryEntity(props);
+  }
+
+  public retry(): void {
+    if (!this.canRetry()) {
+      throw new Error("Cannot retry this webhook");
+    }
+
+    this.update({
+      status: "pending",
+      statusCode: null,
+      responseBody: null,
+      durationMs: null,
+      nextRetryAt: null,
+      retryCount: this.props.retryCount + 1,
+    });
+  }
+
+  public canRetry(): boolean {
+    return (
+      this.props.status === "failed" &&
+      this.props.retryCount < WebhookDeliveryEntity.MAX_RETRIES
     );
   }
 
-  public recordSuccess(statusCode: number, responseBody: string, durationMs: number): void {
-    this.status = "success";
-    this.statusCode = statusCode;
-    this.responseBody = responseBody;
-    this.durationMs = durationMs;
+  public isSuccess(): boolean {
+    return this.props.status === "success";
   }
 
-  public recordFailure(statusCode: number | null, responseBody: string, durationMs: number | null, nextRetryAt: Date | null): void {
-    this.status = "failed";
-    this.statusCode = statusCode;
-    this.responseBody = responseBody;
-    this.durationMs = durationMs;
-    this.nextRetryAt = nextRetryAt;
-    this.retryCount += 1;
+  private update(props: Partial<WebhookDeliveryProps>): void {
+    Object.assign(this.props, props);
+  }
+
+  get status() {
+    return this.props.status;
+  }
+
+  get retryCount() {
+    return this.props.retryCount;
   }
 }

@@ -1,6 +1,6 @@
 import { OpenAPIHono, createRoute, z } from "@hono/zod-openapi";
-import { createProviderEventSchema } from "@/modules/provider_events/application/commands/CreateProviderEventCommand";
-import { listProviderEventsSchema } from "@/modules/provider_events/application/queries/ListProviderEventsQuery";
+import { createProviderEventSchema } from "@/modules/provider_events/application/use-cases/CreateProviderEvent/CreateProviderEvent.schema";
+import { listProviderEventsSchema } from "@/modules/provider_events/application/use-cases/ListProviderEvents/ListProviderEvents.schema";
 import type { AppEnv } from "@/container";
 
 export const providerEventsController = new OpenAPIHono<AppEnv>();
@@ -27,7 +27,7 @@ const createProviderEventRoute = createRoute({
 providerEventsController.openapi(createProviderEventRoute, async (c) => {
   const handler = c.get("providerEvents").create;
   const dto = c.req.valid("json");
-  const result = await handler.handle(dto);
+  const result = await handler.execute(dto);
   return c.json(result, 201);
 });
 
@@ -49,7 +49,7 @@ const listProviderEventsRoute = createRoute({
 providerEventsController.openapi(listProviderEventsRoute, async (c) => {
   const handler = c.get("providerEvents").list;
   const query = c.req.valid("query");
-  const result = await handler.handle(query);
+  const result = await handler.execute(query);
   return c.json(result, 200);
 });
 
@@ -73,6 +73,6 @@ const getProviderEventRoute = createRoute({
 providerEventsController.openapi(getProviderEventRoute, async (c) => {
   const handler = c.get("providerEvents").get;
   const { id } = c.req.valid("param");
-  const result = await handler.handle({ id });
+  const result = await handler.execute({ id });
   return c.json(result, 200);
 });
