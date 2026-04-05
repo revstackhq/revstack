@@ -1,6 +1,6 @@
 import { createRoute, z } from "@hono/zod-openapi";
-import { CreateEntitlementCommandSchema } from "@/modules/entitlements/application/use-cases/CreateEntitlement/CreateEntitlement.schema";
-import { ListEntitlementsQuerySchema } from "@/modules/entitlements/application/use-cases/ListEntitlements/ListEntitlements.schema";
+import { CreateEntitlementCommandSchema } from "@/modules/entitlements/application/use-cases/CreateEntitlement";
+import { ListEntitlementsQuerySchema } from "@/modules/entitlements/application/use-cases/ListEntitlements";
 
 export const listEntitlementsRoute = createRoute({
   method: "get",

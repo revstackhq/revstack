@@ -1,7 +1,7 @@
 import { text, timestamp, integer, jsonb } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { revstack } from "@/schema/namespace";
-import { generateId } from "@/utils/id";
+import { generateId } from "@revstackhq/core";
 import { environments } from "@/schema/core";
 import { users } from "@/schema/users";
 import { entitlements } from "@/schema/entitlements";

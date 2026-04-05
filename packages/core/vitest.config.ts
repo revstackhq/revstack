@@ -10,6 +10,8 @@ export default defineConfig({
     alias: {
       "@/types": "./src/types",
       "@/validator": "./src/validator",
+      "@/domain": "./src/domain",
+      "@/schemas": "./src/schemas",
     },
   },
 });

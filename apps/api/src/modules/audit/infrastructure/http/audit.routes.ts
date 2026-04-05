@@ -1,5 +1,5 @@
 import { createRoute, z } from "@hono/zod-openapi";
-import { ListAuditLogsQuerySchema } from "@/modules/audit/application/use-cases/ListAuditLogs/ListAuditLogs.schema";
+import { ListAuditLogsQuerySchema } from "@/modules/audit/application/use-cases/ListAuditLogs";
 
 export const listAuditLogsRoute = createRoute({
   method: "get",

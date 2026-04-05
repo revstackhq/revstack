@@ -32,12 +32,22 @@ export function toUnixSeconds(date: Date): number {
  *
  * @param input - The date payload from the provider (string, number, or Date).
  * @returns A native JavaScript Date object, or null if the input is completely invalid.
+ * * Note: Assumes numbers < 10^12 are Unix Seconds (Stripe/Polar style).
  */
 export function parseDateSafe(
   input: string | number | Date | null | undefined,
 ): Date | null {
-  if (!input) return null;
-  if (input instanceof Date) return isNaN(input.getTime()) ? null : input;
+  if (input === null || input === undefined || input === "") return null;
+
+  if (input instanceof Date) {
+    return isNaN(input.getTime()) ? null : input;
+  }
+
+  // Detect Unix Seconds vs Milliseconds
+  if (typeof input === "number") {
+    const isSeconds = input < 10000000000;
+    return isSeconds ? fromUnixSeconds(input) : new Date(input);
+  }
 
   const parsed = new Date(input);
   return isNaN(parsed.getTime()) ? null : parsed;
@@ -86,6 +96,4 @@ export function diffInSeconds(start: Date, end: Date): number {
  * milliseconds/seconds mismatch errors during API calls.
  * * @returns The current Unix timestamp in seconds.
  */
-export function currentUnixSeconds(): number {
-  return Math.floor(Date.now() / 1000);
-}
+export const currentUnixSeconds = (): number => Math.floor(Date.now() / 1000);

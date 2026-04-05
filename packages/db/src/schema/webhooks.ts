@@ -1,6 +1,6 @@
 import { text, timestamp, boolean, jsonb, integer } from "drizzle-orm/pg-core";
 import { revstack } from "@/schema/namespace";
-import { generateId } from "@/utils/id";
+import { generateId } from "@revstackhq/core";
 import { environments } from "@/schema/core";
 import { relations } from "drizzle-orm";
 

@@ -4,7 +4,7 @@ import {
   listEntitlementsRoute,
   createEntitlementRoute,
   deleteEntitlementRoute,
-} from "./entitlements.routes";
+} from "@/modules/entitlements/infrastructure/http/entitlements.routes";
 
 export const entitlementsController = new OpenAPIHono<AppEnv>();
 

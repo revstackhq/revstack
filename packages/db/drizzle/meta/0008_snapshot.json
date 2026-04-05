@@ -2739,10 +2739,10 @@
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
-        "audit_logs_actor_id_studio_admins_id_fk": {
-          "name": "audit_logs_actor_id_studio_admins_id_fk",
+        "audit_logs_actor_id_workspace_members_id_fk": {
+          "name": "audit_logs_actor_id_workspace_members_id_fk",
           "tableFrom": "audit_logs",
-          "tableTo": "studio_admins",
+          "tableTo": "workspace_members",
           "schemaTo": "revstack",
           "columnsFrom": [
             "actor_id"
@@ -2760,8 +2760,8 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "revstack.studio_admins": {
-      "name": "studio_admins",
+    "revstack.workspace_members": {
+      "name": "workspace_members",
       "schema": "revstack",
       "columns": {
         "id": {
@@ -2814,8 +2814,8 @@
       "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
-        "studio_admins_email_unique": {
-          "name": "studio_admins_email_unique",
+        "workspace_members_email_unique": {
+          "name": "workspace_members_email_unique",
           "nullsNotDistinct": false,
           "columns": [
             "email"

@@ -7,7 +7,7 @@ import {
   deleteCouponRoute,
   listCouponsRoute,
   getCouponRoute,
-} from "./coupons.routes";
+} from "@/modules/coupons/infrastructure/http/coupons.routes";
 
 export const couponsController = new OpenAPIHono<AppEnv>();
 

@@ -1,6 +1,6 @@
 import { createRoute, z } from "@hono/zod-openapi";
-import { CreateEnvironmentCommandSchema } from "@/modules/environments/application/use-cases/CreateEnvironment/CreateEnvironment.schema";
-import { UpdateEnvironmentCommandSchema } from "@/modules/environments/application/use-cases/UpdateEnvironment/UpdateEnvironment.schema";
+import { CreateEnvironmentCommandSchema } from "@/modules/environments/application/use-cases/CreateEnvironment";
+import { UpdateEnvironmentCommandSchema } from "@/modules/environments/application/use-cases/UpdateEnvironment";
 
 export const createEnvironmentRoute = createRoute({
   method: "post",

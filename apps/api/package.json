@@ -19,6 +19,7 @@
     "@revstackhq/db": "workspace:*",
     "drizzle-orm": "^0.45.1",
     "hono": "^4.3.0",
+    "nanoid": "^5.1.7",
     "zod": "^3.23.8"
   },
   "devDependencies": {

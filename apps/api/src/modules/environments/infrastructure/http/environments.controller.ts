@@ -5,7 +5,7 @@ import {
   getEnvironmentRoute,
   updateEnvironmentRoute,
   deleteEnvironmentRoute,
-} from "./environments.routes";
+} from "@/modules/environments/infrastructure/http/environments.routes";
 
 export const environmentsController = new OpenAPIHono<AppEnv>();
 

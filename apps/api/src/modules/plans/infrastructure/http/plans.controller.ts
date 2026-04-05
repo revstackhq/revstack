@@ -1,26 +1,20 @@
-import { OpenAPIHono, createRoute, z } from "@hono/zod-openapi";
-import { createPlanSchema } from "@/modules/plans/application/use-cases/CreatePlan/CreatePlan.schema";
+import { OpenAPIHono } from "@hono/zod-openapi";
 import type { AppEnv } from "@/container";
+import {
+  createPlanRoute,
+  listPlansRoute,
+  archivePlanRoute,
+  hidePlanRoute,
+  createPlanEntitlementRoute,
+  listPlanEntitlementsRoute,
+  getPlanEntitlementRoute,
+  updatePlanEntitlementLimitsRoute,
+  deletePlanEntitlementRoute,
+} from "@/modules/plans/infrastructure/http/plans.routes";
 
 export const plansController = new OpenAPIHono<AppEnv>();
 
-const createPlanRoute = createRoute({
-  method: "post",
-  path: "/",
-  tags: ["Plans"],
-  summary: "Create a plan",
-  description: "Creates a new billing plan with pricing and entitlement associations.",
-  request: {
-    body: { content: { "application/json": { schema: createPlanSchema } } },
-  },
-  responses: {
-    201: {
-      description: "Plan created",
-      content: { "application/json": { schema: z.object({ id: z.string(), success: z.boolean() }) } },
-    },
-    400: { description: "Validation error" },
-  },
-});
+// --- Plan Handlers ---
 
 plansController.openapi(createPlanRoute, async (c) => {
   const handler = c.get("plans").create;
@@ -29,41 +23,10 @@ plansController.openapi(createPlanRoute, async (c) => {
   return c.json({ id, success: true }, 201);
 });
 
-const listPlansRoute = createRoute({
-  method: "get",
-  path: "/",
-  tags: ["Plans"],
-  summary: "List plans",
-  description: "Retrieves all available billing plans.",
-  responses: {
-    200: {
-      description: "List of plans",
-      content: { "application/json": { schema: z.array(z.any()) } },
-    },
-  },
-});
-
 plansController.openapi(listPlansRoute, async (c) => {
   const handler = c.get("plans").list;
   const result = await handler.execute({});
   return c.json(result, 200);
-});
-
-const archivePlanRoute = createRoute({
-  method: "patch",
-  path: "/{id}/archive",
-  tags: ["Plans"],
-  summary: "Archive a plan",
-  description: "Marks a plan as archived, preventing new subscriptions.",
-  request: {
-    params: z.object({ id: z.string().openapi({ example: "plan_abc123" }) }),
-  },
-  responses: {
-    200: {
-      description: "Plan archived",
-      content: { "application/json": { schema: z.object({ success: z.boolean(), message: z.string() }) } },
-    },
-  },
 });
 
 plansController.openapi(archivePlanRoute, async (c) => {
@@ -73,26 +36,49 @@ plansController.openapi(archivePlanRoute, async (c) => {
   return c.json({ success: true, message: "Plan archived successfully" }, 200);
 });
 
-const hidePlanRoute = createRoute({
-  method: "patch",
-  path: "/{id}/hide",
-  tags: ["Plans"],
-  summary: "Hide a plan",
-  description: "Hides a plan from public visibility while keeping it active for existing subscribers.",
-  request: {
-    params: z.object({ id: z.string().openapi({ example: "plan_abc123" }) }),
-  },
-  responses: {
-    200: {
-      description: "Plan hidden",
-      content: { "application/json": { schema: z.object({ success: z.boolean(), message: z.string() }) } },
-    },
-  },
-});
-
 plansController.openapi(hidePlanRoute, async (c) => {
   const handler = c.get("plans").hide;
   const { id } = c.req.valid("param");
   await handler.execute({ id });
   return c.json({ success: true, message: "Plan hidden successfully" }, 200);
+});
+
+// --- Plan Entitlement Handlers (nested under /:planId/entitlements) ---
+
+plansController.openapi(createPlanEntitlementRoute, async (c) => {
+  const handler = c.get("planEntitlements").create;
+  const { planId, featureId } = c.req.valid("param");
+  const dto = c.req.valid("json");
+  const result = await handler.execute({ ...dto, planId, entitlementId: featureId });
+  return c.json(result, 200);
+});
+
+plansController.openapi(listPlanEntitlementsRoute, async (c) => {
+  const handler = c.get("planEntitlements").list;
+  const { planId } = c.req.valid("param");
+  const query = c.req.valid("query");
+  const result = await handler.execute({ ...query, planId });
+  return c.json(result, 200);
+});
+
+plansController.openapi(getPlanEntitlementRoute, async (c) => {
+  const handler = c.get("planEntitlements").get;
+  const { planId, featureId } = c.req.valid("param");
+  const result = await handler.execute({ planId, entitlementId: featureId });
+  return c.json(result, 200);
+});
+
+plansController.openapi(updatePlanEntitlementLimitsRoute, async (c) => {
+  const handler = c.get("planEntitlements").updateLimits;
+  const { planId, featureId } = c.req.valid("param");
+  const dto = c.req.valid("json");
+  const result = await handler.execute({ ...dto, planId, entitlementId: featureId });
+  return c.json(result, 200);
+});
+
+plansController.openapi(deletePlanEntitlementRoute, async (c) => {
+  const handler = c.get("planEntitlements").delete;
+  const { planId, featureId } = c.req.valid("param");
+  const result = await handler.execute({ planId, entitlementId: featureId });
+  return c.json(result, 200);
 });

@@ -1,74 +1,75 @@
 import { revstack } from "@/schema/namespace";
+import {
+  FEATURE_TYPES,
+  UNIT_TYPES,
+  PLAN_TYPES,
+  STATUSES,
+  SUBSCRIPTION_STATUSES,
+  BILLING_INTERVALS,
+  RESET_PERIODS,
+  PRICING_TYPES,
+  ADDON_ENTITLEMENT_TYPES,
+} from "@revstackhq/core";
 
 export const apiKeyTypeEnum = revstack.enum("api_key_type", [
   "secret",
   "public",
 ]);
 
-export const entitlementTypeEnum = revstack.enum("entitlement_type", [
-  "boolean",
-  "metered",
-  "static",
-  "json",
+export const workspaceRoleEnum = revstack.enum("workspace_role", [
+  "owner",
+  "admin",
+  "viewer",
 ]);
 
-export const unitTypeEnum = revstack.enum("unit_type", [
-  "count",
-  "bytes",
-  "seconds",
-  "tokens",
-  "requests",
-  "custom",
+export const entitlementTypeEnum = revstack.enum(
+  "entitlement_type",
+  FEATURE_TYPES as unknown as [string, ...string[]],
+);
+
+export const unitTypeEnum = revstack.enum(
+  "unit_type",
+  UNIT_TYPES as unknown as [string, ...string[]],
+);
+
+export const integrationModeEnum = revstack.enum("integration_mode", [
+  "sandbox",
+  "production",
 ]);
 
-export const planTypeEnum = revstack.enum("plan_type", [
-  "paid",
-  "free",
-  "custom",
-]);
+export const planTypeEnum = revstack.enum(
+  "plan_type",
+  PLAN_TYPES as unknown as [string, ...string[]],
+);
 
-export const statusEnum = revstack.enum("status", [
-  "active",
-  "inactive",
-  "archived",
-  "draft",
-]);
+export const statusEnum = revstack.enum(
+  "status",
+  STATUSES as unknown as [string, ...string[]],
+);
 
-export const subscriptionStatusEnum = revstack.enum("subscription_status", [
-  "incomplete",
-  "incomplete_expired",
-  "trialing",
-  "active",
-  "past_due",
-  "paused",
-  "unpaid",
-  "revoked",
-  "canceled",
-]);
+export const subscriptionStatusEnum = revstack.enum(
+  "subscription_status",
+  SUBSCRIPTION_STATUSES as unknown as [string, ...string[]],
+);
 
-export const billingIntervalEnum = revstack.enum("billing_interval", [
-  "monthly",
-  "quarterly",
-  "yearly",
-  "one_time",
-]);
+export const billingIntervalEnum = revstack.enum(
+  "billing_interval",
+  BILLING_INTERVALS as unknown as [string, ...string[]],
+);
 
-export const resetPeriodEnum = revstack.enum("reset_period", [
-  "daily",
-  "weekly",
-  "monthly",
-  "yearly",
-  "never",
-]);
+export const resetPeriodEnum = revstack.enum(
+  "reset_period",
+  RESET_PERIODS as unknown as [string, ...string[]],
+);
 
-export const pricingTypeEnum = revstack.enum("pricing_type", [
-  "recurring",
-  "one_time",
-]);
+export const pricingTypeEnum = revstack.enum(
+  "pricing_type",
+  PRICING_TYPES as unknown as [string, ...string[]],
+);
 
 export const discountTypeEnum = revstack.enum("discount_type", [
   "percent",
-  "amount",
+  "fixed",
 ]);
 
 export const paymentStatusEnum = revstack.enum("payment_status", [
@@ -102,6 +103,12 @@ export const discountDurationEnum = revstack.enum("discount_duration", [
   "repeating",
 ]);
 
+export const discountStatusEnum = revstack.enum("discount_status", [
+  "active",
+  "inactive",
+  "archived",
+]);
+
 export const walletTxTypeEnum = revstack.enum("wallet_tx_type", [
   "credit",
   "debit",
@@ -121,14 +128,14 @@ export const signingStrategyEnum = revstack.enum("signing_strategy", [
   "HS256",
 ]);
 
-export const addonTypeEnum = revstack.enum("addon_type", [
-  "recurring",
-  "one_time",
-]);
+export const addonTypeEnum = revstack.enum(
+  "addon_type",
+  PRICING_TYPES as unknown as [string, ...string[]],
+);
 
 export const addonEntitlementTypeEnum = revstack.enum(
   "addon_entitlement_type",
-  ["increment", "set"],
+  ADDON_ENTITLEMENT_TYPES as unknown as [string, ...string[]],
 );
 
 export const processingStatusEnum = revstack.enum("processing_status", [

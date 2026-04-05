@@ -1,5 +1,8 @@
-import { RevstackConfig } from "@/types";
-import { RevstackValidationError, validateConfig } from "@/validator";
+import { RevstackConfig } from "../../src/types/index.js";
+import {
+  RevstackValidationError,
+  validateConfig,
+} from "../../src/validation/configValidator.js";
 import { describe, it, expect } from "vitest";
 
 describe("validateConfig", () => {
@@ -102,7 +105,7 @@ describe("validateConfig", () => {
           type: "recurring",
           amount: 1000,
           currency: "USD",
-          billing_interval: "monthly",
+          billing_interval: "month",
           features: { unknown: { value_limit: 10 } },
         },
       },
@@ -128,7 +131,7 @@ describe("validateConfig", () => {
             {
               amount: 1000,
               currency: "USD",
-              billing_interval: "monthly",
+              billing_interval: "month",
               overage_configuration: {
                 seats: { overage_amount: 10, overage_unit: 1 },
               },
@@ -158,7 +161,7 @@ describe("validateConfig", () => {
             {
               amount: 1000,
               currency: "USD",
-              billing_interval: "monthly",
+              billing_interval: "month",
               overage_configuration: {
                 unknown: { overage_amount: 10, overage_unit: 1 },
               },
@@ -185,9 +188,7 @@ describe("validateConfig", () => {
         pro: {
           ...validPlan,
           is_default: false,
-          prices: [
-            { amount: 10, currency: "USD", billing_interval: "monthly" },
-          ],
+          prices: [{ amount: 10, currency: "USD", billing_interval: "month" }],
         },
       },
       addons: {
@@ -196,7 +197,7 @@ describe("validateConfig", () => {
           type: "recurring",
           amount: 1000,
           currency: "USD",
-          billing_interval: "monthly",
+          billing_interval: "month",
           features: {
             unknown: { value_limit: 10 },
           },
@@ -227,7 +228,7 @@ describe("validateConfig", () => {
             {
               amount: 1000,
               currency: "USD",
-              billing_interval: "monthly",
+              billing_interval: "month",
               available_addons: ["monthly_addon"],
             },
           ],
@@ -239,7 +240,7 @@ describe("validateConfig", () => {
           type: "recurring",
           amount: 100,
           currency: "USD",
-          billing_interval: "monthly",
+          billing_interval: "month",
           features: {},
         },
       },
@@ -257,7 +258,7 @@ describe("validateConfig", () => {
             {
               amount: 1000,
               currency: "USD",
-              billing_interval: "monthly",
+              billing_interval: "month",
               available_addons: ["onetime_addon"],
             },
           ],
@@ -286,7 +287,7 @@ describe("validateConfig", () => {
             {
               amount: 1000,
               currency: "USD",
-              billing_interval: "monthly",
+              billing_interval: "month",
               available_addons: ["yearly_addon"],
             },
           ],
@@ -298,7 +299,7 @@ describe("validateConfig", () => {
           type: "recurring",
           amount: 1000,
           currency: "USD",
-          billing_interval: "yearly",
+          billing_interval: "year",
           features: {},
         },
       },
@@ -308,7 +309,7 @@ describe("validateConfig", () => {
       validateConfig(config);
     } catch (e: any) {
       expect(e.errors).toContain(
-        "Interval Mismatch: Plan 'default' price is 'monthly', but Addon 'yearly_addon' is 'yearly'. Recurring addons must match the price's billing interval.",
+        "Interval Mismatch: Plan 'default' price is 'month', but Addon 'yearly_addon' is 'year'. Recurring addons must match the price's billing interval.",
       );
     }
   });
@@ -323,7 +324,7 @@ describe("validateConfig", () => {
             {
               amount: 1000,
               currency: "USD",
-              billing_interval: "monthly",
+              billing_interval: "month",
               available_addons: ["ghost_addon"],
             },
           ],

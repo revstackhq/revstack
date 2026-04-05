@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { EntitlementEngine } from "../../src/engine";
-import type { PlanDef } from "../../src/types";
+import { EntitlementEngine } from "@/domain/engines/EntitlementEngine";
+import type { PlanDef } from "@/types";
 
 function createBasePlan(overrides: Partial<PlanDef> = {}): PlanDef {
   return {
@@ -11,7 +11,7 @@ function createBasePlan(overrides: Partial<PlanDef> = {}): PlanDef {
     is_public: true,
     type: "paid",
     status: "active",
-    prices: [{ amount: 2900, currency: "USD", billing_interval: "monthly" }],
+    prices: [{ amount: 2900, currency: "USD", billing_interval: "month" }],
     features: {},
     ...overrides,
   };

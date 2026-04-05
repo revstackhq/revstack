@@ -1,18 +1,14 @@
 import { OpenAPIHono } from "@hono/zod-openapi";
 import type { AppEnv } from "@/container";
-import { apiKeyMiddleware } from "@/common/middlewares/api-key";
 import {
   bulkCreateRoute,
   createCustomerRoute,
   deleteCustomerRoute,
   getCustomerRoute,
   listCustomersRoute,
-  updateCustomerRoute,
 } from "@/modules/customers/infrastructure/http/customers.routes";
 
 export const customersController = new OpenAPIHono<AppEnv>();
-
-customersController.use("*", apiKeyMiddleware);
 
 // POST /
 customersController.openapi(createCustomerRoute, async (c) => {

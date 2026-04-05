@@ -11,7 +11,7 @@ export * from "@/schema/addons";
 export * from "@/schema/coupons";
 export * from "@/schema/entitlements";
 export * from "@/schema/usages";
-export * from "@/schema/studio";
+export * from "@/schema/workspaces";
 export * from "@/schema/webhooks";
 export * from "@/schema/invoices";
 export * from "@/schema/payments";

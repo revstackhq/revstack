@@ -1,4 +1,4 @@
-import { Entity } from "@/common/domain/Entity";
+import { Entity } from "@revstackhq/core";
 import { eq, SQL } from "drizzle-orm";
 import { PgDatabase, PgTable, PgColumn } from "drizzle-orm/pg-core";
 

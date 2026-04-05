@@ -1,7 +1,7 @@
 import { text, timestamp, boolean, jsonb } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { revstack } from "@/schema/namespace";
-import { generateId } from "@/utils/id";
+import { generateId } from "@revstackhq/core";
 import {
   apiKeyTypeEnum,
   authProviderEnum,
@@ -21,6 +21,7 @@ import { usageMeters } from "@/schema/usages";
 import { auditLogs } from "@/schema/logs";
 import { webhookEndpoints } from "@/schema/webhooks";
 import { integrations } from "@/schema/integrations";
+import { workspaceMembers } from "@/schema/workspaces";
 
 /**
  * Represents an isolated environment (e.g., 'Production', 'Development').
@@ -95,6 +96,7 @@ export const environmentsRelations = relations(environments, ({ many }) => ({
   integrations: many(integrations),
   authConfigs: many(authConfigs),
   users: many(users),
+  workspaceMembers: many(workspaceMembers),
   customers: many(customers),
   plans: many(plans),
   entitlements: many(entitlements),

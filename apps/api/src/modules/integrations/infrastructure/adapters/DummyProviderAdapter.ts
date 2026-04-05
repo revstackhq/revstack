@@ -1,4 +1,4 @@
-import type { ProviderAdapter } from "@/modules/integrations/application/ports/ProviderAdapter";
+import type { ProviderAdapter } from "@revstackhq/core";
 
 export class DummyProviderAdapter implements ProviderAdapter {
   public async verifyCredentials(config: Record<string, any>): Promise<boolean> {

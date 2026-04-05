@@ -1,7 +1,7 @@
-import { CreateCustomerCommandSchema } from "@/modules/customers/application/use-cases/CreateCustomer/CreateCustomer.schema";
-import { CreateManyCustomersCommandSchema } from "@/modules/customers/application/use-cases/CreateManyCustomers/CreateManyCustomers.schema";
-import { DeleteCustomerCommandSchema } from "@/modules/customers/application/use-cases/DeleteCustomer/DeleteCustomer.schema";
-import { CustomerResponseSchema, ListCustomersQuerySchema } from "@/modules/customers/application/use-cases/ListCustomers/ListCustomers.schema";
+import { CreateCustomerCommandSchema } from "@/modules/customers/application/use-cases/CreateCustomer";
+import { CreateManyCustomersCommandSchema } from "@/modules/customers/application/use-cases/CreateManyCustomers";
+import { DeleteCustomerCommandSchema } from "@/modules/customers/application/use-cases/DeleteCustomer";
+import { CustomerResponseSchema, ListCustomersQuerySchema } from "@/modules/customers/application/use-cases/ListCustomers";
 import { createRoute, z } from "@hono/zod-openapi";
 
 

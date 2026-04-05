@@ -4,7 +4,7 @@ import {
   PriceDefSchema,
   PlanDefInputSchema,
   DiscountDefSchema,
-} from "../../src/schema";
+} from "@/schemas/billing.schema";
 
 describe("Zod Schemas", () => {
   describe("AddonDefInputSchema", () => {
@@ -14,7 +14,7 @@ describe("Zod Schemas", () => {
         type: "recurring" as const,
         amount: 5000,
         currency: "USD",
-        billing_interval: "monthly" as const,
+        billing_interval: "month" as const,
         features: {},
       };
 
@@ -34,7 +34,7 @@ describe("Zod Schemas", () => {
       const result = AddonDefInputSchema.safeParse(addon);
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(result?.error?.issues?.[0]?.message).toMatch(/Invalid option/i);
+        expect(result?.error?.issues?.[0]?.message).toMatch(/Required/i);
       }
     });
 
@@ -57,7 +57,7 @@ describe("Zod Schemas", () => {
         type: "one_time" as const,
         amount: 25000,
         currency: "USD",
-        billing_interval: "monthly",
+        billing_interval: "month",
         features: {},
       };
 
@@ -77,7 +77,7 @@ describe("Zod Schemas", () => {
       const result = AddonDefInputSchema.safeParse(addon);
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(result.error?.issues?.[0]?.message).toMatch(/Too small/i);
+        expect(result.error?.issues?.[0]?.message).toMatch(/greater than or equal to 0/i);
       }
     });
   });
@@ -87,7 +87,7 @@ describe("Zod Schemas", () => {
       const price = {
         amount: 1000,
         currency: "USD",
-        billing_interval: "monthly" as const,
+        billing_interval: "month" as const,
         available_addons: ["addon_1", "addon_2"],
       };
 
@@ -99,7 +99,7 @@ describe("Zod Schemas", () => {
       const price = {
         amount: -10,
         currency: "USD",
-        billing_interval: "monthly" as const,
+        billing_interval: "month" as const,
       };
 
       const result = PriceDefSchema.safeParse(price);
@@ -119,7 +119,7 @@ describe("Zod Schemas", () => {
           {
             amount: 1000,
             currency: "USD",
-            billing_interval: "monthly" as const,
+            billing_interval: "month" as const,
             available_addons: ["my_addon"],
           },
         ],

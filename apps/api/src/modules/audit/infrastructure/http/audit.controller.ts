@@ -3,8 +3,8 @@ import type { AppEnv } from "@/container";
 import {
   listAuditLogsRoute,
   getAuditLogRoute,
-} from "./audit.routes";
-import { AuditLogNotFoundError } from "@/modules/audit/domain/AuditErrors";
+} from "@/modules/audit/infrastructure/http/audit.routes";
+import { AuditLogNotFoundError } from "@revstackhq/core";
 
 export const auditController = new OpenAPIHono<AppEnv>();
 

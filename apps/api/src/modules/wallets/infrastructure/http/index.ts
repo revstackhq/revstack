@@ -1,3 +1,3 @@
-import { walletsController } from "./wallets.controller";
+import { walletsController } from "@/modules/wallets/infrastructure/http/wallets.controller";
 
 export const walletsRoutes = walletsController;

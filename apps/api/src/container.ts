@@ -1,167 +1,169 @@
-import { PostgresEntitlementRepo } from "@/modules/entitlements/infrastructure/adapters/PostgresEntitlementRepo";
-import { PostgresPlanEntitlementRepo } from "@/modules/plan_entitlements/infrastructure/adapters/PostgresPlanEntitlementRepo";
-import { PostgresAddonEntitlementRepo } from "@/modules/addon_entitlements/infrastructure/adapters/PostgresAddonEntitlementRepo";
-import { PostgresPriceRepo } from "@/modules/prices/infrastructure/adapters/PostgresPriceRepo";
-import { PostgresAddonRepo } from "@/modules/addons/infrastructure/adapters/PostgresAddonRepo";
-import { PostgresCouponRepo } from "@/modules/coupons/infrastructure/adapters/PostgresCouponRepo";
-import { PostgresEnvironmentRepository } from "@/modules/environments/infrastructure/adapters/PostgresEnvironmentRepo";
-import { PostgresAuthConfigRepo } from "@/modules/auth/infrastructure/adapters/PostgresAuthConfigRepo";
-import { PostgresStudioAdminRepo } from "@/modules/studio/infrastructure/adapters/PostgresStudioAdminRepo";
-import { PostgresAuditLogRepo } from "@/modules/audit/infrastructure/adapters/PostgresAuditLogRepo";
-import { PostgresUserRepo } from "@/modules/users/infrastructure/adapters/PostgresUserRepo";
-import { CreateEntitlementHandler } from "@/modules/entitlements/application/use-cases/CreateEntitlement/CreateEntitlement.handler";
-import { DeleteEntitlementHandler } from "@/modules/entitlements/application/use-cases/DeleteEntitlement/DeleteEntitlement.handler";
-import { ListEntitlementsHandler } from "@/modules/entitlements/application/use-cases/ListEntitlements/ListEntitlements.handler";
+import { PostgresEntitlementRepository } from "@/modules/entitlements/infrastructure/adapters/PostgresEntitlementRepository";
+import { PostgresPlanEntitlementRepository } from "@/modules/plans/infrastructure/adapters/PostgresPlanEntitlementRepository";
+import { PostgresAddonEntitlementRepository } from "@/modules/addons/infrastructure/adapters/PostgresAddonEntitlementRepository";
+import { PostgresPriceRepository } from "@/modules/prices/infrastructure/adapters/PostgresPriceRepository";
+import { PostgresAddonRepository } from "@/modules/addons/infrastructure/adapters/PostgresAddonRepository";
+import { PostgresCouponRepository } from "@/modules/coupons/infrastructure/adapters/PostgresCouponRepository";
+import { PostgresEnvironmentRepository } from "@/modules/environments/infrastructure/adapters/PostgresEnvironmentRepository";
+import { PostgresAuthConfigRepository } from "@/modules/identity_providers/infrastructure/adapters/PostgresAuthConfigRepository";
+import { PostgresWorkspaceMemberRepository } from "@/modules/workspaces/infrastructure/adapters/PostgresWorkspaceMemberRepository";
+import { PostgresAuditLogRepository } from "@/modules/audit/infrastructure/adapters/PostgresAuditLogRepository";
+import { PostgresUserRepository } from "@/modules/users/infrastructure/adapters/PostgresUserRepository";
+import { CreateEntitlementHandler } from "@/modules/entitlements/application/use-cases/CreateEntitlement";
+import { DeleteEntitlementHandler } from "@/modules/entitlements/application/use-cases/DeleteEntitlement";
+import { ListEntitlementsHandler } from "@/modules/entitlements/application/use-cases/ListEntitlements";
 
-import { PostgresPlanRepo } from "@/modules/plans/infrastructure/adapters/PostgresPlanRepo";
-import { CreatePlanHandler } from "@/modules/plans/application/use-cases/CreatePlan/CreatePlan.handler";
-import { ListPlansHandler } from "@/modules/plans/application/use-cases/ListPlans/ListPlans.handler";
-import { ArchivePlanHandler } from "@/modules/plans/application/use-cases/ArchivePlan/ArchivePlan.handler";
-import { HidePlanHandler } from "@/modules/plans/application/use-cases/HidePlan/HidePlan.handler";
+import { PostgresPlanRepository } from "@/modules/plans/infrastructure/adapters/PostgresPlanRepository";
+import { CreatePlanHandler } from "@/modules/plans/application/use-cases/CreatePlan";
+import { ListPlansHandler } from "@/modules/plans/application/use-cases/ListPlans";
+import { ArchivePlanHandler } from "@/modules/plans/application/use-cases/ArchivePlan";
+import { HidePlanHandler } from "@/modules/plans/application/use-cases/HidePlan";
 
-import { CreatePlanEntitlementHandler } from "@/modules/plan_entitlements/application/use-cases/CreatePlanEntitlement/CreatePlanEntitlement.handler";
-import { UpdatePlanEntitlementLimitsHandler } from "@/modules/plan_entitlements/application/use-cases/UpdatePlanEntitlementLimits/UpdatePlanEntitlementLimits.handler";
-import { DeletePlanEntitlementHandler } from "@/modules/plan_entitlements/application/use-cases/DeletePlanEntitlement/DeletePlanEntitlement.handler";
-import { ListPlanEntitlementsHandler } from "@/modules/plan_entitlements/application/use-cases/ListPlanEntitlements/ListPlanEntitlements.handler";
-import { GetPlanEntitlementHandler } from "@/modules/plan_entitlements/application/use-cases/GetPlanEntitlement/GetPlanEntitlement.handler";
+import { CreatePlanEntitlementHandler } from "@/modules/plans/application/use-cases/CreatePlanEntitlement";
+import { UpdatePlanEntitlementLimitsHandler } from "@/modules/plans/application/use-cases/UpdatePlanEntitlementLimits";
+import { DeletePlanEntitlementHandler } from "@/modules/plans/application/use-cases/DeletePlanEntitlement";
+import { ListPlanEntitlementsHandler } from "@/modules/plans/application/use-cases/ListPlanEntitlements";
+import { GetPlanEntitlementHandler } from "@/modules/plans/application/use-cases/GetPlanEntitlement";
 
-import { CreatePriceHandler } from "@/modules/prices/application/use-cases/CreatePrice/CreatePrice.handler";
-import { UpdatePriceHandler } from "@/modules/prices/application/use-cases/UpdatePrice/UpdatePrice.handler";
-import { VersionPriceHandler } from "@/modules/prices/application/use-cases/VersionPrice/VersionPrice.handler";
-import { ListPricesHandler } from "@/modules/prices/application/use-cases/ListPrices/ListPrices.handler";
-import { GetPriceHandler } from "@/modules/prices/application/use-cases/GetPrice/GetPrice.handler";
+import { CreatePriceHandler } from "@/modules/prices/application/use-cases/CreatePrice";
+import { UpdatePriceHandler } from "@/modules/prices/application/use-cases/UpdatePrice";
+import { VersionPriceHandler } from "@/modules/prices/application/use-cases/VersionPrice";
+import { ListPricesHandler } from "@/modules/prices/application/use-cases/ListPrices";
+import { GetPriceHandler } from "@/modules/prices/application/use-cases/GetPrice";
 
-import { CreateAddonHandler } from "@/modules/addons/application/use-cases/CreateAddon/CreateAddon.handler";
-import { CreateManyAddonsHandler } from "@/modules/addons/application/use-cases/CreateManyAddons/CreateManyAddons.handler";
-import { ArchiveAddonHandler } from "@/modules/addons/application/use-cases/ArchiveAddon/ArchiveAddon.handler";
-import { ListAddonsHandler } from "@/modules/addons/application/use-cases/ListAddons/ListAddons.handler";
-import { GetAddonHandler } from "@/modules/addons/application/use-cases/GetAddon/GetAddon.handler";
+import { CreateAddonHandler } from "@/modules/addons/application/use-cases/CreateAddon";
+import { CreateManyAddonsHandler } from "@/modules/addons/application/use-cases/CreateManyAddons";
+import { ArchiveAddonHandler } from "@/modules/addons/application/use-cases/ArchiveAddon";
+import { ListAddonsHandler } from "@/modules/addons/application/use-cases/ListAddons";
+import { GetAddonHandler } from "@/modules/addons/application/use-cases/GetAddon";
 
-import { CreateCouponHandler } from "@/modules/coupons/application/use-cases/CreateCoupon/CreateCoupon.handler";
-import { UpdateCouponHandler } from "@/modules/coupons/application/use-cases/UpdateCoupon/UpdateCoupon.handler";
-import { ArchiveCouponHandler } from "@/modules/coupons/application/use-cases/ArchiveCoupon/ArchiveCoupon.handler";
-import { DeleteCouponHandler } from "@/modules/coupons/application/use-cases/DeleteCoupon/DeleteCoupon.handler";
-import { ListCouponsHandler } from "@/modules/coupons/application/use-cases/ListCoupons/ListCoupons.handler";
-import { GetCouponHandler } from "@/modules/coupons/application/use-cases/GetCoupon/GetCoupon.handler";
+import { CreateCouponHandler } from "@/modules/coupons/application/use-cases/CreateCoupon";
+import { UpdateCouponHandler } from "@/modules/coupons/application/use-cases/UpdateCoupon";
+import { ArchiveCouponHandler } from "@/modules/coupons/application/use-cases/ArchiveCoupon";
+import { DeleteCouponHandler } from "@/modules/coupons/application/use-cases/DeleteCoupon";
+import { ListCouponsHandler } from "@/modules/coupons/application/use-cases/ListCoupons";
+import { GetCouponHandler } from "@/modules/coupons/application/use-cases/GetCoupon";
 
-import { CreateAddonEntitlementHandler } from "@/modules/addon_entitlements/application/use-cases/CreateAddonEntitlement/CreateAddonEntitlement.handler";
-import { DeleteAddonEntitlementHandler } from "@/modules/addon_entitlements/application/use-cases/DeleteAddonEntitlement/DeleteAddonEntitlement.handler";
-import { ListAddonEntitlementsHandler } from "@/modules/addon_entitlements/application/use-cases/ListAddonEntitlements/ListAddonEntitlements.handler";
-import { GetAddonEntitlementHandler } from "@/modules/addon_entitlements/application/use-cases/GetAddonEntitlement/GetAddonEntitlement.handler";
+import { CreateAddonEntitlementHandler } from "@/modules/addons/application/use-cases/CreateAddonEntitlement";
+import { DeleteAddonEntitlementHandler } from "@/modules/addons/application/use-cases/DeleteAddonEntitlement";
+import { ListAddonEntitlementsHandler } from "@/modules/addons/application/use-cases/ListAddonEntitlements";
+import { GetAddonEntitlementHandler } from "@/modules/addons/application/use-cases/GetAddonEntitlement";
 
 import { PostgresCustomerRepository } from "@/modules/customers/infrastructure/adapters/PostgresCustomerRepository";
-import { CreateCustomerHandler } from "@/modules/customers/application/use-cases/CreateCustomer/CreateCustomer.handler";
-import { ListCustomersHandler } from "@/modules/customers/application/use-cases/ListCustomers/ListCustomers.handler";
-import { CreateManyCustomersHandler } from "@/modules/customers/application/use-cases/CreateManyCustomers/CreateManyCustomers.handler";
-import { DeleteCustomerHandler } from "@/modules/customers/application/use-cases/DeleteCustomer/DeleteCustomer.handler";
+import { CreateCustomerHandler } from "@/modules/customers/application/use-cases/CreateCustomer";
+import { ListCustomersHandler } from "@/modules/customers/application/use-cases/ListCustomers";
+import { CreateManyCustomersHandler } from "@/modules/customers/application/use-cases/CreateManyCustomers";
+import { DeleteCustomerHandler } from "@/modules/customers/application/use-cases/DeleteCustomer";
 
-import { PostgresSubscriptionRepo } from "@/modules/subscriptions/infrastructure/adapters/PostgresSubscriptionRepo";
-import { CreateSubscriptionHandler } from "@/modules/subscriptions/application/use-cases/CreateSubscription/CreateSubscription.handler";
-import { CancelSubscriptionHandler } from "@/modules/subscriptions/application/use-cases/CancelSubscription/CancelSubscription.handler";
-import { UpdateSubscriptionHandler } from "@/modules/subscriptions/application/use-cases/UpdateSubscription/UpdateSubscription.handler";
-import { ListCustomerSubscriptionsHandler } from "@/modules/subscriptions/application/use-cases/ListCustomerSubscriptions/ListCustomerSubscriptions.handler";
-import { ListSubscriptionsHandler } from "@/modules/subscriptions/application/use-cases/ListSubscriptions/ListSubscriptions.handler";
-import { GetSubscriptionHandler } from "@/modules/subscriptions/application/use-cases/GetSubscription/GetSubscription.handler";
+import { PostgresSubscriptionRepository } from "@/modules/subscriptions/infrastructure/adapters/PostgresSubscriptionRepository";
+import { CreateSubscriptionHandler } from "@/modules/subscriptions/application/use-cases/CreateSubscription";
+import { CancelSubscriptionHandler } from "@/modules/subscriptions/application/use-cases/CancelSubscription";
+import { UpdateSubscriptionHandler } from "@/modules/subscriptions/application/use-cases/UpdateSubscription";
+import { ListCustomerSubscriptionsHandler } from "@/modules/subscriptions/application/use-cases/ListCustomerSubscriptions";
+import { ListSubscriptionsHandler } from "@/modules/subscriptions/application/use-cases/ListSubscriptions";
+import { GetSubscriptionHandler } from "@/modules/subscriptions/application/use-cases/GetSubscription";
 
-import { PostgresUsageRepo } from "@/modules/usage/infrastructure/adapters/PostgresUsageRepo";
-import { RecordUsageHandler } from "@/modules/usage/application/use-cases/RecordUsage/RecordUsage.handler";
-import { CreateUsageMeterHandler } from "@/modules/usage/application/use-cases/CreateUsageMeter/CreateUsageMeter.handler";
-import { UpdateUsageMeterHandler } from "@/modules/usage/application/use-cases/UpdateUsageMeter/UpdateUsageMeter.handler";
-import { ListUsagesHandler } from "@/modules/usage/application/use-cases/ListUsages/ListUsages.handler";
-import { GetUsageMeterHandler } from "@/modules/usage/application/use-cases/GetUsageMeter/GetUsageMeter.handler";
+import { PostgresUsageRepository } from "@/modules/usage/infrastructure/adapters/PostgresUsageRepository";
+import { RecordUsageHandler } from "@/modules/usage/application/use-cases/RecordUsage";
+import { CreateUsageMeterHandler } from "@/modules/usage/application/use-cases/CreateUsageMeter";
+import { UpdateUsageMeterHandler } from "@/modules/usage/application/use-cases/UpdateUsageMeter";
+import { ListUsagesHandler } from "@/modules/usage/application/use-cases/ListUsages";
+import { GetUsageMeterHandler } from "@/modules/usage/application/use-cases/GetUsageMeter";
 
-import { PostgresWalletRepo } from "@/modules/wallets/infrastructure/adapters/PostgresWalletRepo";
-import { CreditWalletHandler } from "@/modules/wallets/application/use-cases/CreditWallet/CreditWallet.handler";
-import { DebitWalletHandler } from "@/modules/wallets/application/use-cases/DebitWallet/DebitWallet.handler";
-import { GetWalletBalanceHandler } from "@/modules/wallets/application/use-cases/GetWalletBalance/GetWalletBalance.handler";
-import { ListWalletTransactionsHandler } from "@/modules/wallets/application/use-cases/ListWalletTransactions/ListWalletTransactions.handler";
+import { PostgresWalletRepository } from "@/modules/wallets/infrastructure/adapters/PostgresWalletRepository";
+import { CreditWalletHandler } from "@/modules/wallets/application/use-cases/CreditWallet";
+import { DebitWalletHandler } from "@/modules/wallets/application/use-cases/DebitWallet";
+import { GetWalletBalanceHandler } from "@/modules/wallets/application/use-cases/GetWalletBalance";
+import { ListWalletTransactionsHandler } from "@/modules/wallets/application/use-cases/ListWalletTransactions";
 
-import { PostgresInvoiceRepo } from "@/modules/invoices/infrastructure/adapters/PostgresInvoiceRepo";
-import { CreateDraftInvoiceHandler } from "@/modules/invoices/application/use-cases/CreateDraftInvoice/CreateDraftInvoice.handler";
-import { UpdateInvoiceHandler } from "@/modules/invoices/application/use-cases/UpdateInvoice/UpdateInvoice.handler";
-import { FinalizeInvoiceHandler } from "@/modules/invoices/application/use-cases/FinalizeInvoice/FinalizeInvoice.handler";
-import { VoidInvoiceHandler } from "@/modules/invoices/application/use-cases/VoidInvoice/VoidInvoice.handler";
-import { ListInvoicesHandler } from "@/modules/invoices/application/use-cases/ListInvoices/ListInvoices.handler";
-import { GetInvoiceHandler } from "@/modules/invoices/application/use-cases/GetInvoice/GetInvoice.handler";
-import { ProcessPaymentHandler } from "@/modules/payments/application/use-cases/ProcessPayment/ProcessPayment.handler";
-import { AddInvoiceLineItemHandler } from "@/modules/invoices/application/use-cases/AddInvoiceLineItem/AddInvoiceLineItem.handler";
-import { UpdateInvoiceLineItemHandler } from "@/modules/invoices/application/use-cases/UpdateInvoiceLineItem/UpdateInvoiceLineItem.handler";
-import { DeleteInvoiceLineItemHandler } from "@/modules/invoices/application/use-cases/DeleteInvoiceLineItem/DeleteInvoiceLineItem.handler";
+import { PostgresInvoiceRepository } from "@/modules/invoices/infrastructure/adapters/PostgresInvoiceRepository";
+import { CreateDraftInvoiceHandler } from "@/modules/invoices/application/use-cases/CreateDraftInvoice";
+import { UpdateInvoiceHandler } from "@/modules/invoices/application/use-cases/UpdateInvoice";
+import { FinalizeInvoiceHandler } from "@/modules/invoices/application/use-cases/FinalizeInvoice";
+import { VoidInvoiceHandler } from "@/modules/invoices/application/use-cases/VoidInvoice";
+import { ListInvoicesHandler } from "@/modules/invoices/application/use-cases/ListInvoices";
+import { GetInvoiceHandler } from "@/modules/invoices/application/use-cases/GetInvoice";
+import { ProcessPaymentHandler } from "@/modules/payments/application/use-cases/ProcessPayment";
+import { AddInvoiceLineItemHandler } from "@/modules/invoices/application/use-cases/AddInvoiceLineItem";
+import { UpdateInvoiceLineItemHandler } from "@/modules/invoices/application/use-cases/UpdateInvoiceLineItem";
+import { DeleteInvoiceLineItemHandler } from "@/modules/invoices/application/use-cases/DeleteInvoiceLineItem";
 
-import { PostgresPaymentRepo } from "@/modules/payments/infrastructure/adapters/PostgresPaymentRepo";
-import { GetPaymentHandler } from "@/modules/payments/application/use-cases/GetPayment/GetPayment.handler";
-import { ListPaymentsHandler } from "@/modules/payments/application/use-cases/ListPayments/ListPayments.handler";
+import { PostgresPaymentRepository } from "@/modules/payments/infrastructure/adapters/PostgresPaymentRepository";
+import { GetPaymentHandler } from "@/modules/payments/application/use-cases/GetPayment";
+import { ListPaymentsHandler } from "@/modules/payments/application/use-cases/ListPayments";
 
-import { PostgresRefundRepo } from "@/modules/refunds/infrastructure/adapters/PostgresRefundRepo";
-import { CreateRefundHandler } from "@/modules/refunds/application/use-cases/CreateRefund/CreateRefund.handler";
-import { UpdateRefundHandler } from "@/modules/refunds/application/use-cases/UpdateRefund/UpdateRefund.handler";
-import { ListRefundsHandler } from "@/modules/refunds/application/use-cases/ListRefunds/ListRefunds.handler";
-import { GetRefundHandler } from "@/modules/refunds/application/use-cases/GetRefund/GetRefund.handler";
+import { PostgresRefundRepository } from "@/modules/refunds/infrastructure/adapters/PostgresRefundRepository";
+import { CreateRefundHandler } from "@/modules/refunds/application/use-cases/CreateRefund";
+import { UpdateRefundHandler } from "@/modules/refunds/application/use-cases/UpdateRefund";
+import { ListRefundsHandler } from "@/modules/refunds/application/use-cases/ListRefunds";
+import { GetRefundHandler } from "@/modules/refunds/application/use-cases/GetRefund";
 
-import { PostgresCreditNoteRepo } from "@/modules/credit_notes/infrastructure/adapters/PostgresCreditNoteRepo";
-import { CreateCreditNoteHandler } from "@/modules/credit_notes/application/use-cases/CreateCreditNote/CreateCreditNote.handler";
-import { ListCreditNotesHandler } from "@/modules/credit_notes/application/use-cases/ListCreditNotes/ListCreditNotes.handler";
-import { GetCreditNoteHandler } from "@/modules/credit_notes/application/use-cases/GetCreditNote/GetCreditNote.handler";
+import { PostgresCreditNoteRepository } from "@/modules/invoices/infrastructure/adapters/PostgresCreditNoteRepository";
+import { CreateCreditNoteHandler } from "@/modules/invoices/application/use-cases/CreateCreditNote";
+import { ListCreditNotesHandler } from "@/modules/invoices/application/use-cases/ListCreditNotes";
+import { GetCreditNoteHandler } from "@/modules/invoices/application/use-cases/GetCreditNote";
 
-import { PostgresWebhookEndpointRepo } from "@/modules/webhooks/infrastructure/adapters/PostgresWebhookEndpointRepo";
-import { CreateWebhookEndpointHandler } from "@/modules/webhooks/application/use-cases/CreateWebhookEndpoint/CreateWebhookEndpoint.handler";
-import { ListWebhookEndpointsHandler } from "@/modules/webhooks/application/use-cases/ListWebhookEndpoints/ListWebhookEndpoints.handler";
-import { DeactivateWebhookEndpointHandler } from "@/modules/webhooks/application/use-cases/DeactivateWebhookEndpoint/DeactivateWebhookEndpoint.handler";
-import { RotateWebhookSecretHandler } from "@/modules/webhooks/application/use-cases/RotateWebhookSecret/RotateWebhookSecret.handler";
-import { ListWebhookDeliveriesHandler } from "@/modules/webhooks/application/use-cases/ListWebhookDeliveries/ListWebhookDeliveries.handler";
+import { PostgresWebhookEndpointRepository } from "@/modules/webhooks/infrastructure/adapters/PostgresWebhookEndpointRepository";
+import { CreateWebhookEndpointHandler } from "@/modules/webhooks/application/use-cases/CreateWebhookEndpoint";
+import { ListWebhookEndpointsHandler } from "@/modules/webhooks/application/use-cases/ListWebhookEndpoints";
+import { DeactivateWebhookEndpointHandler } from "@/modules/webhooks/application/use-cases/DeactivateWebhookEndpoint";
+import { RotateWebhookSecretHandler } from "@/modules/webhooks/application/use-cases/RotateWebhookSecret";
+import { ListWebhookDeliveriesHandler } from "@/modules/webhooks/application/use-cases/ListWebhookDeliveries";
 
-import { CreateApiKeyHandler } from "@/modules/system/application/use-cases/CreateApiKey/CreateApiKey.handler";
-import { VerifyApiKeyHandler } from "@/modules/system/application/use-cases/VerifyApiKey/VerifyApiKey.handler";
-import { ListApiKeysHandler } from "@/modules/system/application/use-cases/ListApiKeys/ListApiKeys.handler";
-import { GetApiKeyHandler } from "@/modules/system/application/use-cases/GetApiKey/GetApiKey.handler";
-import { UpdateApiKeyHandler } from "@/modules/system/application/use-cases/UpdateApiKey/UpdateApiKey.handler";
-import { RotateApiKeyHandler } from "@/modules/system/application/use-cases/RotateApiKey/RotateApiKey.handler";
-import { DeleteApiKeyHandler } from "@/modules/system/application/use-cases/DeleteApiKey/DeleteApiKey.handler";
+import { CreateApiKeyHandler } from "@/modules/api_keys/application/use-cases/CreateApiKey";
+import { VerifyApiKeyHandler } from "@/modules/api_keys/application/use-cases/VerifyApiKey";
+import { ListApiKeysHandler } from "@/modules/api_keys/application/use-cases/ListApiKeys";
+import { GetApiKeyHandler } from "@/modules/api_keys/application/use-cases/GetApiKey";
+import { UpdateApiKeyHandler } from "@/modules/api_keys/application/use-cases/UpdateApiKey";
+import { RotateApiKeyHandler } from "@/modules/api_keys/application/use-cases/RotateApiKey";
+import { DeleteApiKeyHandler } from "@/modules/api_keys/application/use-cases/DeleteApiKey";
 
-import { CreateEnvironmentHandler } from "@/modules/environments/application/use-cases/CreateEnvironment/CreateEnvironment.handler";
-import { UpdateEnvironmentHandler } from "@/modules/environments/application/use-cases/UpdateEnvironment/UpdateEnvironment.handler";
-import { GetEnvironmentHandler } from "@/modules/environments/application/use-cases/GetEnvironment/GetEnvironment.handler";
-import { ListEnvironmentsHandler } from "@/modules/environments/application/use-cases/ListEnvironments/ListEnvironments.handler";
+import { CreateEnvironmentHandler } from "@/modules/environments/application/use-cases/CreateEnvironment";
+import { UpdateEnvironmentHandler } from "@/modules/environments/application/use-cases/UpdateEnvironment";
+import { GetEnvironmentHandler } from "@/modules/environments/application/use-cases/GetEnvironment";
+import { ListEnvironmentsHandler } from "@/modules/environments/application/use-cases/ListEnvironments";
 
-import { PutAuthConfigHandler } from "@/modules/auth/application/use-cases/PutAuthConfig/PutAuthConfig.handler";
-import { ListAuthConfigsHandler } from "@/modules/auth/application/use-cases/ListAuthConfigs/ListAuthConfigs.handler";
-import { GetAuthConfigHandler } from "@/modules/auth/application/use-cases/GetAuthConfig/GetAuthConfig.handler";
+import { PutAuthConfigHandler } from "@/modules/identity_providers/application/use-cases/PutAuthConfig";
+import { ListAuthConfigsHandler } from "@/modules/identity_providers/application/use-cases/ListAuthConfigs";
+import { GetAuthConfigHandler } from "@/modules/identity_providers/application/use-cases/GetAuthConfig";
 
-import { CreateStudioAdminHandler } from "@/modules/studio/application/use-cases/CreateStudioAdmin/CreateStudioAdmin.handler";
-import { UpdateStudioAdminHandler } from "@/modules/studio/application/use-cases/UpdateStudioAdmin/UpdateStudioAdmin.handler";
-import { ListStudioAdminsHandler } from "@/modules/studio/application/use-cases/ListStudioAdmins/ListStudioAdmins.handler";
-import { GetStudioAdminHandler } from "@/modules/studio/application/use-cases/GetStudioAdmin/GetStudioAdmin.handler";
+import { CreateWorkspaceMemberHandler } from "@/modules/workspaces/application/use-cases/CreateWorkspaceMember";
+import { UpdateWorkspaceMemberHandler } from "@/modules/workspaces/application/use-cases/UpdateWorkspaceMember";
+import { ListWorkspaceMembersHandler } from "@/modules/workspaces/application/use-cases/ListWorkspaceMembers";
+import { GetWorkspaceMemberHandler } from "@/modules/workspaces/application/use-cases/GetWorkspaceMember";
 
-import { ListAuditLogsHandler } from "@/modules/audit/application/use-cases/ListAuditLogs/ListAuditLogs.handler";
-import { GetAuditLogHandler } from "@/modules/audit/application/use-cases/GetAuditLog/GetAuditLog.handler";
+import { ListAuditLogsHandler } from "@/modules/audit/application/use-cases/ListAuditLogs";
+import { GetAuditLogHandler } from "@/modules/audit/application/use-cases/GetAuditLog";
 
-import { CreateUserHandler } from "@/modules/users/application/use-cases/CreateUser/CreateUser.handler";
-import { UpdateUserHandler } from "@/modules/users/application/use-cases/UpdateUser/UpdateUser.handler";
-import { ListUsersHandler } from "@/modules/users/application/use-cases/ListUsers/ListUsers.handler";
-import { GetUserHandler } from "@/modules/users/application/use-cases/GetUser/GetUser.handler";
+import { CreateUserHandler } from "@/modules/users/application/use-cases/CreateUser";
+import { UpdateUserHandler } from "@/modules/users/application/use-cases/UpdateUser";
+import { ListUsersHandler } from "@/modules/users/application/use-cases/ListUsers";
+import { GetUserHandler } from "@/modules/users/application/use-cases/GetUser";
 
-import { PostgresIntegrationRepo } from "@/modules/integrations/infrastructure/adapters/PostgresIntegrationRepo";
+import { PostgresIntegrationRepository } from "@/modules/integrations/infrastructure/adapters/PostgresIntegrationRepository";
 import { DummyProviderAdapter } from "@/modules/integrations/infrastructure/adapters/DummyProviderAdapter";
-import { InstallIntegrationHandler } from "@/modules/integrations/application/use-cases/InstallIntegration/InstallIntegration.handler";
-import { UpdateIntegrationConfigHandler } from "@/modules/integrations/application/use-cases/UpdateIntegrationConfig/UpdateIntegrationConfig.handler";
-import { ListIntegrationsHandler } from "@/modules/integrations/application/use-cases/ListIntegrations/ListIntegrations.handler";
-import { GetIntegrationHandler } from "@/modules/integrations/application/use-cases/GetIntegration/GetIntegration.handler";
+import { InstallIntegrationHandler } from "@/modules/integrations/application/use-cases/InstallIntegration";
+import { UpdateIntegrationConfigHandler } from "@/modules/integrations/application/use-cases/UpdateIntegrationConfig";
+import { ListIntegrationsHandler } from "@/modules/integrations/application/use-cases/ListIntegrations";
+import { GetIntegrationHandler } from "@/modules/integrations/application/use-cases/GetIntegration";
 
-import { PostgresProviderEventRepo } from "@/modules/provider_events/infrastructure/adapters/PostgresProviderEventRepo";
-import { CreateProviderEventHandler } from "@/modules/provider_events/application/use-cases/CreateProviderEvent/CreateProviderEvent.handler";
-import { ListProviderEventsHandler } from "@/modules/provider_events/application/use-cases/ListProviderEvents/ListProviderEvents.handler";
-import { GetProviderEventHandler } from "@/modules/provider_events/application/use-cases/GetProviderEvent/GetProviderEvent.handler";
+import { PostgresProviderEventRepository } from "@/modules/provider_events/infrastructure/adapters/PostgresProviderEventRepository";
+import { CreateProviderEventHandler } from "@/modules/provider_events/application/use-cases/CreateProviderEvent";
+import { ListProviderEventsHandler } from "@/modules/provider_events/application/use-cases/ListProviderEvents";
+import { GetProviderEventHandler } from "@/modules/provider_events/application/use-cases/GetProviderEvent";
 
 import { db as PgDatabase } from "@revstackhq/db";
-import { PostgresApiKeyRepository } from "@/modules/system/infrastructure/adapters/PostgresApiKeyRepository";
-import { AccessService } from "@/modules/access/application/AccessService";
-import { DeleteEnvironmentHandler } from "@/modules/environments/application/use-cases/DeleteEnvironment/DeleteEnvironment.handler";
+import { PostgresApiKeyRepository } from "@/modules/api_keys/infrastructure/adapters/PostgresApiKeyRepository";
+import { AccessService } from "@/common/infrastructure/security/application/AccessService";
+import { JwtService } from "@/common/infrastructure/security/JwtService";
+import { DeleteEnvironmentHandler } from "@/modules/environments/application/use-cases/DeleteEnvironment";
 
 export type AppEnv = {
   Variables: ReturnType<typeof buildContainer> & {
     environmentId: string;
-    actorId?: string;
+    userId?: string;
     scopes: string[];
+    authType: "api_key" | "jwt";
   };
 };
 
@@ -192,34 +194,37 @@ export function buildContainer() {
     : { publish: async (e: any) => console.log("[Native] Published", e) };
 
   const repos = {
-    entitlements: new PostgresEntitlementRepo(db),
-    planEntitlements: new PostgresPlanEntitlementRepo(db),
-    addonEntitlements: new PostgresAddonEntitlementRepo(db),
-    plans: new PostgresPlanRepo(db),
-    prices: new PostgresPriceRepo(db),
-    addons: new PostgresAddonRepo(db),
-    coupons: new PostgresCouponRepo(db),
+    entitlements: new PostgresEntitlementRepository(db),
+    planEntitlements: new PostgresPlanEntitlementRepository(db),
+    addonEntitlements: new PostgresAddonEntitlementRepository(db),
+    plans: new PostgresPlanRepository(db),
+    prices: new PostgresPriceRepository(db),
+    addons: new PostgresAddonRepository(db),
+    coupons: new PostgresCouponRepository(db),
     customers: new PostgresCustomerRepository(db),
-    subscriptions: new PostgresSubscriptionRepo(db),
-    usage: new PostgresUsageRepo(db),
-    wallets: new PostgresWalletRepo(db),
-    invoices: new PostgresInvoiceRepo(db),
-    payments: new PostgresPaymentRepo(db),
-    refunds: new PostgresRefundRepo(db),
-    creditNotes: new PostgresCreditNoteRepo(db),
-    webhooks: new PostgresWebhookEndpointRepo(db),
+    subscriptions: new PostgresSubscriptionRepository(db),
+    usage: new PostgresUsageRepository(db),
+    wallets: new PostgresWalletRepository(db),
+    invoices: new PostgresInvoiceRepository(db),
+    payments: new PostgresPaymentRepository(db),
+    refunds: new PostgresRefundRepository(db),
+    creditNotes: new PostgresCreditNoteRepository(db),
+    webhooks: new PostgresWebhookEndpointRepository(db),
     apiKeys: new PostgresApiKeyRepository(db),
     environments: new PostgresEnvironmentRepository(db),
-    authConfigs: new PostgresAuthConfigRepo(db),
-    studioAdmins: new PostgresStudioAdminRepo(db),
-    auditLogs: new PostgresAuditLogRepo(db),
-    users: new PostgresUserRepo(db),
-    integrations: new PostgresIntegrationRepo(db),
-    providerEvents: new PostgresProviderEventRepo(db),
+    authConfigs: new PostgresAuthConfigRepository(db),
+    workspaceMembers: new PostgresWorkspaceMemberRepository(db),
+    auditLogs: new PostgresAuditLogRepository(db),
+    users: new PostgresUserRepository(db),
+    integrations: new PostgresIntegrationRepository(db),
+    providerEvents: new PostgresProviderEventRepository(db),
   };
+
+  const jwtSecret = process.env.JWT_SECRET || "revstack-dev-secret";
 
   return {
     accessService: new AccessService(repos.apiKeys),
+    jwtService: new JwtService(jwtSecret),
     entitlements: {
       get create() {
         return new CreateEntitlementHandler(
@@ -555,18 +560,18 @@ export function buildContainer() {
         return new GetAuthConfigHandler(repos.authConfigs);
       },
     },
-    studio: {
-      get createAdmin() {
-        return new CreateStudioAdminHandler(repos.studioAdmins, eventBus);
+    workspaces: {
+      get create() {
+        return new CreateWorkspaceMemberHandler(repos.workspaceMembers, eventBus);
       },
-      get updateAdmin() {
-        return new UpdateStudioAdminHandler(repos.studioAdmins);
+      get update() {
+        return new UpdateWorkspaceMemberHandler(repos.workspaceMembers);
       },
-      get listAdmins() {
-        return new ListStudioAdminsHandler(repos.studioAdmins);
+      get list() {
+        return new ListWorkspaceMembersHandler(repos.workspaceMembers);
       },
-      get getAdmin() {
-        return new GetStudioAdminHandler(repos.studioAdmins);
+      get get() {
+        return new GetWorkspaceMemberHandler(repos.workspaceMembers);
       },
     },
     audit: {

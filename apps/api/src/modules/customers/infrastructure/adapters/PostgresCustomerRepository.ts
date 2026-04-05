@@ -1,8 +1,8 @@
 import { eq } from "drizzle-orm";
 import { PgDatabase } from "drizzle-orm/pg-core";
 import { BasePostgresRepository } from "@/common/infrastructure/adapters/BasePostgresRepository";
-import type { CustomerRepository } from "@/modules/customers/application/ports/CustomerRepository";
-import { CustomerEntity } from "@/modules/customers/domain/CustomerEntity";
+import type { CustomerRepository } from "@revstackhq/core";
+import { CustomerEntity } from "@revstackhq/core";
 import { customers } from "@revstackhq/db";
 
 export class PostgresCustomerRepository

@@ -21,6 +21,7 @@
   },
   "dependencies": {
     "@neondatabase/serverless": "^0.10.4",
+    "@revstackhq/core": "workspace:^",
     "drizzle-orm": "^0.45.1",
     "nanoid": "^5.1.7"
   },

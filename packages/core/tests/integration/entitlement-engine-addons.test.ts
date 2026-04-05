@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { EntitlementEngine } from "../../src/engine";
-import type { AddonDef, PlanDef } from "../../src/types";
+import { EntitlementEngine } from "@/domain/engines/EntitlementEngine";
+import type { AddonDef, PlanDef } from "@/types";
 
 describe("EntitlementEngine — Add-ons", () => {
   const basePlan: PlanDef = {
@@ -10,7 +10,7 @@ describe("EntitlementEngine — Add-ons", () => {
     is_public: true,
     type: "paid",
     status: "active",
-    prices: [{ amount: 2900, currency: "USD", billing_interval: "monthly" }],
+    prices: [{ amount: 2900, currency: "USD", billing_interval: "month" }],
     features: { seats: { value_limit: 5, is_hard_limit: true } },
   };
 
@@ -21,7 +21,7 @@ describe("EntitlementEngine — Add-ons", () => {
       type: "recurring",
       amount: 500,
       currency: "USD",
-      billing_interval: "monthly",
+      billing_interval: "month",
       features: { seats: { value_limit: 3, type: "increment" } },
     };
 
@@ -41,7 +41,7 @@ describe("EntitlementEngine — Add-ons", () => {
       type: "recurring",
       amount: 50000,
       currency: "USD",
-      billing_interval: "monthly",
+      billing_interval: "month",
       features: { seats: { value_limit: 100, type: "set" } },
     };
 
@@ -61,7 +61,7 @@ describe("EntitlementEngine — Add-ons", () => {
       type: "recurring",
       amount: 1000,
       currency: "USD",
-      billing_interval: "monthly",
+      billing_interval: "month",
       features: { sso: { has_access: true } },
     };
 
@@ -80,7 +80,7 @@ describe("EntitlementEngine — Add-ons", () => {
       type: "recurring",
       amount: 0,
       currency: "USD",
-      billing_interval: "monthly",
+      billing_interval: "month",
       features: { seats: { value_limit: 2, type: "increment" } },
     };
     const addonSet: AddonDef = {
@@ -89,7 +89,7 @@ describe("EntitlementEngine — Add-ons", () => {
       type: "recurring",
       amount: 0,
       currency: "USD",
-      billing_interval: "monthly",
+      billing_interval: "month",
       features: { seats: { value_limit: 20, type: "set" } },
     };
 
@@ -110,7 +110,7 @@ describe("EntitlementEngine — Add-ons", () => {
       type: "recurring",
       amount: 0,
       currency: "USD",
-      billing_interval: "monthly",
+      billing_interval: "month",
       features: {
         seats: { value_limit: 0, type: "increment", is_hard_limit: false },
       },
@@ -132,7 +132,7 @@ describe("EntitlementEngine — Add-ons", () => {
       type: "recurring",
       amount: 0,
       currency: "USD",
-      billing_interval: "monthly",
+      billing_interval: "month",
       features: { seats: { value_limit: 100, type: "increment" } },
     };
 
