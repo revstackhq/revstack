@@ -32,10 +32,10 @@ const app = new OpenAPIHono<AppEnv>();
 // Global Error Handler
 app.onError(globalErrorHandler);
 
-// 1. Build Dependency Injection Container
+// Build Dependency Injection Container
 const container = buildContainer();
 
-// 2. Middleware to inject services into Request Context
+// Middleware to inject services into Request Context
 app.use("*", async (c, next) => {
   for (const [key, value] of Object.entries(container)) {
     c.set(key as keyof typeof container, value);
@@ -43,10 +43,10 @@ app.use("*", async (c, next) => {
   await next();
 });
 
-// 2.5 Auth Middleware
+// Auth Middleware
 app.use("/v1/*", requireAuth);
 
-// 3. Mount Routes (RESTful)
+// Mount Routes (RESTful)
 const routes = app
   .route("/v1/addons", addonsRoutes)
   .route("/v1/api-keys", apiKeysRoutes)
@@ -101,8 +101,8 @@ app.doc("/openapi.json", {
   ],
 });
 
-console.log(`🚀 Revstack API running on ${appUrl}`);
-console.log(`🌍 Environment: ${environment} (${hostingEnvironment})`);
+console.log(`Revstack API running on ${appUrl}`);
+console.log(`Environment: ${environment} (${hostingEnvironment})`);
 
 serve({
   fetch: app.fetch,

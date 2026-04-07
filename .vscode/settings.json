@@ -4,5 +4,10 @@
       "mode": "auto"
     }
   ],
-  "cSpell.words": ["Revstack"]
+  "cSpell.words": ["Revstack"],
+  "typescript.preferences.importModuleSpecifier": "shortest",
+  "typescript.preferences.importModuleSpecifierEnding": "minimal",
+  "typescript.preferences.autoImportFileExcludePatterns": [
+    "**/packages/db/src/schema/index.ts"
+  ]
 }

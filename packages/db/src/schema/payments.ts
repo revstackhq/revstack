@@ -6,6 +6,8 @@ import { environments } from "@/schema/core";
 import { customers } from "@/schema/customers";
 import { invoices } from "@/schema/invoices";
 import { paymentStatusEnum } from "@/schema/enums";
+import { refunds } from "@/schema";
+import { disputes } from "@/schema/disputes";
 
 export const payments = revstack.table("payments", {
   id: text("id")
@@ -16,7 +18,6 @@ export const payments = revstack.table("payments", {
     .notNull(),
   invoiceId: text("invoice_id").references(() => invoices.id),
   customerId: text("customer_id").references(() => customers.id),
-
   amount: integer("amount").notNull(),
   currency: text("currency").notNull().default("USD"),
   status: paymentStatusEnum("status").notNull(),
@@ -24,13 +25,12 @@ export const payments = revstack.table("payments", {
   externalId: text("external_id"),
   idempotencyKey: text("idempotency_key").unique(),
   errorMessage: text("error_message"),
-
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
     .notNull(),
 });
 
-export const paymentsRelations = relations(payments, ({ one }) => ({
+export const paymentsRelations = relations(payments, ({ one, many }) => ({
   environment: one(environments, {
     fields: [payments.environmentId],
     references: [environments.id],
@@ -43,4 +43,6 @@ export const paymentsRelations = relations(payments, ({ one }) => ({
     fields: [payments.customerId],
     references: [customers.id],
   }),
+  refunds: many(refunds),
+  disputes: many(disputes),
 }));

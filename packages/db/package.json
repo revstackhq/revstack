@@ -14,8 +14,9 @@
     }
   },
   "scripts": {
-    "generate": "drizzle-kit generate",
-    "push": "drizzle-kit push",
+    "build:core": "pnpm --filter @revstackhq/core build",
+    "generate": "pnpm build:core && drizzle-kit generate",
+    "push": "pnpm build:core && drizzle-kit push",
     "studio": "drizzle-kit studio",
     "build": "tsup"
   },

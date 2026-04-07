@@ -77,9 +77,13 @@ export const DOMAIN_EVENTS = {
   // --- Customers ---
   CUSTOMER_CREATED: "customer.created",
   CUSTOMER_DELETED: "customer.deleted",
+  CUSTOMER_UPDATED: "customer.updated",
+  CUSTOMER_ARCHIVED: "customer.archived",
 
   // --- Entitlements ---
   ENTITLEMENT_CREATED: "entitlement.created",
+  ENTITLEMENT_UPDATED: "entitlement.updated",
+  ENTITLEMENT_ARCHIVED: "entitlement.archived",
   ENTITLEMENT_DELETED: "entitlement.deleted",
 
   // --- Environments ---

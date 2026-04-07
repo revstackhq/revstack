@@ -1,16 +1,28 @@
-import type { CustomerEntity } from "@/domain/aggregates/customers/CustomerEntity";
+import type {
+  CustomerEntity,
+  CustomerStatus,
+} from "@/domain/aggregates/customers/CustomerEntity";
+import type { PaginatedCursorResult } from "@/types/pagination";
 
 export interface CustomerRepository {
-  save(customer: CustomerEntity): Promise<string>;
-  findById(id: string): Promise<CustomerEntity | null>;
-  findByEmail(
-    email: string,
-    environmentId: string,
-  ): Promise<CustomerEntity | null>;
-  findByEnvironment(
-    environmentId: string,
-    pagination?: { limit?: number; offset?: number },
-  ): Promise<CustomerEntity[]>;
-  saveMany(customers: CustomerEntity[]): Promise<void>;
-  delete(id: string, environmentId: string): Promise<boolean>;
+  save(customer: CustomerEntity): Promise<void>;
+
+  findById(params: {
+    id: string;
+    environmentId: string;
+  }): Promise<CustomerEntity | null>;
+
+  findByExternalId(params: {
+    externalId: string;
+    environmentId: string;
+  }): Promise<CustomerEntity | null>;
+
+  list(params: {
+    environmentId: string;
+    limit?: number;
+    cursor?: string;
+    status?: CustomerStatus;
+  }): Promise<PaginatedCursorResult<CustomerEntity>>;
+
+  saveMany(entities: CustomerEntity[]): Promise<void>;
 }

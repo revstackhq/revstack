@@ -6,7 +6,7 @@ import { DOMAIN_EVENTS } from "@/constants/index";
 export interface AddonCreatedPayload {
   id: string;
   slug: string;
-  environment_id: string;
+  environmentId: string;
 }
 
 export class AddonCreatedEvent extends DomainEvent<AddonCreatedPayload> {
@@ -18,7 +18,7 @@ export class AddonCreatedEvent extends DomainEvent<AddonCreatedPayload> {
 
 export interface AddonArchivedPayload {
   id: string;
-  environment_id: string;
+  environmentId: string;
 }
 
 export class AddonArchivedEvent extends DomainEvent<AddonArchivedPayload> {
@@ -31,8 +31,8 @@ export class AddonArchivedEvent extends DomainEvent<AddonArchivedPayload> {
 // --- Addon Entitlement Events ---
 
 export interface AddonEntitlementCreatedPayload {
-  addon_id: string;
-  entitlement_id: string;
+  addonId: string;
+  entitlementId: string;
 }
 
 export class AddonEntitlementCreatedEvent extends DomainEvent<AddonEntitlementCreatedPayload> {
@@ -43,8 +43,8 @@ export class AddonEntitlementCreatedEvent extends DomainEvent<AddonEntitlementCr
 }
 
 export interface AddonEntitlementDeletedPayload {
-  id: string;
-  addon_id: string;
+  addonId: string;
+  entitlementId: string;
 }
 
 export class AddonEntitlementDeletedEvent extends DomainEvent<AddonEntitlementDeletedPayload> {

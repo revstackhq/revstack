@@ -5,7 +5,7 @@ import { generateId } from "@revstackhq/core";
 import { environments } from "@/schema/core";
 import { invoices } from "@/schema/invoices";
 import { refunds } from "@/schema/refunds";
-import { creditNoteStatusEnum } from "@/schema/enums";
+import { creditNoteReasonEnum, creditNoteStatusEnum } from "@/schema/enums";
 
 export const creditNotes = revstack.table("credit_notes", {
   id: text("id")
@@ -18,12 +18,11 @@ export const creditNotes = revstack.table("credit_notes", {
     .references(() => invoices.id, { onDelete: "cascade" })
     .notNull(),
   refundId: text("refund_id").references(() => refunds.id),
-
+  reasonCode: creditNoteReasonEnum("reason_code").default("other"),
   amount: integer("amount").notNull(),
   currency: text("currency").notNull().default("USD"),
   status: creditNoteStatusEnum("status").notNull().default("issued"),
   reason: text("reason"),
-
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
     .notNull(),

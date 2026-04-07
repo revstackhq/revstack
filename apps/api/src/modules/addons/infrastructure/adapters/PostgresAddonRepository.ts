@@ -1,36 +1,46 @@
 import { eq, and, gt } from "drizzle-orm";
-import { addons, DrizzleDB } from "@revstackhq/db";
+import { addons, addonEntitlements, DrizzleDB } from "@revstackhq/db";
 import {
+  AddonBillingInterval,
+  AddonEntitlementType,
   AddonEntity,
   AddonRepository,
+  AddonStatus,
+  AddonType,
   PaginatedCursorResult,
-  PlanStatus,
-  PricingType,
 } from "@revstackhq/core";
 
 type AddonInsert = typeof addons.$inferInsert;
 type AddonSelect = typeof addons.$inferSelect;
+type AddonWithEntitlements = AddonSelect & {
+  entitlements?: (typeof addonEntitlements.$inferSelect)[];
+};
 
 export class PostgresAddonRepository implements AddonRepository {
-  constructor(
-    private readonly db: DrizzleDB,
-    private readonly environmentId?: string,
-  ) {}
+  constructor(private readonly db: DrizzleDB) {}
 
-  private toDomain(row: AddonSelect): AddonEntity {
+  private toDomain(row: AddonWithEntitlements): AddonEntity {
     return AddonEntity.restore({
       id: row.id,
       environmentId: row.environmentId,
       slug: row.slug,
       name: row.name,
       description: row.description ?? undefined,
-      type: row.type,
-      billingInterval: row.billingInterval ?? undefined,
+      type: row.type as AddonType,
+      billingInterval:
+        (row.billingInterval as AddonBillingInterval) ?? undefined,
+      status: row.status as AddonStatus,
       billingIntervalCount: row.billingIntervalCount ?? undefined,
       amount: row.amount,
       currency: row.currency,
-      status: row.status,
-      metadata: row.metadata ?? {},
+      metadata: (row.metadata ?? {}) as Record<string, unknown>,
+      entitlements:
+        row.entitlements?.map((e) => ({
+          id: e.id,
+          entitlementId: e.entitlementId,
+          valueLimit: e.valueLimit ?? undefined,
+          type: e.type as AddonEntitlementType,
+        })) ?? [],
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,
     });
@@ -40,7 +50,7 @@ export class PostgresAddonRepository implements AddonRepository {
     const val = entity.val;
     return {
       id: val.id,
-      environmentId: this.environmentId!,
+      environmentId: val.environmentId,
       slug: val.slug,
       name: val.name,
       description: val.description,
@@ -57,64 +67,84 @@ export class PostgresAddonRepository implements AddonRepository {
   }
 
   async save(addon: AddonEntity): Promise<void> {
-    const data = this.toPersistence(addon);
+    const val = addon.val;
+    const addonData = this.toPersistence(addon);
 
-    await this.db
-      .insert(addons)
-      .values(data)
-      .onConflictDoUpdate({
-        target: addons.id,
-        set: {
-          name: data.name,
-          description: data.description,
-          status: data.status,
-          metadata: data.metadata,
-          updatedAt: new Date(),
-        },
-      });
+    await this.db.transaction(async (tx) => {
+      await tx
+        .insert(addons)
+        .values(addonData)
+        .onConflictDoUpdate({
+          target: addons.id,
+          set: {
+            name: addonData.name,
+            description: addonData.description,
+            status: addonData.status,
+            metadata: addonData.metadata,
+            updatedAt: new Date(),
+          },
+        });
+
+      await tx
+        .delete(addonEntitlements)
+        .where(eq(addonEntitlements.addonId, val.id));
+
+      if (val.entitlements.length > 0) {
+        const entitlementsData = val.entitlements.map((e) => ({
+          addonId: val.id,
+          entitlementId: e.entitlementId,
+          valueLimit: e.valueLimit,
+          type: e.type,
+        }));
+
+        await tx.insert(addonEntitlements).values(entitlementsData);
+      }
+    });
   }
 
-  async saveMany(entities: AddonEntity[]): Promise<void> {
-    if (entities.length === 0) return;
-    for (const entity of entities) {
-      await this.save(entity);
-    }
-  }
-
-  async findById(id: string): Promise<AddonEntity | null> {
+  async findById(params: {
+    id: string;
+    environmentId: string;
+  }): Promise<AddonEntity | null> {
     const row = await this.db.query.addons.findFirst({
       where: and(
-        eq(addons.id, id),
-        eq(addons.environmentId, this.environmentId),
+        eq(addons.id, params.id),
+        eq(addons.environmentId, params.environmentId),
       ),
+      with: {
+        entitlements: true,
+      },
     });
     return row ? this.toDomain(row) : null;
   }
 
-  async findBySlug(slug: string): Promise<AddonEntity | null> {
+  async findBySlug(params: {
+    slug: string;
+    environmentId: string;
+  }): Promise<AddonEntity | null> {
     const row = await this.db.query.addons.findFirst({
       where: and(
-        eq(addons.slug, slug),
-        eq(addons.environmentId, this.environmentId),
+        eq(addons.slug, params.slug),
+        eq(addons.environmentId, params.environmentId),
       ),
+      with: {
+        entitlements: true,
+      },
     });
     return row ? this.toDomain(row) : null;
   }
 
-  async findMany(params: {
-    status?: PlanStatus;
-    type?: PricingType;
-    limit: number;
+  async list(params: {
+    environmentId: string;
     cursor?: string;
+    limit?: number;
+    status?: AddonStatus;
   }): Promise<PaginatedCursorResult<AddonEntity>> {
-    const conditions = [eq(addons.environmentId, this.environmentId)];
+    const take = params.limit ?? 50;
+    const conditions = [eq(addons.environmentId, params.environmentId)];
 
-    if (params.status !== undefined) {
+    if (params.status) {
       conditions.push(eq(addons.status, params.status));
-    }
-
-    if (params.type) {
-      conditions.push(eq(addons.type, params.type));
     }
 
     if (params.cursor) {
@@ -124,17 +154,22 @@ export class PostgresAddonRepository implements AddonRepository {
     const rows = await this.db.query.addons.findMany({
       where: and(...conditions),
       orderBy: (addons, { asc }) => [asc(addons.id)],
-      limit: params.limit + 1,
+      limit: take + 1,
+      with: {
+        entitlements: true,
+      },
     });
 
-    const hasMore = rows.length > params.limit;
+    const hasMore = rows.length > take;
     const items = hasMore ? rows.slice(0, -1) : rows;
     const nextCursor = hasMore ? (items.at(-1)?.id ?? null) : null;
 
     return {
-      items: items.map((row) => this.toDomain(row)),
-      nextCursor,
-      hasMore,
+      data: items.map((row) => this.toDomain(row)),
+      pagination: {
+        nextCursor,
+        hasMore,
+      },
     };
   }
 }

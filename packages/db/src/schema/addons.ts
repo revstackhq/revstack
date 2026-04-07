@@ -27,19 +27,15 @@ export const addons = revstack.table(
     slug: text("slug").notNull(),
     name: text("name").notNull(),
     description: text("description"),
-
     type: addonTypeEnum("type").notNull(),
     billingInterval: billingIntervalEnum("billing_interval"),
-
     billingIntervalCount: integer("billing_interval_count"),
-
     amount: integer("amount").notNull(),
     currency: text("currency").notNull().default("USD"),
-
-    metadata: jsonb("metadata").default({}),
-
+    metadata: jsonb("metadata")
+      .$type<Record<string, unknown>>()
+      .$defaultFn(() => ({})),
     status: statusEnum("status").notNull().default("active"),
-
     createdAt: timestamp("created_at", { withTimezone: true })
       .defaultNow()
       .notNull(),

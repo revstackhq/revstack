@@ -10,6 +10,7 @@ import {
   ADDON_ENTITLEMENT_TYPES,
   CHECK_RESULT_REASONS,
 } from "@/constants";
+import { AddonEntitlementType } from "@/domain/aggregates";
 
 // ==========================================
 // 1. Enums & Primitives
@@ -23,7 +24,6 @@ export type PlanType = (typeof PLAN_TYPES)[number];
 export type PlanStatus = (typeof STATUSES)[number];
 export type SubscriptionStatus = (typeof SUBSCRIPTION_STATUSES)[number];
 export type PricingType = (typeof PRICING_TYPES)[number];
-export type AddonEntitlementType = (typeof ADDON_ENTITLEMENT_TYPES)[number];
 export type CheckResultReason = (typeof CHECK_RESULT_REASONS)[number];
 
 // ==========================================

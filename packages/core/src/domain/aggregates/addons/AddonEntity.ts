@@ -1,42 +1,57 @@
 import { Entity } from "@/domain/base/Entity";
-import { BadRequestError } from "@/domain/base/DomainError";
 import { generateId } from "@/utils/id";
+import type { EntitlementEntity } from "@/domain/aggregates/entitlements/EntitlementEntity";
 import {
   AddonCreatedEvent,
   AddonArchivedEvent,
+  AddonEntitlementCreatedEvent,
+  AddonEntitlementDeletedEvent,
 } from "@/domain/aggregates/addons/AddonEvents";
+import {
+  AddonAlreadyArchivedError,
+  InvalidEntitlementTypeError,
+  EntitlementNotFoundError,
+} from "@/domain/aggregates/addons/AddonErrors";
+import { BadRequestError } from "@/domain/base";
 
-import type { PricingType, PlanStatus, BillingInterval } from "@/types/index";
+export type AddonType = "recurring" | "one_time";
+export type AddonBillingInterval = "day" | "week" | "month" | "year";
+export type AddonStatus = "active" | "inactive" | "archived" | "draft";
+export type AddonEntitlementType = "increment" | "set";
+
+export interface AddonEntitlementProps {
+  id: string;
+  entitlementId: string;
+  valueLimit?: number;
+  type: AddonEntitlementType;
+}
 
 export interface AddonProps {
   id: string;
   environmentId: string;
-  slug: string;
   name: string;
+  slug: string;
+  type: AddonType;
   description?: string;
-  type: PricingType;
-  billingInterval?: BillingInterval;
+  billingInterval?: AddonBillingInterval;
   billingIntervalCount?: number;
   amount: number;
   currency: string;
-  status: PlanStatus;
-  metadata?: Record<string, any>;
+  status: AddonStatus;
+  metadata: Record<string, unknown>;
+  entitlements: AddonEntitlementProps[];
   createdAt: Date;
   updatedAt: Date;
 }
 
-export interface CreateAddonProps {
-  environmentId: string;
-  slug: string;
-  name: string;
-  type: PricingType;
-  amount: number;
-  description?: string;
-  billingInterval?: BillingInterval;
-  billingIntervalCount?: number;
-  currency?: string;
-  metadata?: Record<string, any>;
-}
+export type CreateAddonProps = Omit<
+  AddonProps,
+  "id" | "status" | "entitlements" | "createdAt" | "updatedAt" | "metadata"
+> & { metadata?: Record<string, unknown> };
+
+export type UpdateAddonProps = Partial<
+  Pick<AddonProps, "name" | "status" | "metadata" | "description">
+>;
 
 export class AddonEntity extends Entity<AddonProps> {
   private constructor(props: AddonProps) {
@@ -48,40 +63,11 @@ export class AddonEntity extends Entity<AddonProps> {
   }
 
   public static create(props: CreateAddonProps): AddonEntity {
-    if (!props.name) {
-      throw new BadRequestError("Addon name is required", "NAME_REQUIRED");
-    }
-
-    if (!props.slug) {
-      throw new BadRequestError("Addon slug is required", "SLUG_REQUIRED");
-    }
-
-    if (!props.type) {
-      throw new BadRequestError("Addon type is required", "TYPE_REQUIRED");
-    }
-
-    if (props.amount < 0) {
-      throw new BadRequestError(
-        "Addon amount cannot be negative",
-        "INVALID_AMOUNT",
-      );
-    }
-
-    const id = generateId("add");
-
     const entity = new AddonEntity({
       ...props,
-      id,
-      currency: props.currency || "USD",
+      id: generateId("add"),
       status: "active",
-      name: props.name,
-      slug: props.slug,
-      amount: props.amount,
-      description: props.description,
-      billingInterval: props.billingInterval,
-      billingIntervalCount: props.billingIntervalCount,
-      type: props.type,
-      environmentId: props.environmentId,
+      entitlements: [],
       metadata: props.metadata || {},
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -89,20 +75,40 @@ export class AddonEntity extends Entity<AddonProps> {
 
     entity.addEvent(
       new AddonCreatedEvent({
-        environment_id: props.environmentId,
-        id,
-        slug: props.slug,
+        id: entity.val.id,
+        environmentId: entity.val.environmentId,
+        slug: entity.val.slug,
       }),
     );
 
     return entity;
   }
 
+  public update(props: UpdateAddonProps): void {
+    if (props.name !== undefined) {
+      this.props.name = props.name;
+    }
+
+    if (props.status !== undefined) {
+      this.props.status = props.status;
+    }
+
+    if (props.metadata !== undefined) {
+      this.props.metadata = { ...this.props.metadata, ...props.metadata };
+    }
+
+    if (props.description !== undefined) {
+      this.props.description = props.description;
+    }
+
+    this.props.updatedAt = new Date();
+  }
+
   public archive(): void {
     if (this.props.status === "archived") {
       throw new BadRequestError(
         "Addon is already archived",
-        "ALREADY_ARCHIVED",
+        "ADDON_ALREADY_ARCHIVED",
       );
     }
 
@@ -111,8 +117,66 @@ export class AddonEntity extends Entity<AddonProps> {
 
     this.addEvent(
       new AddonArchivedEvent({
-        id: this.val.id!,
-        environment_id: this.val.environmentId,
+        id: this.val.id,
+        environmentId: this.val.environmentId,
+      }),
+    );
+  }
+
+  public addEntitlement(
+    entitlement: EntitlementEntity,
+    limit: number,
+    type: AddonEntitlementType,
+  ): void {
+    if (entitlement.val.type === "boolean" && type === "increment") {
+      throw new InvalidEntitlementTypeError(entitlement.val.slug);
+    }
+
+    const entitlementId = entitlement.val.id;
+
+    const newAddonEntitlement: AddonEntitlementProps = {
+      id: generateId("aent"),
+      entitlementId,
+      valueLimit: limit,
+      type,
+    };
+
+    const existingIndex = this.props.entitlements.findIndex(
+      (e) => e.entitlementId === entitlementId,
+    );
+
+    if (existingIndex >= 0) {
+      this.props.entitlements[existingIndex] = newAddonEntitlement;
+    } else {
+      this.props.entitlements.push(newAddonEntitlement);
+    }
+
+    this.props.updatedAt = new Date();
+
+    this.addEvent(
+      new AddonEntitlementCreatedEvent({
+        addonId: this.val.id,
+        entitlementId: entitlementId,
+      }),
+    );
+  }
+
+  public removeEntitlement(entitlementId: string): void {
+    const existingIndex = this.props.entitlements.findIndex(
+      (e) => e.entitlementId === entitlementId,
+    );
+
+    if (existingIndex === -1) {
+      throw new EntitlementNotFoundError(entitlementId);
+    }
+
+    this.props.entitlements.splice(existingIndex, 1);
+    this.props.updatedAt = new Date();
+
+    this.addEvent(
+      new AddonEntitlementDeletedEvent({
+        addonId: this.val.id,
+        entitlementId: entitlementId,
       }),
     );
   }

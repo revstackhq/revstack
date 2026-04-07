@@ -4,7 +4,7 @@ import { revstack } from "@/schema/namespace";
 import { generateId } from "@revstackhq/core";
 import { auditLogs } from "@/schema/logs";
 import { environments } from "@/schema/core";
-import { workspaceRoleEnum } from "@/schema";
+import { workspaceRoleEnum } from "@/schema/enums";
 
 export const workspaceMembers = revstack.table("workspace_members", {
   id: text("id")

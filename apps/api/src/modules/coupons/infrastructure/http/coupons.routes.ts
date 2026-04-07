@@ -7,23 +7,30 @@ import {
   UpdateCouponCommandSchema,
   UpdateCouponResponseSchema,
 } from "@/modules/coupons/application/use-cases/UpdateCoupon";
+import { ArchiveCouponResponseSchema } from "@/modules/coupons/application/use-cases/ArchiveCoupon";
+import { GetCouponResponseSchema } from "@/modules/coupons/application/use-cases/GetCoupon";
 import {
   ListCouponsQuerySchema,
-  ListCouponsResponse,
+  ListCouponsResponseSchema,
 } from "@/modules/coupons/application/use-cases/ListCoupons";
-import { GetCouponResponseSchema } from "@/modules/coupons/application/use-cases/GetCoupon";
-import { DeleteCouponResponseSchema } from "@/modules/coupons/application/use-cases/DeleteCoupon";
-import { ArchiveCouponResponseSchema } from "@/modules/coupons/application/use-cases/ArchiveCoupon";
+import {
+  ValidateCouponCommandSchema,
+  ValidateCouponResponseSchema,
+} from "@/modules/coupons/application/use-cases/ValidateCoupon";
 
 export const createCouponRoute = createRoute({
   method: "post",
   path: "/",
   tags: ["Coupons"],
-  summary: "Create a coupon",
-  description: "Creates a new discount coupon with percentage or fixed amount.",
+  summary: "Create a new coupon",
+  description: "Creates a new coupon.",
   request: {
     body: {
-      content: { "application/json": { schema: CreateCouponCommandSchema } },
+      content: {
+        "application/json": {
+          schema: CreateCouponCommandSchema.omit({ environment_id: true }),
+        },
+      },
     },
   },
   responses: {
@@ -31,7 +38,6 @@ export const createCouponRoute = createRoute({
       description: "Coupon created",
       content: { "application/json": { schema: CreateCouponResponseSchema } },
     },
-    400: { description: "Validation error" },
   },
 });
 
@@ -40,11 +46,18 @@ export const updateCouponRoute = createRoute({
   path: "/{id}",
   tags: ["Coupons"],
   summary: "Update a coupon",
-  description: "Updates the active status or metadata of a coupon.",
+  description: "Updates an existing coupon.",
   request: {
-    params: z.object({ id: z.string().openapi({ example: "coup_abc123" }) }),
+    params: z.object({ id: z.string().openapi({ example: "cou_abc123" }) }),
     body: {
-      content: { "application/json": { schema: UpdateCouponCommandSchema } },
+      content: {
+        "application/json": {
+          schema: UpdateCouponCommandSchema.omit({
+            environment_id: true,
+            id: true,
+          }),
+        },
+      },
     },
   },
   responses: {
@@ -56,13 +69,13 @@ export const updateCouponRoute = createRoute({
 });
 
 export const archiveCouponRoute = createRoute({
-  method: "patch",
+  method: "post",
   path: "/{id}/archive",
   tags: ["Coupons"],
   summary: "Archive a coupon",
-  description: "Archives a coupon, automatically deactivating it.",
+  description: "Archives a coupon.",
   request: {
-    params: z.object({ id: z.string().openapi({ example: "coup_abc123" }) }),
+    params: z.object({ id: z.string().openapi({ example: "cou_abc123" }) }),
   },
   responses: {
     200: {
@@ -72,19 +85,19 @@ export const archiveCouponRoute = createRoute({
   },
 });
 
-export const deleteCouponRoute = createRoute({
-  method: "delete",
+export const getCouponRoute = createRoute({
+  method: "get",
   path: "/{id}",
   tags: ["Coupons"],
-  summary: "Delete a coupon",
-  description: "Permanently deletes a coupon.",
+  summary: "Get a coupon",
+  description: "Retrieves a coupon by ID.",
   request: {
-    params: z.object({ id: z.string().openapi({ example: "coup_abc123" }) }),
+    params: z.object({ id: z.string().openapi({ example: "cou_abc123" }) }),
   },
   responses: {
     200: {
-      description: "Coupon deleted",
-      content: { "application/json": { schema: DeleteCouponResponseSchema } },
+      description: "Coupon retrieved",
+      content: { "application/json": { schema: GetCouponResponseSchema } },
     },
   },
 });
@@ -94,30 +107,37 @@ export const listCouponsRoute = createRoute({
   path: "/",
   tags: ["Coupons"],
   summary: "List coupons",
-  description:
-    "Retrieves coupons with optional environment and status filters.",
-  request: { query: ListCouponsQuerySchema },
+  description: "Retrieves a list of coupons.",
+  request: {
+    query: ListCouponsQuerySchema.omit({ environment_id: true }),
+  },
   responses: {
     200: {
-      description: "List of coupons",
-      content: { "application/json": { schema: ListCouponsResponse } },
+      description: "Coupons retrieved",
+      content: { "application/json": { schema: ListCouponsResponseSchema } },
     },
   },
 });
 
-export const getCouponRoute = createRoute({
-  method: "get",
-  path: "/{id}",
+export const validateCouponRoute = createRoute({
+  method: "post",
+  path: "/validate",
   tags: ["Coupons"],
-  summary: "Get a coupon",
-  description: "Retrieves a single coupon by ID.",
+  summary: "Validate a coupon",
+  description: "Validates a coupon for an upcoming or existing subscription.",
   request: {
-    params: z.object({ id: z.string().openapi({ example: "coup_abc123" }) }),
+    body: {
+      content: {
+        "application/json": {
+          schema: ValidateCouponCommandSchema.omit({ environment_id: true }),
+        },
+      },
+    },
   },
   responses: {
     200: {
-      description: "Coupon details",
-      content: { "application/json": { schema: GetCouponResponseSchema } },
+      description: "Coupon validation result",
+      content: { "application/json": { schema: ValidateCouponResponseSchema } },
     },
   },
 });

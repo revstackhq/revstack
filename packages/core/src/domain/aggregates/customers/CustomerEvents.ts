@@ -1,5 +1,5 @@
+import { DOMAIN_EVENTS } from "@/constants";
 import { DomainEvent } from "@/domain/base/DomainEvent";
-import { DOMAIN_EVENTS } from "@/constants/index";
 
 export interface CustomerCreatedPayload {
   id: string;
@@ -8,21 +8,31 @@ export interface CustomerCreatedPayload {
 
 export class CustomerCreatedEvent extends DomainEvent<CustomerCreatedPayload> {
   public readonly eventName = DOMAIN_EVENTS.CUSTOMER_CREATED;
-
   constructor(payload: CustomerCreatedPayload) {
     super(payload);
   }
 }
 
-export interface CustomerDeletedPayload {
+export interface CustomerUpdatedPayload {
   id: string;
   environmentId: string;
 }
 
-export class CustomerDeletedEvent extends DomainEvent<CustomerDeletedPayload> {
-  public readonly eventName = DOMAIN_EVENTS.CUSTOMER_DELETED;
+export class CustomerUpdatedEvent extends DomainEvent<CustomerUpdatedPayload> {
+  public readonly eventName = DOMAIN_EVENTS.CUSTOMER_UPDATED;
+  constructor(payload: CustomerUpdatedPayload) {
+    super(payload);
+  }
+}
 
-  constructor(payload: CustomerDeletedPayload) {
+export interface CustomerArchivedPayload {
+  id: string;
+  environmentId: string;
+}
+
+export class CustomerArchivedEvent extends DomainEvent<CustomerArchivedPayload> {
+  public readonly eventName = DOMAIN_EVENTS.CUSTOMER_ARCHIVED;
+  constructor(payload: CustomerArchivedPayload) {
     super(payload);
   }
 }

@@ -1,70 +1,65 @@
 import { z } from "zod";
 import type { CustomerRepository } from "@revstackhq/core";
-import type { CacheService } from "@/common/application/ports/CacheService";
+import { CustomerItemSchema } from "./CreateCustomer";
 
 export const ListCustomersQuerySchema = z.object({
-  environment_id: z.string().min(1, "Environment is required"),
-  limit: z.number().optional().default(10),
-  offset: z.number().optional().default(0),
+  environment_id: z.string().min(1),
+  status: z.enum(["active", "archived"]).optional(),
+  limit: z.coerce.number().int().min(1).max(100).optional(),
+  cursor: z.string().optional(),
 });
 
 export type ListCustomersQuery = z.infer<typeof ListCustomersQuerySchema>;
 
-export const CustomerResponseSchema = z.object({
-  id: z.string(),
-  environment_id: z.string(),
-  user_id: z.string(),
-  email: z.string().email(),
-  name: z.string(),
-  external_id: z.string(),
-  phone: z.string().nullable(),
-  metadata: z.record(z.any()).nullable(),
-  created_at: z.date(),
+export const ListCustomersResponseSchema = z.object({
+  data: z.array(CustomerItemSchema),
+  pagination: z.object({
+    next_cursor: z.string().nullable(),
+    has_more: z.boolean(),
+  }),
 });
-
-export const ListCustomersResponseSchema = z.array(CustomerResponseSchema);
 
 export type ListCustomersResponse = z.infer<typeof ListCustomersResponseSchema>;
 
 export class ListCustomersHandler {
-  constructor(
-    private readonly repository: CustomerRepository,
-    private readonly cache: CacheService,
-  ) {}
+  constructor(private readonly repository: CustomerRepository) {}
 
   public async execute(
     query: ListCustomersQuery,
   ): Promise<ListCustomersResponse> {
-    const cacheKey = `env:${query.environment_id}:customers:${query.limit}:${query.offset}`;
+    const result = await this.repository.list({
+      environmentId: query.environment_id,
+      status: query.status,
+      limit: query.limit,
+      cursor: query.cursor,
+    });
 
-    const cached = await this.cache.get<ListCustomersResponse>(cacheKey);
+    return {
+      data: result.data.map((customer) => {
+        const v = customer.val;
 
-    if (cached) {
-      return cached;
-    }
-
-    const entities = await this.repository.findByEnvironment(
-      query.environment_id,
-      { limit: query.limit, offset: query.offset },
-    );
-
-    const customersDto = entities.map((entity) => {
-      const v = entity.val;
-      return {
-        id: v.id!,
-        environment_id: v.environmentId,
-        user_id: v.userId,
-        email: v.email,
-        name: v.name,
-        external_id: v.externalId,
-        phone: v.phone ?? null,
-        metadata: v.metadata ?? null,
-        created_at: v.createdAt,
-      };
-    }) as ListCustomersResponse;
-
-    await this.cache.set(cacheKey, customersDto, 60);
-
-    return customersDto;
+        return {
+          id: v.id,
+          environment_id: v.environmentId,
+          user_id: v.userId,
+          provider_id: v.providerId,
+          external_id: v.externalId,
+          email: v.email,
+          name: v.name,
+          phone: v.phone,
+          currency: v.currency,
+          billing_address: v.billingAddress,
+          tax_ids: v.taxIds,
+          status: v.status,
+          metadata: v.metadata ?? {},
+          created_at: v.createdAt,
+          updated_at: v.updatedAt,
+        };
+      }),
+      pagination: {
+        next_cursor: result.pagination?.nextCursor ?? null,
+        has_more: result.pagination?.hasMore ?? false,
+      },
+    };
   }
 }

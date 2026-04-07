@@ -1,8 +1,6 @@
 import { z } from "zod";
-import { DrizzleDB } from "@revstackhq/db";
 import type { EventBus } from "@/common/application/ports/EventBus";
-import { AddonNotFoundError } from "@revstackhq/core";
-import { PostgresAddonRepository } from "@/modules/addons/infrastructure/adapters/PostgresAddonRepository";
+import { AddonNotFoundError, AddonRepository } from "@revstackhq/core";
 
 export const ArchiveAddonCommandSchema = z.object({
   id: z.string().min(1),
@@ -19,19 +17,17 @@ export type ArchiveAddonResponse = z.infer<typeof ArchiveAddonResponseSchema>;
 
 export class ArchiveAddonHandler {
   constructor(
-    private readonly db: DrizzleDB,
+    private readonly repository: AddonRepository,
     private readonly eventBus: EventBus,
   ) {}
 
   public async execute(
     command: ArchiveAddonCommand,
   ): Promise<ArchiveAddonResponse> {
-    const repository = new PostgresAddonRepository(
-      this.db,
-      command.environment_id,
-    );
-
-    const addon = await repository.findById(command.id);
+    const addon = await this.repository.findById({
+      id: command.id,
+      environmentId: command.environment_id,
+    });
 
     if (!addon) {
       throw new AddonNotFoundError();
@@ -39,7 +35,7 @@ export class ArchiveAddonHandler {
 
     addon.archive();
 
-    await repository.save(addon);
+    await this.repository.save(addon);
 
     await this.eventBus.publish(addon.pullEvents());
 

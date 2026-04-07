@@ -1,30 +1,76 @@
 import { OpenAPIHono } from "@hono/zod-openapi";
 import type { AppEnv } from "@/container";
 import {
-  listEntitlementsRoute,
   createEntitlementRoute,
-  deleteEntitlementRoute,
-} from "@/modules/entitlements/infrastructure/http/entitlements.routes";
+  updateEntitlementRoute,
+  archiveEntitlementRoute,
+  getEntitlementRoute,
+  listEntitlementsRoute,
+} from "./entitlements.routes";
 
 export const entitlementsController = new OpenAPIHono<AppEnv>();
 
-entitlementsController.openapi(listEntitlementsRoute, async (c) => {
-  const handler = c.get("entitlements").list;
-  const query = c.req.valid("query");
-  const result = await handler.execute(query);
-  return c.json(result, 200);
-});
-
 entitlementsController.openapi(createEntitlementRoute, async (c) => {
   const handler = c.get("entitlements").create;
-  const dto = c.req.valid("json");
-  const result = await handler.execute(dto);
+  const body = c.req.valid("json");
+  const environmentId = c.get("environmentId");
+
+  const result = await handler.execute({
+    ...body,
+    environment_id: environmentId,
+  });
+
   return c.json(result, 201);
 });
 
-entitlementsController.openapi(deleteEntitlementRoute, async (c) => {
-  const handler = c.get("entitlements").delete;
+entitlementsController.openapi(updateEntitlementRoute, async (c) => {
+  const handler = c.get("entitlements").update;
+  const body = c.req.valid("json");
   const { id } = c.req.valid("param");
-  const result = await handler.execute({ id });
+  const environmentId = c.get("environmentId");
+
+  const result = await handler.execute({
+    ...body,
+    id,
+    environment_id: environmentId,
+  });
+
+  return c.json(result, 200);
+});
+
+entitlementsController.openapi(archiveEntitlementRoute, async (c) => {
+  const handler = c.get("entitlements").archive;
+  const { id } = c.req.valid("param");
+  const environmentId = c.get("environmentId");
+
+  const result = await handler.execute({
+    id,
+    environment_id: environmentId,
+  });
+
+  return c.json(result, 200);
+});
+
+entitlementsController.openapi(getEntitlementRoute, async (c) => {
+  const handler = c.get("entitlements").get;
+  const { id } = c.req.valid("param");
+  const environmentId = c.get("environmentId");
+
+  const result = await handler.execute({
+    id,
+    environment_id: environmentId,
+  });
+
+  return c.json(result, 200);
+});
+
+entitlementsController.openapi(listEntitlementsRoute, async (c) => {
+  const handler = c.get("entitlements").list;
+  const environmentId = c.get("environmentId");
+
+  const result = await handler.execute({
+    environment_id: environmentId,
+  });
+
   return c.json(result, 200);
 });

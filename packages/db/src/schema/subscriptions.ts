@@ -30,9 +30,7 @@ export const subscriptions = revstack.table("subscriptions", {
     .references(() => plans.id)
     .notNull(),
   priceId: text("price_id").references(() => prices.id), // Nullable for free tiers
-
   status: subscriptionStatusEnum("status").notNull(),
-
   currentPeriodStart: timestamp("current_period_start", {
     withTimezone: true,
   }).notNull(),
@@ -46,16 +44,17 @@ export const subscriptions = revstack.table("subscriptions", {
   canceledAt: timestamp("canceled_at", { withTimezone: true }),
   trialStart: timestamp("trial_start", { withTimezone: true }),
   trialEnd: timestamp("trial_end", { withTimezone: true }),
-
   externalSubscriptionId: text("external_subscription_id"),
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
     .notNull(),
-
   nextBillingJobId: text("next_billing_job_id"),
   processingStatus: processingStatusEnum("processing_status")
     .default("idle")
     .notNull(),
+  pendingPlanId: text("pending_plan_id").references(() => plans.id),
+  pendingPriceId: text("pending_price_id").references(() => prices.id),
+  scheduleChangeAt: timestamp("schedule_change_at", { withTimezone: true }),
 });
 
 /**
@@ -124,9 +123,21 @@ export const subscriptionsRelations = relations(
       fields: [subscriptions.priceId],
       references: [prices.id],
     }),
+    pendingPlan: one(plans, {
+      fields: [subscriptions.pendingPlanId],
+      references: [plans.id],
+    }),
+    pendingPrice: one(prices, {
+      fields: [subscriptions.pendingPriceId],
+      references: [prices.id],
+    }),
     addons: many(subscriptionAddons),
     invoices: many(invoices),
     subscriptionCoupons: many(subscriptionCoupons),
+    environment: one(environments, {
+      fields: [subscriptions.environmentId],
+      references: [environments.id],
+    }),
   }),
 );
 

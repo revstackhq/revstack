@@ -1,12 +1,11 @@
-import { text, timestamp, integer, jsonb } from "drizzle-orm/pg-core";
-import { relations } from "drizzle-orm";
+import { text, timestamp, integer, jsonb, boolean } from "drizzle-orm/pg-core";
+import { relations, sql } from "drizzle-orm";
 import { revstack } from "@/schema/namespace";
 import { generateId } from "@revstackhq/core";
 import { environments } from "@/schema/core";
 import {
   discountTypeEnum,
   discountDurationEnum,
-  statusEnum,
   discountStatusEnum,
 } from "@/schema/enums";
 import { subscriptionCoupons } from "@/schema/subscriptions";
@@ -28,11 +27,18 @@ export const coupons = revstack.table("coupons", {
   duration: discountDurationEnum("duration").notNull(),
   durationInMonths: integer("duration_in_months"),
   maxRedemptions: integer("max_redemptions"),
+  currency: text("currency"),
+  redemptionsCount: integer("redemptions_count").default(0).notNull(),
   metadata: jsonb("metadata")
     .$type<Record<string, unknown>>()
     .$defaultFn(() => ({})),
   expiresAt: timestamp("expires_at", { withTimezone: true }),
   status: discountStatusEnum("status").notNull().default("active"),
+  restrictedPlanIds: text("restricted_plan_ids")
+    .array()
+    .notNull()
+    .default(sql`'{}'::text[]`),
+  isFirstTimeOnly: boolean("is_first_time_only").notNull().default(false),
 });
 
 export const couponsRelations = relations(coupons, ({ many }) => ({

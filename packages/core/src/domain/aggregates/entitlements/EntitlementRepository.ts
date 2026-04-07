@@ -2,7 +2,16 @@ import type { EntitlementEntity } from "@/domain/aggregates/entitlements/Entitle
 
 export interface EntitlementRepository {
   save(entitlement: EntitlementEntity): Promise<void>;
-  findById(id: string): Promise<EntitlementEntity | null>;
-  findAll(): Promise<EntitlementEntity[]>;
-  delete(id: string): Promise<boolean>;
+
+  findById(params: {
+    id: string;
+    environmentId: string;
+  }): Promise<EntitlementEntity | null>;
+
+  findBySlug(params: {
+    slug: string;
+    environmentId: string;
+  }): Promise<EntitlementEntity | null>;
+
+  findMany(params: { environmentId: string }): Promise<EntitlementEntity[]>;
 }

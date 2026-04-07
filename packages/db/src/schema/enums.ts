@@ -68,8 +68,30 @@ export const pricingTypeEnum = revstack.enum(
 );
 
 export const discountTypeEnum = revstack.enum("discount_type", [
-  "percent",
-  "fixed",
+  "percentage",
+  "fixed_amount",
+]);
+
+export const disputeStatusEnum = revstack.enum("dispute_status", [
+  "needs_response",
+  "under_review",
+  "won",
+  "lost",
+  "warning",
+]);
+
+export const paymentMethodStatusEnum = revstack.enum("payment_method_status", [
+  "active",
+  "expired",
+  "failed",
+]);
+
+export const creditNoteReasonEnum = revstack.enum("credit_note_reason", [
+  "duplicate",
+  "fraudulent",
+  "order_change",
+  "product_unsatisfactory",
+  "other",
 ]);
 
 export const paymentStatusEnum = revstack.enum("payment_status", [
@@ -126,6 +148,15 @@ export const authProviderEnum = revstack.enum("auth_provider", [
 export const signingStrategyEnum = revstack.enum("signing_strategy", [
   "RS256",
   "HS256",
+]);
+
+/**
+ * Represents a distinct feature or resource limit granted to users within the system.
+ */
+export const entitlementStatusEnum = revstack.enum("entitlement_status", [
+  "draft",
+  "active",
+  "archived",
 ]);
 
 export const addonTypeEnum = revstack.enum(

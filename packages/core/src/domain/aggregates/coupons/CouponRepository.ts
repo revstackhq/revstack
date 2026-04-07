@@ -1,12 +1,26 @@
-import type { CouponEntity } from "@/domain/aggregates/coupons/CouponEntity";
+import type {
+  CouponEntity,
+  CouponStatus,
+} from "@/domain/aggregates/coupons/CouponEntity";
+import type { PaginatedCursorResult } from "@/types/pagination";
 
 export interface CouponRepository {
   save(coupon: CouponEntity): Promise<string>;
-  findById(id: string): Promise<CouponEntity | null>;
-  findByCode(environmentId: string, code: string): Promise<CouponEntity | null>;
-  find(filters: {
-    environmentId?: string;
-    status?: "active" | "inactive" | "archived";
-  }): Promise<CouponEntity[]>;
-  delete(id: string): Promise<boolean>;
+
+  findById(params: {
+    id: string;
+    environmentId: string;
+  }): Promise<CouponEntity | null>;
+
+  findByCode(params: {
+    environmentId: string;
+    code: string;
+  }): Promise<CouponEntity | null>;
+
+  list(params: {
+    environmentId: string;
+    status?: CouponStatus;
+    limit?: number;
+    cursor?: string;
+  }): Promise<PaginatedCursorResult<CouponEntity>>;
 }

@@ -20,3 +20,5 @@ export * from "@/schema/credit_notes";
 export * from "@/schema/events";
 export * from "@/schema/logs";
 export * from "@/schema/integrations";
+export * from "@/schema/payment_methods";
+export * from "@/schema/disputes";

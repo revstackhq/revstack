@@ -26,7 +26,6 @@ export const invoices = revstack.table("invoices", {
     .references(() => customers.id, { onDelete: "cascade" })
     .notNull(),
   subscriptionId: text("subscription_id").references(() => subscriptions.id),
-
   amount: integer("amount").notNull(),
   subtotal: integer("subtotal").notNull().default(0),
   discount: integer("discount").notNull().default(0),
@@ -34,18 +33,15 @@ export const invoices = revstack.table("invoices", {
   amountDue: integer("amount_due").notNull().default(0),
   amountPaid: integer("amount_paid").notNull().default(0),
   amountRemaining: integer("amount_remaining").notNull().default(0),
-
+  amountRefunded: integer("amount_refunded").default(0).notNull(),
   currency: text("currency").notNull().default("USD"),
   status: invoiceStatusEnum("status").notNull(),
-
   billingReason: text("billing_reason"),
   idempotencyKey: text("idempotency_key").unique(),
-
   paidAt: timestamp("paid_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
     .notNull(),
-
   nextRetryAt: timestamp("next_retry_at", { withTimezone: true }),
   dunningStep: integer("dunning_step").default(0).notNull(),
 });

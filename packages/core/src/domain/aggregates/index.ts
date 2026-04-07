@@ -1,5 +1,3 @@
-export * from "@/domain/aggregates/addons/AddonEntitlementEntity";
-export * from "@/domain/aggregates/addons/AddonEntitlementRepository";
 export * from "@/domain/aggregates/addons/AddonEntity";
 export * from "@/domain/aggregates/addons/AddonErrors";
 export * from "@/domain/aggregates/addons/AddonEvents";
@@ -21,7 +19,6 @@ export * from "@/domain/aggregates/customers/CustomerErrors";
 export * from "@/domain/aggregates/customers/CustomerEvents";
 export * from "@/domain/aggregates/customers/CustomerRepository";
 export * from "@/domain/aggregates/entitlements/EntitlementEntity";
-export * from "@/domain/aggregates/entitlements/EntitlementErrors";
 export * from "@/domain/aggregates/entitlements/EntitlementEvents";
 export * from "@/domain/aggregates/entitlements/EntitlementRepository";
 export * from "@/domain/aggregates/environments/EnvironmentEntity";

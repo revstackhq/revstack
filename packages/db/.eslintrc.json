@@ -1,0 +1,16 @@
+{
+  "extends": ["@revstackhq/eslint-config/base"],
+  "rules": {
+    "no-restricted-imports": [
+      "error",
+      {
+        "patterns": [
+          {
+            "group": ["@/schema", "@/schema/index", "./index"],
+            "message": "🚨 DRIZZLE CIRCULAR DEPENDENCY: Don't import from index (Barrel file) inside the schemas. Import directly from the specific file (ej: '@/schema/namespace')."
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,8 +1,23 @@
 import { createRoute, z } from "@hono/zod-openapi";
-import { CreateAddonEntitlementCommandSchema, CreateAddonEntitlementResponseSchema } from "@/modules/addons/application/use-cases/CreateAddonEntitlement";
-import { ListAddonEntitlementsQuerySchema, ListAddonEntitlementsResponseSchema } from "@/modules/addons/application/use-cases/ListAddonEntitlements";
-
-// --- Addon Routes ---
+import {
+  CreateAddonCommandSchema,
+  CreateAddonResponseSchema,
+} from "@/modules/addons/application/use-cases/CreateAddon";
+import {
+  ListAddonsQuerySchema,
+  ListAddonsResponseSchema,
+} from "@/modules/addons/application/use-cases/ListAddons";
+import { GetAddonResponseSchema } from "@/modules/addons/application/use-cases/GetAddon";
+import { ArchiveAddonResponseSchema } from "@/modules/addons/application/use-cases/ArchiveAddon";
+import {
+  UpsertAddonEntitlementCommandSchema,
+  UpsertAddonEntitlementResponseSchema,
+} from "@/modules/addons/application/use-cases/UpsertAddonEntitlement";
+import { RemoveAddonEntitlementResponseSchema } from "@/modules/addons/application/use-cases/RemoveAddonEntitlement";
+import {
+  UpdateAddonCommandSchema,
+  UpdateAddonResponseSchema,
+} from "@/modules/addons/application/use-cases/UpdateAddon";
 
 export const createAddonRoute = createRoute({
   method: "post",
@@ -10,36 +25,19 @@ export const createAddonRoute = createRoute({
   tags: ["Addons"],
   summary: "Create an addon",
   request: {
-    body: { content: { "application/json": { schema: z.any() } } },
+    body: {
+      content: {
+        "application/json": {
+          schema: CreateAddonCommandSchema.omit({ environment_id: true }),
+        },
+      },
+    },
   },
   responses: {
-    201: { description: "Addon created", content: { "application/json": { schema: z.any() } } },
-  },
-});
-
-export const bulkCreateAddonsRoute = createRoute({
-  method: "post",
-  path: "/bulk",
-  tags: ["Addons"],
-  summary: "Bulk create addons",
-  request: {
-    body: { content: { "application/json": { schema: z.any() } } },
-  },
-  responses: {
-    201: { description: "Addons created", content: { "application/json": { schema: z.any() } } },
-  },
-});
-
-export const archiveAddonRoute = createRoute({
-  method: "patch",
-  path: "/{id}/archive",
-  tags: ["Addons"],
-  summary: "Archive an addon",
-  request: {
-    params: z.object({ id: z.string().openapi({ example: "add_abc123" }) }),
-  },
-  responses: {
-    200: { description: "Addon archived", content: { "application/json": { schema: z.any() } } },
+    201: {
+      description: "Addon created",
+      content: { "application/json": { schema: CreateAddonResponseSchema } },
+    },
   },
 });
 
@@ -48,102 +46,126 @@ export const listAddonsRoute = createRoute({
   path: "/",
   tags: ["Addons"],
   summary: "List addons",
+  request: {
+    query: ListAddonsQuerySchema.omit({ environment_id: true }),
+  },
   responses: {
-    200: { description: "List of addons", content: { "application/json": { schema: z.array(z.any()) } } },
+    200: {
+      description: "Paginated list of addons",
+      content: { "application/json": { schema: ListAddonsResponseSchema } },
+    },
   },
 });
 
 export const getAddonRoute = createRoute({
   method: "get",
-  path: "/{id}",
+  path: "/{id_or_slug}",
   tags: ["Addons"],
   summary: "Get an addon",
   request: {
-    params: z.object({ id: z.string().openapi({ example: "add_abc123" }) }),
-  },
-  responses: {
-    200: { description: "Addon details", content: { "application/json": { schema: z.any() } } },
-  },
-});
-
-// --- Addon Entitlement Routes (nested under /:addonId/entitlements) ---
-
-export const listAddonEntitlementsRoute = createRoute({
-  method: "get",
-  path: "/{addonId}/entitlements",
-  tags: ["Addon Entitlements"],
-  summary: "List entitlements for an addon",
-  request: {
     params: z.object({
-      addonId: z.string().openapi({ example: "add_abc123" }),
+      id_or_slug: z.string().openapi({ example: "add_123" }),
     }),
-    query: ListAddonEntitlementsQuerySchema,
   },
   responses: {
     200: {
-      description: "List of addon entitlements",
-      content: { "application/json": { schema: ListAddonEntitlementsResponseSchema } },
+      description: "Addon details",
+      content: { "application/json": { schema: GetAddonResponseSchema } },
+    },
+  },
+});
+
+export const archiveAddonRoute = createRoute({
+  method: "delete",
+  path: "/{id}",
+  tags: ["Addons"],
+  summary: "Archive an addon",
+  request: {
+    params: z.object({ id: z.string().openapi({ example: "add_123" }) }),
+  },
+  responses: {
+    200: {
+      description: "Addon archived",
+      content: { "application/json": { schema: ArchiveAddonResponseSchema } },
+    },
+  },
+});
+
+export const updateAddonRoute = createRoute({
+  method: "put",
+  path: "/{id}",
+  tags: ["Addons"],
+  summary: "Update an addon",
+  request: {
+    params: z.object({ id: z.string().openapi({ example: "add_123" }) }),
+    body: {
+      content: {
+        "application/json": {
+          schema: UpdateAddonCommandSchema.omit({
+            environment_id: true,
+            id: true,
+          }),
+        },
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: "Addon updated",
+      content: { "application/json": { schema: UpdateAddonResponseSchema } },
     },
   },
 });
 
 export const createAddonEntitlementRoute = createRoute({
   method: "put",
-  path: "/{addonId}/entitlements/{featureId}",
+  path: "/{addon_id}/entitlements/{entitlement_id}",
   tags: ["Addon Entitlements"],
-  summary: "Attach or update an entitlement on an addon",
+  summary: "Upsert an entitlement into an addon",
   request: {
     params: z.object({
-      addonId: z.string().openapi({ example: "add_abc123" }),
-      featureId: z.string().openapi({ example: "feat_ai_tokens" }),
+      addon_id: z.string().openapi({ example: "add_123" }),
+      entitlement_id: z.string().openapi({ example: "ent_456" }),
     }),
     body: {
-      content: { "application/json": { schema: CreateAddonEntitlementCommandSchema } },
+      content: {
+        "application/json": {
+          schema: UpsertAddonEntitlementCommandSchema.omit({
+            environment_id: true,
+            addon_id: true,
+            entitlement_id: true,
+          }),
+        },
+      },
     },
   },
   responses: {
     200: {
-      description: "Addon entitlement saved",
-      content: { "application/json": { schema: CreateAddonEntitlementResponseSchema } },
+      description: "Entitlement upserted",
+      content: {
+        "application/json": { schema: UpsertAddonEntitlementResponseSchema },
+      },
     },
-    400: { description: "Validation error" },
-    409: { description: "Already exists" },
-  },
-});
-
-export const getAddonEntitlementRoute = createRoute({
-  method: "get",
-  path: "/{addonId}/entitlements/{featureId}",
-  tags: ["Addon Entitlements"],
-  summary: "Get an addon entitlement",
-  request: {
-    params: z.object({
-      addonId: z.string().openapi({ example: "add_abc123" }),
-      featureId: z.string().openapi({ example: "feat_ai_tokens" }),
-    }),
-  },
-  responses: {
-    200: { description: "Addon entitlement details", content: { "application/json": { schema: z.any() } } },
-    404: { description: "Not found" },
   },
 });
 
 export const deleteAddonEntitlementRoute = createRoute({
   method: "delete",
-  path: "/{addonId}/entitlements/{featureId}",
+  path: "/{addon_id}/entitlements/{entitlement_id}",
   tags: ["Addon Entitlements"],
-  summary: "Detach an entitlement from an addon",
+  summary: "Remove an entitlement from an addon",
   request: {
     params: z.object({
-      addonId: z.string().openapi({ example: "add_abc123" }),
-      featureId: z.string().openapi({ example: "feat_ai_tokens" }),
+      addon_id: z.string().openapi({ example: "add_123" }),
+      entitlement_id: z.string().openapi({ example: "ent_456" }),
     }),
   },
   responses: {
     200: {
-      description: "Addon entitlement removed",
-      content: { "application/json": { schema: z.object({ success: z.boolean() }) } },
+      description: "Entitlement removed",
+      content: {
+        "application/json": { schema: RemoveAddonEntitlementResponseSchema },
+      },
     },
-    404: { description: "Not found" },
   },
 });

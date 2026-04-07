@@ -1,28 +1,39 @@
+import { AddonRepository } from "@revstackhq/core";
 import { z } from "zod";
-import type { AddonRepository } from "@revstackhq/core";
 
 export const ListAddonsQuerySchema = z.object({
-  environment_id: z.string().min(1, "Environment is required"),
-  is_archived: z
-    .enum(["true", "false"])
-    .transform((v) => v === "true")
-    .optional(),
+  environment_id: z.string().min(1),
+  cursor: z.string().optional(),
+  limit: z.number().optional(),
+  status: z.enum(["active", "inactive", "archived", "draft"]).optional(),
 });
 
 export type ListAddonsQuery = z.infer<typeof ListAddonsQuerySchema>;
 
-export const AddonResponseSchema = z.object({
-  id: z.string(),
-  environment_id: z.string(),
-  name: z.string(),
-  type: z.string(),
-  is_archived: z.boolean(),
-  metadata: z.record(z.any()).optional(),
-  created_at: z.date(),
-  updated_at: z.date(),
+export const ListAddonsResponseSchema = z.object({
+  data: z.array(
+    z.object({
+      id: z.string(),
+      environment_id: z.string(),
+      slug: z.string(),
+      name: z.string(),
+      description: z.string().nullable(),
+      type: z.string(),
+      billing_interval: z.string().nullable(),
+      billing_interval_count: z.number().nullable(),
+      amount: z.number(),
+      currency: z.string(),
+      status: z.string(),
+      metadata: z.record(z.any()),
+      created_at: z.date(),
+      updated_at: z.date(),
+    }),
+  ),
+  pagination: z.object({
+    next_cursor: z.string().nullable(),
+    has_more: z.boolean(),
+  }),
 });
-
-export const ListAddonsResponseSchema = z.array(AddonResponseSchema);
 
 export type ListAddonsResponse = z.infer<typeof ListAddonsResponseSchema>;
 
@@ -30,23 +41,38 @@ export class ListAddonsHandler {
   constructor(private readonly repository: AddonRepository) {}
 
   public async execute(query: ListAddonsQuery): Promise<ListAddonsResponse> {
-    const addons = await this.repository.find({
+    const result = await this.repository.list({
       environmentId: query.environment_id,
-      isArchived: query.is_archived,
+      cursor: query.cursor,
+      limit: query.limit,
+      status: query.status,
     });
 
-    return addons.map((a) => {
-      const v = a.val;
-      return {
-        id: v.id!,
-        environment_id: v.environmentId,
-        name: v.name,
-        type: v.type,
-        is_archived: v.isArchived,
-        metadata: v.metadata,
-        created_at: v.createdAt,
-        updated_at: v.updatedAt,
-      };
-    });
+    return {
+      data: result.data.map((addon) => {
+        const v = addon.val;
+
+        return {
+          id: v.id,
+          environment_id: v.environmentId,
+          slug: v.slug,
+          name: v.name,
+          description: v.description ?? null,
+          type: v.type,
+          billing_interval: v.billingInterval ?? null,
+          billing_interval_count: v.billingIntervalCount ?? null,
+          amount: v.amount,
+          currency: v.currency,
+          status: v.status,
+          metadata: v.metadata,
+          created_at: v.createdAt,
+          updated_at: v.updatedAt,
+        };
+      }),
+      pagination: {
+        next_cursor: result.pagination?.nextCursor || null,
+        has_more: result.pagination?.hasMore || false,
+      },
+    };
   }
 }

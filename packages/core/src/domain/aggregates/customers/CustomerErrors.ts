@@ -1,13 +1,19 @@
-export class CustomerNotFoundError extends Error {
-  constructor(id: string) {
-    super(`Customer with ID ${id} was not found.`);
-    this.name = "CustomerNotFoundError";
+import { NotFoundError, ConflictError, BadRequestError } from "@/domain/base/DomainError";
+
+export class CustomerNotFoundError extends NotFoundError {
+  constructor(identifier: string) {
+    super(`Customer '${identifier}' was not found.`, "CUSTOMER_NOT_FOUND");
   }
 }
 
-export class CustomerAlreadyDeactivatedError extends Error {
+export class CustomerAlreadyExistsError extends ConflictError {
+  constructor(identifier: string) {
+    super(`Customer '${identifier}' already exists.`, "CUSTOMER_ALREADY_EXISTS");
+  }
+}
+
+export class CustomerAlreadyArchivedError extends BadRequestError {
   constructor(id: string) {
-    super(`Customer with ID ${id} is already deactivated.`);
-    this.name = "CustomerAlreadyDeactivatedError";
+    super(`Customer '${id}' is already archived.`, "CUSTOMER_ALREADY_ARCHIVED");
   }
 }

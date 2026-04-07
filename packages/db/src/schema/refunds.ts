@@ -5,6 +5,7 @@ import { generateId } from "@revstackhq/core";
 import { environments } from "@/schema/core";
 import { payments } from "@/schema/payments";
 import { refundStatusEnum } from "@/schema/enums";
+import { creditNotes } from "@/schema";
 
 export const refunds = revstack.table("refunds", {
   id: text("id")
@@ -16,26 +17,30 @@ export const refunds = revstack.table("refunds", {
   paymentId: text("payment_id")
     .references(() => payments.id, { onDelete: "cascade" })
     .notNull(),
-
   amount: integer("amount").notNull(),
   currency: text("currency").notNull().default("USD"),
   status: refundStatusEnum("status").notNull(),
   reason: text("reason"),
   externalId: text("external_id"),
+  failureCode: text("failure_code"), // e.g: "expired_card", "insufficient_funds"
+  failureMessage: text("failure_message"),
   idempotencyKey: text("idempotency_key").unique(),
-
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
     .notNull(),
 });
 
 export const refundsRelations = relations(refunds, ({ one }) => ({
-  environment: one(environments, {
-    fields: [refunds.environmentId],
-    references: [environments.id],
-  }),
   payment: one(payments, {
     fields: [refunds.paymentId],
     references: [payments.id],
+  }),
+  creditNote: one(creditNotes, {
+    fields: [refunds.id],
+    references: [creditNotes.refundId],
+  }),
+  environment: one(environments, {
+    fields: [refunds.environmentId],
+    references: [environments.id],
   }),
 }));

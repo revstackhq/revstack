@@ -1,7 +1,11 @@
 import { text, timestamp, jsonb } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { revstack } from "@/schema/namespace";
-import { generateId } from "@revstackhq/core";
+import {
+  CustomerBillingAddress,
+  CustomerStatus,
+  generateId,
+} from "@revstackhq/core";
 import { environments } from "@/schema/core";
 import { users } from "@/schema/users";
 import { subscriptions } from "@/schema/subscriptions";
@@ -26,8 +30,24 @@ export const customers = revstack.table("customers", {
   email: text("email").notNull(),
   name: text("name").notNull(),
   phone: text("phone"),
-  metadata: jsonb("metadata").default({}),
+  metadata: jsonb("metadata")
+    .$type<Record<string, unknown>>()
+    .$defaultFn(() => ({})),
+  currency: text("currency").default("USD").notNull(),
+  status: text("status").$type<CustomerStatus>().default("active").notNull(),
+  billingAddress: jsonb("billing_address").$type<CustomerBillingAddress>(),
+  taxIds: jsonb("tax_ids")
+    .$type<
+      Array<{
+        type: string; // 'eu_vat', 'cl_rut', 'us_ein', etc.
+        value: string;
+      }>
+    >()
+    .default([]),
   createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
     .defaultNow()
     .notNull(),
 });

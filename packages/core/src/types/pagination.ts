@@ -1,7 +1,7 @@
 export interface PaginatedCursorResult<T> {
   data: T[];
   pagination: {
-    next_cursor: string | null;
-    has_more: boolean;
+    nextCursor: string | null;
+    hasMore: boolean;
   };
 }

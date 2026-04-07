@@ -1,17 +1,12 @@
-import { PostgresEntitlementRepository } from "@/modules/entitlements/infrastructure/adapters/PostgresEntitlementRepository";
+import { buildAddonsModule } from "@/modules/addons/infrastructure/di/factory";
+import { buildEntitlementsModule } from "@/modules/entitlements/infrastructure/di/factory";
 import { PostgresPlanEntitlementRepository } from "@/modules/plans/infrastructure/adapters/PostgresPlanEntitlementRepository";
-import { PostgresAddonEntitlementRepository } from "@/modules/addons/infrastructure/adapters/PostgresAddonEntitlementRepository";
 import { PostgresPriceRepository } from "@/modules/prices/infrastructure/adapters/PostgresPriceRepository";
-import { PostgresAddonRepository } from "@/modules/addons/infrastructure/adapters/PostgresAddonRepository";
-import { PostgresCouponRepository } from "@/modules/coupons/infrastructure/adapters/PostgresCouponRepository";
 import { PostgresEnvironmentRepository } from "@/modules/environments/infrastructure/adapters/PostgresEnvironmentRepository";
 import { PostgresAuthConfigRepository } from "@/modules/identity_providers/infrastructure/adapters/PostgresAuthConfigRepository";
 import { PostgresWorkspaceMemberRepository } from "@/modules/workspaces/infrastructure/adapters/PostgresWorkspaceMemberRepository";
 import { PostgresAuditLogRepository } from "@/modules/audit/infrastructure/adapters/PostgresAuditLogRepository";
 import { PostgresUserRepository } from "@/modules/users/infrastructure/adapters/PostgresUserRepository";
-import { CreateEntitlementHandler } from "@/modules/entitlements/application/use-cases/CreateEntitlement";
-import { DeleteEntitlementHandler } from "@/modules/entitlements/application/use-cases/DeleteEntitlement";
-import { ListEntitlementsHandler } from "@/modules/entitlements/application/use-cases/ListEntitlements";
 
 import { PostgresPlanRepository } from "@/modules/plans/infrastructure/adapters/PostgresPlanRepository";
 import { CreatePlanHandler } from "@/modules/plans/application/use-cases/CreatePlan";
@@ -19,42 +14,14 @@ import { ListPlansHandler } from "@/modules/plans/application/use-cases/ListPlan
 import { ArchivePlanHandler } from "@/modules/plans/application/use-cases/ArchivePlan";
 import { HidePlanHandler } from "@/modules/plans/application/use-cases/HidePlan";
 
-import { CreatePlanEntitlementHandler } from "@/modules/plans/application/use-cases/CreatePlanEntitlement";
-import { UpdatePlanEntitlementLimitsHandler } from "@/modules/plans/application/use-cases/UpdatePlanEntitlementLimits";
-import { DeletePlanEntitlementHandler } from "@/modules/plans/application/use-cases/DeletePlanEntitlement";
-import { ListPlanEntitlementsHandler } from "@/modules/plans/application/use-cases/ListPlanEntitlements";
-import { GetPlanEntitlementHandler } from "@/modules/plans/application/use-cases/GetPlanEntitlement";
-
 import { CreatePriceHandler } from "@/modules/prices/application/use-cases/CreatePrice";
 import { UpdatePriceHandler } from "@/modules/prices/application/use-cases/UpdatePrice";
 import { VersionPriceHandler } from "@/modules/prices/application/use-cases/VersionPrice";
 import { ListPricesHandler } from "@/modules/prices/application/use-cases/ListPrices";
 import { GetPriceHandler } from "@/modules/prices/application/use-cases/GetPrice";
 
-import { CreateAddonHandler } from "@/modules/addons/application/use-cases/CreateAddon";
-import { CreateManyAddonsHandler } from "@/modules/addons/application/use-cases/CreateManyAddons";
-import { ArchiveAddonHandler } from "@/modules/addons/application/use-cases/ArchiveAddon";
-import { ListAddonsHandler } from "@/modules/addons/application/use-cases/ListAddons";
-import { GetAddonHandler } from "@/modules/addons/application/use-cases/GetAddon";
-
-import { CreateCouponHandler } from "@/modules/coupons/application/use-cases/CreateCoupon";
-import { UpdateCouponHandler } from "@/modules/coupons/application/use-cases/UpdateCoupon";
-import { ArchiveCouponHandler } from "@/modules/coupons/application/use-cases/ArchiveCoupon";
-import { DeleteCouponHandler } from "@/modules/coupons/application/use-cases/DeleteCoupon";
-import { ListCouponsHandler } from "@/modules/coupons/application/use-cases/ListCoupons";
-import { GetCouponHandler } from "@/modules/coupons/application/use-cases/GetCoupon";
-
-import { CreateAddonEntitlementHandler } from "@/modules/addons/application/use-cases/CreateAddonEntitlement";
-import { DeleteAddonEntitlementHandler } from "@/modules/addons/application/use-cases/DeleteAddonEntitlement";
-import { ListAddonEntitlementsHandler } from "@/modules/addons/application/use-cases/ListAddonEntitlements";
-import { GetAddonEntitlementHandler } from "@/modules/addons/application/use-cases/GetAddonEntitlement";
-
-import { PostgresCustomerRepository } from "@/modules/customers/infrastructure/adapters/PostgresCustomerRepository";
-import { CreateCustomerHandler } from "@/modules/customers/application/use-cases/CreateCustomer";
-import { ListCustomersHandler } from "@/modules/customers/application/use-cases/ListCustomers";
-import { CreateManyCustomersHandler } from "@/modules/customers/application/use-cases/CreateManyCustomers";
-import { DeleteCustomerHandler } from "@/modules/customers/application/use-cases/DeleteCustomer";
-
+import { buildCouponsModule } from "@/modules/coupons/infrastructure/di/factory";
+import { buildCustomersModule } from "@/modules/customers/infrastructure/di/factory";
 import { PostgresSubscriptionRepository } from "@/modules/subscriptions/infrastructure/adapters/PostgresSubscriptionRepository";
 import { CreateSubscriptionHandler } from "@/modules/subscriptions/application/use-cases/CreateSubscription";
 import { CancelSubscriptionHandler } from "@/modules/subscriptions/application/use-cases/CancelSubscription";
@@ -194,14 +161,9 @@ export function buildContainer() {
     : { publish: async (e: any) => console.log("[Native] Published", e) };
 
   const repos = {
-    entitlements: new PostgresEntitlementRepository(db),
     planEntitlements: new PostgresPlanEntitlementRepository(db),
-    addonEntitlements: new PostgresAddonEntitlementRepository(db),
     plans: new PostgresPlanRepository(db),
     prices: new PostgresPriceRepository(db),
-    addons: new PostgresAddonRepository(db),
-    coupons: new PostgresCouponRepository(db),
-    customers: new PostgresCustomerRepository(db),
     subscriptions: new PostgresSubscriptionRepository(db),
     usage: new PostgresUsageRepository(db),
     wallets: new PostgresWalletRepository(db),
@@ -225,21 +187,7 @@ export function buildContainer() {
   return {
     accessService: new AccessService(repos.apiKeys),
     jwtService: new JwtService(jwtSecret),
-    entitlements: {
-      get create() {
-        return new CreateEntitlementHandler(
-          repos.entitlements,
-          eventBus,
-          cache,
-        );
-      },
-      get delete() {
-        return new DeleteEntitlementHandler(repos.entitlements, eventBus);
-      },
-      get list() {
-        return new ListEntitlementsHandler(repos.entitlements, cache);
-      },
-    },
+    entitlements: buildEntitlementsModule(db, eventBus, cache),
     plans: {
       get create() {
         return new CreatePlanHandler(repos.plans, eventBus, cache);
@@ -252,32 +200,6 @@ export function buildContainer() {
       },
       get hide() {
         return new HidePlanHandler(repos.plans);
-      },
-    },
-    planEntitlements: {
-      get create() {
-        return new CreatePlanEntitlementHandler(
-          repos.planEntitlements,
-          eventBus,
-        );
-      },
-      get updateLimits() {
-        return new UpdatePlanEntitlementLimitsHandler(
-          repos.planEntitlements,
-          eventBus,
-        );
-      },
-      get delete() {
-        return new DeletePlanEntitlementHandler(
-          repos.planEntitlements,
-          eventBus,
-        );
-      },
-      get list() {
-        return new ListPlanEntitlementsHandler(repos.planEntitlements);
-      },
-      get get() {
-        return new GetPlanEntitlementHandler(repos.planEntitlements);
       },
     },
     prices: {
@@ -297,77 +219,9 @@ export function buildContainer() {
         return new GetPriceHandler(repos.prices);
       },
     },
-    addons: {
-      get create() {
-        return new CreateAddonHandler(repos.addons, eventBus);
-      },
-      get createMany() {
-        return new CreateManyAddonsHandler(repos.addons, eventBus);
-      },
-      get archive() {
-        return new ArchiveAddonHandler(repos.addons);
-      },
-      get list() {
-        return new ListAddonsHandler(repos.addons);
-      },
-      get get() {
-        return new GetAddonHandler(repos.addons);
-      },
-    },
-    addonEntitlements: {
-      get create() {
-        return new CreateAddonEntitlementHandler(
-          repos.addonEntitlements,
-          eventBus,
-        );
-      },
-      get delete() {
-        return new DeleteAddonEntitlementHandler(
-          repos.addonEntitlements,
-          eventBus,
-        );
-      },
-      get list() {
-        return new ListAddonEntitlementsHandler(repos.addonEntitlements);
-      },
-      get get() {
-        return new GetAddonEntitlementHandler(repos.addonEntitlements);
-      },
-    },
-    coupons: {
-      get create() {
-        return new CreateCouponHandler(repos.coupons, eventBus);
-      },
-      get update() {
-        return new UpdateCouponHandler(repos.coupons, eventBus);
-      },
-      get archive() {
-        return new ArchiveCouponHandler(repos.coupons, eventBus);
-      },
-      get delete() {
-        return new DeleteCouponHandler(repos.coupons, eventBus);
-      },
-      get list() {
-        return new ListCouponsHandler(repos.coupons);
-      },
-      get get() {
-        return new GetCouponHandler(repos.coupons);
-      },
-    },
-    customers: {
-      get create() {
-        return new CreateCustomerHandler(repos.customers, eventBus, cache);
-      },
-      get list() {
-        return new ListCustomersHandler(repos.customers, cache);
-      },
-      get createMany() {
-        return new CreateManyCustomersHandler(repos.customers, eventBus);
-      },
-      get delete() {
-        return new DeleteCustomerHandler(repos.customers, eventBus);
-      },
-    },
+    addons: buildAddonsModule(db, eventBus),
+    coupons: buildCouponsModule(db, eventBus),
+    customers: buildCustomersModule(db, eventBus),
     subscriptions: {
       get create() {
         return new CreateSubscriptionHandler(
@@ -562,7 +416,10 @@ export function buildContainer() {
     },
     workspaces: {
       get create() {
-        return new CreateWorkspaceMemberHandler(repos.workspaceMembers, eventBus);
+        return new CreateWorkspaceMemberHandler(
+          repos.workspaceMembers,
+          eventBus,
+        );
       },
       get update() {
         return new UpdateWorkspaceMemberHandler(repos.workspaceMembers);

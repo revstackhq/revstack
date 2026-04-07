@@ -1,18 +1,26 @@
-import type { AddonEntity } from "@/domain/aggregates/addons/AddonEntity";
-import type { PricingType, PlanStatus } from "@/types/index";
-import type { PaginatedCursorResult } from "@/types/pagination";
+import type {
+  AddonEntity,
+  AddonStatus,
+} from "@/domain/aggregates/addons/AddonEntity";
+import type { PaginatedCursorResult as PaginatedResult } from "@/types/pagination";
 
 export interface AddonRepository {
   save(addon: AddonEntity): Promise<void>;
-  saveMany(addons: AddonEntity[]): Promise<void>;
 
-  findById(id: string): Promise<AddonEntity | null>;
-  findBySlug(slug: string): Promise<AddonEntity | null>;
+  findById(params: {
+    id: string;
+    environmentId: string;
+  }): Promise<AddonEntity | null>;
 
-  findMany(params: {
-    status?: PlanStatus;
-    type?: PricingType;
-    limit: number;
+  findBySlug(params: {
+    slug: string;
+    environmentId: string;
+  }): Promise<AddonEntity | null>;
+
+  list(params: {
+    environmentId: string;
+    status?: AddonStatus;
+    limit?: number;
     cursor?: string;
-  }): Promise<PaginatedCursorResult<AddonEntity>>;
+  }): Promise<PaginatedResult<AddonEntity>>;
 }
