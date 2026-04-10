@@ -61,10 +61,8 @@ export const addonEntitlements = revstack.table(
     entitlementId: text("entitlement_id")
       .references(() => entitlements.id, { onDelete: "cascade" })
       .notNull(),
-
     valueLimit: integer("value_limit"),
     type: addonEntitlementTypeEnum("type").notNull().default("increment"),
-
     createdAt: timestamp("created_at", { withTimezone: true })
       .defaultNow()
       .notNull(),

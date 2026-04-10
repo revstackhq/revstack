@@ -14,11 +14,9 @@ export const workspaceMembers = revstack.table("workspace_members", {
   passwordHash: text("password_hash").notNull(),
   name: text("name"),
   role: workspaceRoleEnum("role").default("admin").notNull(),
-
   environmentId: text("environment_id")
     .references(() => environments.id)
     .notNull(),
-
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
     .notNull(),
