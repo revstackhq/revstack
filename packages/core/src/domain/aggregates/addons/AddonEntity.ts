@@ -8,9 +8,8 @@ import {
   AddonEntitlementDeletedEvent,
 } from "@/domain/aggregates/addons/AddonEvents";
 import {
-  AddonAlreadyArchivedError,
+  AddonEntitlementNotFoundError,
   InvalidEntitlementTypeError,
-  EntitlementNotFoundError,
 } from "@/domain/aggregates/addons/AddonErrors";
 import { BadRequestError } from "@/domain/base";
 
@@ -167,7 +166,7 @@ export class AddonEntity extends Entity<AddonProps> {
     );
 
     if (existingIndex === -1) {
-      throw new EntitlementNotFoundError(entitlementId);
+      throw new AddonEntitlementNotFoundError();
     }
 
     this.props.entitlements.splice(existingIndex, 1);

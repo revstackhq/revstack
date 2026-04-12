@@ -17,6 +17,7 @@ export class CouponCreatedEvent extends DomainEvent<CouponCreatedPayload> {
 export interface CouponUpdatedPayload {
   id: string;
   environmentId: string;
+  changes: string[];
 }
 
 export class CouponUpdatedEvent extends DomainEvent<CouponUpdatedPayload> {

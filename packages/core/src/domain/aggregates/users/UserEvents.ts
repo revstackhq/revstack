@@ -1,11 +1,43 @@
-import { DOMAIN_EVENTS } from "@/constants/index";
+import { DomainEvent } from "@/domain/base/DomainEvent";
+import { DOMAIN_EVENTS } from "@/constants";
 
-export class UserCreatedEvent {
-  public readonly eventName = DOMAIN_EVENTS.USER_CREATED;
-  constructor(public readonly userId: string, public readonly environmentId: string) {}
+export interface UserCreatedPayload {
+  userId: string;
+  email: string;
+  environmentId: string;
+  role: string;
 }
 
-export class UserUpdatedEvent {
+export class UserCreatedEvent extends DomainEvent<UserCreatedPayload> {
+  public readonly eventName = DOMAIN_EVENTS.USER_CREATED;
+  constructor(payload: UserCreatedPayload) {
+    super(payload);
+  }
+}
+
+export interface UserUpdatedPayload {
+  userId: string;
+  environmentId: string;
+  changes: string[];
+}
+
+export class UserUpdatedEvent extends DomainEvent<UserUpdatedPayload> {
   public readonly eventName = DOMAIN_EVENTS.USER_UPDATED;
-  constructor(public readonly userId: string, public readonly environmentId: string) {}
+  constructor(payload: UserUpdatedPayload) {
+    super(payload);
+  }
+}
+
+export interface UserDeactivatedPayload {
+  userId: string;
+  environmentId: string;
+  email: string;
+  reason?: string;
+}
+
+export class UserDeactivatedEvent extends DomainEvent<UserDeactivatedPayload> {
+  public readonly eventName = DOMAIN_EVENTS.USER_DEACTIVATED;
+  constructor(payload: UserDeactivatedPayload) {
+    super(payload);
+  }
 }

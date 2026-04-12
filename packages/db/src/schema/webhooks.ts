@@ -1,45 +1,59 @@
-import { text, timestamp, boolean, jsonb, integer } from "drizzle-orm/pg-core";
+import { text, timestamp, boolean, jsonb, integer, index } from "drizzle-orm/pg-core";
 import { revstack } from "@/schema/namespace";
 import { generateId } from "@revstackhq/core";
 import { environments } from "@/schema/core";
 import { relations } from "drizzle-orm";
 
-export const webhookEndpoints = revstack.table("webhook_endpoints", {
-  id: text("id")
-    .$defaultFn(() => generateId("whe"))
-    .primaryKey(),
-  environmentId: text("environment_id")
-    .references(() => environments.id, { onDelete: "cascade" })
-    .notNull(),
-  url: text("url").notNull(),
-  signingSecret: text("signing_secret").notNull(),
-  description: text("description"),
-  enabledEvents: jsonb("enabled_events").default([]).notNull(),
-  isActive: boolean("is_active").default(true).notNull(),
-  createdAt: timestamp("created_at", { withTimezone: true })
-    .defaultNow()
-    .notNull(),
-  updatedAt: timestamp("updated_at", { withTimezone: true })
-    .defaultNow()
-    .notNull(),
-});
+export const webhookEndpoints = revstack.table(
+  "webhook_endpoints",
+  {
+    id: text("id")
+      .$defaultFn(() => generateId("whe"))
+      .primaryKey(),
+    environmentId: text("environment_id")
+      .references(() => environments.id, { onDelete: "cascade" })
+      .notNull(),
+    url: text("url").notNull(),
+    signingSecret: text("signing_secret").notNull(),
+    description: text("description"),
+    enabledEvents: jsonb("enabled_events").default([]).notNull(),
+    isActive: boolean("is_active").default(true).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    index("wh_env_idx").on(t.environmentId),
+    index("wh_env_active_idx").on(t.environmentId, t.isActive),
+  ],
+);
 
-export const webhookDeliveries = revstack.table("webhook_deliveries", {
-  id: text("id")
-    .$defaultFn(() => generateId("whd"))
-    .primaryKey(),
-  endpointId: text("endpoint_id")
-    .references(() => webhookEndpoints.id, { onDelete: "cascade" })
-    .notNull(),
-  eventType: text("event_type").notNull(),
-  payload: jsonb("payload").notNull(),
-  statusCode: integer("status_code"),
-  success: boolean("success").notNull(),
-  errorMessage: text("error_message"),
-  createdAt: timestamp("created_at", { withTimezone: true })
-    .defaultNow()
-    .notNull(),
-});
+export const webhookDeliveries = revstack.table(
+  "webhook_deliveries",
+  {
+    id: text("id")
+      .$defaultFn(() => generateId("whd"))
+      .primaryKey(),
+    endpointId: text("endpoint_id")
+      .references(() => webhookEndpoints.id, { onDelete: "cascade" })
+      .notNull(),
+    eventType: text("event_type").notNull(),
+    payload: jsonb("payload").notNull(),
+    statusCode: integer("status_code"),
+    success: boolean("success").notNull(),
+    errorMessage: text("error_message"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    index("whd_endpoint_idx").on(t.endpointId),
+    index("whd_endpoint_created_idx").on(t.endpointId, t.createdAt),
+  ],
+);
 
 export const webhookEndpointsRelations = relations(
   webhookEndpoints,

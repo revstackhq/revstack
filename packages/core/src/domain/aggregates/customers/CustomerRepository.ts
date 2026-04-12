@@ -17,11 +17,22 @@ export interface CustomerRepository {
     environmentId: string;
   }): Promise<CustomerEntity | null>;
 
+  findByEmail(params: {
+    email: string;
+    environmentId: string;
+  }): Promise<CustomerEntity | null>;
+
+  findByProviderId(params: {
+    providerId: string;
+    environmentId: string;
+  }): Promise<CustomerEntity | null>;
+
   list(params: {
     environmentId: string;
     limit?: number;
     cursor?: string;
     status?: CustomerStatus;
+    search?: string;
   }): Promise<PaginatedCursorResult<CustomerEntity>>;
 
   saveMany(entities: CustomerEntity[]): Promise<void>;

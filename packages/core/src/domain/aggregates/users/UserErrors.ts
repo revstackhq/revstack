@@ -1,13 +1,26 @@
-import { DomainError } from "@/domain/base/DomainError";
+import { BadRequestError } from "@/domain/base/DomainError";
 
-export class UserNotFoundError extends DomainError {
-  constructor() {
-    super("User not found", 404, "USER_NOT_FOUND");
+export class UserDomainError extends BadRequestError {
+  constructor(message: string, code: string) {
+    super(message, code);
+    this.name = "UserDomainError";
   }
 }
 
-export class UserAlreadyExistsError extends DomainError {
+export class InvalidUserEmailError extends UserDomainError {
+  constructor(email: string) {
+    super(`The email address '${email}' is not valid.`, "INVALID_USER_EMAIL");
+  }
+}
+
+export class UserEnvironmentRequiredError extends UserDomainError {
   constructor() {
-    super("A user with this email already exists in this environment", 409, "USER_ALREADY_EXISTS");
+    super("Users must be associated with an environment.", "USER_ENV_REQUIRED");
+  }
+}
+
+export class UserAlreadyInactiveError extends UserDomainError {
+  constructor(userId: string) {
+    super(`User ${userId} is already inactive.`, "USER_ALREADY_INACTIVE");
   }
 }

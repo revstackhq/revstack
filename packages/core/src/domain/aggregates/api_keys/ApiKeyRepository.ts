@@ -1,12 +1,19 @@
-import type { ApiKeyEntity } from "@/domain/aggregates/api_keys/ApiKeyEntity";
+import { PaginatedCursorResult } from "@/types";
+import { ApiKeyEntity, ApiKeyStatus, ApiKeyType } from "./ApiKeyEntity";
 
 export interface ApiKeyRepository {
-  save(apiKey: ApiKeyEntity): Promise<string>;
-  findById(id: string): Promise<ApiKeyEntity | null>;
-  findByHash(hash: string): Promise<ApiKeyEntity | null>;
-  findByEnvironment(
-    environmentId: string,
-    type?: "public" | "secret",
-  ): Promise<ApiKeyEntity[]>;
-  delete(id: string): Promise<boolean>;
+  save(apiKey: ApiKeyEntity): Promise<void>;
+
+  findByHash(params: {
+    keyHash: string;
+    environmentId: string;
+  }): Promise<ApiKeyEntity | null>;
+
+  list(params: {
+    environmentId: string;
+    type?: ApiKeyType;
+    status?: ApiKeyStatus;
+    limit?: number;
+    cursor?: string;
+  }): Promise<PaginatedCursorResult<ApiKeyEntity>>;
 }

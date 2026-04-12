@@ -13,18 +13,6 @@ export const PLAN_TYPES = ["paid", "free", "custom"] as const;
 
 export const STATUSES = ["active", "inactive", "archived", "draft"] as const;
 
-export const SUBSCRIPTION_STATUSES = [
-  "incomplete",
-  "incomplete_expired",
-  "trialing",
-  "active",
-  "past_due",
-  "paused",
-  "unpaid",
-  "revoked",
-  "canceled",
-] as const;
-
 export const BILLING_INTERVALS = ["day", "week", "month", "year"] as const;
 
 export const RESET_PERIODS = [
@@ -64,6 +52,12 @@ export const DOMAIN_EVENTS = {
   API_KEY_UPDATED: "api_key.updated",
   API_KEY_DELETED: "api_key.deleted",
   API_KEY_ROTATED: "api_key.rotated",
+  API_KEY_USED: "api_key.used",
+  API_KEY_REVOKED: "api_key.revoked",
+
+  // --- Provider Events ---
+  PROVIDER_EVENT_INGESTED: "provider_event.ingested",
+  PROVIDER_EVENT_PROCESSED: "provider_event.processed",
 
   // --- Audit ---
   AUDIT_LOG_CREATED: "audit.log.created",
@@ -92,11 +86,16 @@ export const DOMAIN_EVENTS = {
   ENVIRONMENT_DELETED: "environment.deleted",
 
   // --- Identity Providers ---
-  AUTH_CONFIG_UPDATED: "auth_config.updated",
+  IDENTITY_PROVIDER_CREATED: "identity_provider.created",
+  IDENTITY_PROVIDER_UPDATED: "identity_provider.updated",
+  IDENTITY_PROVIDER_DELETED: "identity_provider.deleted",
 
   // --- Integrations ---
   INTEGRATION_INSTALLED: "integration.installed",
   INTEGRATION_CONFIG_UPDATED: "integration.config.updated",
+  INTEGRATION_UPDATED: "integration.updated",
+  INTEGRATION_UNINSTALLED: "integration.uninstalled",
+  INTEGRATION_ERROR: "integration.error",
 
   // --- Invoices ---
   INVOICE_CREATED: "invoice.created",
@@ -122,11 +121,23 @@ export const DOMAIN_EVENTS = {
   // --- Refunds ---
   REFUND_CREATED: "refund.created",
   REFUND_UPDATED: "refund.updated",
+  REFUND_SUCCEEDED: "refund.succeeded",
+  REFUND_FAILED: "refund.failed",
 
   // --- Subscriptions ---
   SUBSCRIPTION_CREATED: "subscription.created",
-  SUBSCRIPTION_CANCELLED: "subscription.cancelled",
   SUBSCRIPTION_UPDATED: "subscription.updated",
+  SUBSCRIPTION_CANCELED: "subscription.canceled",
+  SUBSCRIPTION_REVOKED: "subscription.revoked",
+  SUBSCRIPTION_PAUSED: "subscription.paused",
+  SUBSCRIPTION_RESUMED: "subscription.resumed",
+  SUBSCRIPTION_TRIAL_ENDED: "subscription.trial_ended",
+  SUBSCRIPTION_ADDON_ADDED: "subscription.addon_added",
+  SUBSCRIPTION_ADDON_REMOVED: "subscription.addon_removed",
+  SUBSCRIPTION_SCHEDULE_UPDATED: "subscription.schedule_updated",
+  SUBSCRIPTION_SCHEDULE_CLEARED: "subscription.schedule_cleared",
+  SUBSCRIPTION_COUPON_APPLIED: "subscription.coupon_applied",
+  SUBSCRIPTION_COUPON_REMOVED: "subscription.coupon_removed",
 
   // --- Usage ---
   USAGE_RECORDED: "usage.recorded",
@@ -136,6 +147,7 @@ export const DOMAIN_EVENTS = {
   // --- Users ---
   USER_CREATED: "user.created",
   USER_UPDATED: "user.updated",
+  USER_DEACTIVATED: "user.deactivated",
 
   // --- Wallets ---
   WALLET_CREDITED: "wallet.credited",

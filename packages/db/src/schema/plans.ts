@@ -1,34 +1,59 @@
-import { text, timestamp, boolean, jsonb, integer } from "drizzle-orm/pg-core";
+import {
+  text,
+  timestamp,
+  boolean,
+  jsonb,
+  integer,
+  uniqueIndex,
+  index,
+} from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { revstack } from "@/schema/namespace";
-import { generateId } from "@revstackhq/core";
+import {
+  PLAN_TYPES,
+  RESET_PERIODS,
+  STATUSES,
+  generateId,
+} from "@revstackhq/core";
 import { environments } from "@/schema/core";
-import { planTypeEnum, statusEnum, resetPeriodEnum } from "@/schema/enums";
 import { entitlements } from "@/schema/entitlements";
 import { prices } from "@/schema/prices";
 import { subscriptions } from "@/schema/subscriptions";
 
+export const planTypeEnum = revstack.enum("plan_type", PLAN_TYPES);
+
+export const planStatusEnum = revstack.enum("plan_status", STATUSES);
+
+export const resetPeriodEnum = revstack.enum("reset_period", RESET_PERIODS);
+
 /**
  * Represents a logical grouping of prices and entitlements that a customer can subscribe to.
  */
-export const plans = revstack.table("plans", {
-  id: text("id")
-    .$defaultFn(() => generateId("plan"))
-    .primaryKey(),
-  environmentId: text("environment_id")
-    .references(() => environments.id, { onDelete: "cascade" })
-    .notNull(),
-  slug: text("slug").notNull(),
-  name: text("name").notNull(),
-  description: text("description"),
-  type: planTypeEnum("type").notNull().default("paid"),
-  status: statusEnum("status").notNull().default("active"),
-  isDefault: boolean("is_default").default(false).notNull(), // Ideal for "Guest" or fallback plans
-  isPublic: boolean("is_public").default(true).notNull(),
-  updatedAt: timestamp("updated_at", { withTimezone: true })
-    .defaultNow()
-    .notNull(),
-});
+export const plans = revstack.table(
+  "plans",
+  {
+    id: text("id")
+      .$defaultFn(() => generateId("plan"))
+      .primaryKey(),
+    environmentId: text("environment_id")
+      .references(() => environments.id, { onDelete: "cascade" })
+      .notNull(),
+    slug: text("slug").notNull(),
+    name: text("name").notNull(),
+    description: text("description"),
+    type: planTypeEnum("type").notNull().default("paid"),
+    status: planStatusEnum("status").notNull().default("active"),
+    isDefault: boolean("is_default").default(false).notNull(), // Ideal for "Guest" or fallback plans
+    isPublic: boolean("is_public").default(true).notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    uniqueIndex("plan_env_slug_idx").on(t.environmentId, t.slug),
+    index("plan_env_status_idx").on(t.environmentId, t.status),
+  ],
+);
 
 /**
  * Association table that links specific Entitlements to Plans.

@@ -1,15 +1,31 @@
 import { Entity } from "@/domain/base/Entity";
-import { BadRequestError } from "@/domain/base/DomainError";
+import { generateId } from "@/utils/id";
+import {
+  EnvironmentNameRequiredError,
+  EnvironmentSlugRequiredError,
+  ProtectedEnvironmentError,
+} from "./EnvironmentErrors";
+import {
+  EnvironmentCreatedEvent,
+  EnvironmentUpdatedEvent,
+} from "./EnvironmentEvents";
 
 export interface EnvironmentProps {
-  id?: string;
-  projectId?: string | null;
+  id: string;
+  projectId: string;
   name: string;
   slug: string;
   isDefault: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
+
+export type CreateEnvironmentProps = Omit<
+  EnvironmentProps,
+  "id" | "createdAt" | "updatedAt" | "isDefault"
+>;
+
+export type UpdateEnvironmentProps = Partial<Pick<EnvironmentProps, "name">>;
 
 export class EnvironmentEntity extends Entity<EnvironmentProps> {
   private constructor(props: EnvironmentProps) {
@@ -20,51 +36,58 @@ export class EnvironmentEntity extends Entity<EnvironmentProps> {
     return new EnvironmentEntity(props);
   }
 
-  public static create(
-    props: Omit<EnvironmentProps, "id" | "createdAt" | "updatedAt">,
-  ): EnvironmentEntity {
-    if (!props.name) {
-      throw new BadRequestError("Environment name is required", "MISSING_NAME");
-    }
+  public static create(props: CreateEnvironmentProps): EnvironmentEntity {
+    if (!props.name) throw new EnvironmentNameRequiredError();
+    if (!props.slug) throw new EnvironmentSlugRequiredError();
 
-    if (!props.slug) {
-      throw new BadRequestError("Environment slug is required", "MISSING_SLUG");
-    }
+    const normalizedSlug = props.slug.toLowerCase().trim();
 
-    if (
-      props.isDefault &&
-      props.slug !== "sandbox" &&
-      props.slug !== "production"
-    ) {
-      throw new BadRequestError(
-        "Default environment slug must be sandbox or production",
-        "INVALID_DEFAULT_ENV_SLUG",
-      );
-    }
-
-    return new EnvironmentEntity({
+    const environment = new EnvironmentEntity({
       ...props,
+      slug: normalizedSlug,
+      id: generateId("env"),
+      isDefault: ["production", "sandbox"].includes(normalizedSlug),
       createdAt: new Date(),
       updatedAt: new Date(),
     });
+
+    environment.addEvent(
+      new EnvironmentCreatedEvent({
+        id: environment.val.id,
+        projectId: environment.val.projectId,
+        slug: environment.val.slug,
+      }),
+    );
+
+    return environment;
   }
 
-  public updateName(name: string): void {
-    if (this.val.isDefault) {
-      throw new BadRequestError(
-        "Cannot update default environment name",
-        "DEFAULT_ENV_LOCKED",
+  public update(props: UpdateEnvironmentProps): void {
+    if (this.isCoreEnvironment()) {
+      throw new ProtectedEnvironmentError("update");
+    }
+
+    if (props.name && props.name !== this.props.name) {
+      this.props.name = props.name;
+      this.props.updatedAt = new Date();
+
+      this.addEvent(
+        new EnvironmentUpdatedEvent({
+          id: this.val.id,
+          projectId: this.val.projectId,
+          changes: ["name"],
+        }),
       );
     }
-    this.props.name = name;
   }
 
-  public canBeDeleted(): void {
-    if (this.val.isDefault) {
-      throw new BadRequestError(
-        "Cannot delete default environments",
-        "DEFAULT_ENV_LOCKED",
-      );
+  public assertCanBeDeleted(): void {
+    if (this.isCoreEnvironment()) {
+      throw new ProtectedEnvironmentError("delete");
     }
+  }
+
+  private isCoreEnvironment(): boolean {
+    return this.props.isDefault;
   }
 }

@@ -1,2 +1,0 @@
-ALTER TABLE "revstack"."entitlements" ADD COLUMN "metadata" jsonb DEFAULT '{}'::jsonb;--> statement-breakpoint
-ALTER TABLE "revstack"."entitlements" ADD COLUMN "created_at" timestamp with time zone DEFAULT now() NOT NULL;

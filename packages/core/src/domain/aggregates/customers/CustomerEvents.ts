@@ -4,6 +4,8 @@ import { DomainEvent } from "@/domain/base/DomainEvent";
 export interface CustomerCreatedPayload {
   id: string;
   environmentId: string;
+  externalId: string;
+  email: string;
 }
 
 export class CustomerCreatedEvent extends DomainEvent<CustomerCreatedPayload> {
@@ -16,6 +18,7 @@ export class CustomerCreatedEvent extends DomainEvent<CustomerCreatedPayload> {
 export interface CustomerUpdatedPayload {
   id: string;
   environmentId: string;
+  changes: string[];
 }
 
 export class CustomerUpdatedEvent extends DomainEvent<CustomerUpdatedPayload> {

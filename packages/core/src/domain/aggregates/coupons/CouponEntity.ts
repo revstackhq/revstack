@@ -1,5 +1,4 @@
 import { Entity } from "@/domain/base/Entity";
-import { BadRequestError } from "@/domain/base/DomainError";
 import { generateId } from "@/utils/id";
 import {
   CouponArchivedEvent,
@@ -7,6 +6,10 @@ import {
   CouponUpdatedEvent,
 } from "@/domain/aggregates/coupons/CouponEvents";
 import {
+  CouponCodeRequiredError,
+  InvalidCouponAmountError,
+  CouponCurrencyRequiredError,
+  CouponAlreadyArchivedError,
   CouponExpiredError,
   CouponLimitReachedError,
   IneligibleCouponError,
@@ -30,7 +33,7 @@ export interface CouponProps {
   restrictedPlanIds: string[];
   isFirstTimeOnly: boolean;
   status: CouponStatus;
-  metadata?: Record<string, unknown>;
+  metadata: Record<string, unknown>;
   expiresAt?: Date;
   createdAt: Date;
   updatedAt: Date;
@@ -39,10 +42,6 @@ export interface CouponProps {
 export type CreateCouponProps = Omit<
   CouponProps,
   "id" | "status" | "createdAt" | "updatedAt" | "redemptionsCount"
->;
-
-export type UpdateCouponProps = Partial<
-  Pick<CouponProps, "status" | "metadata" | "maxRedemptions" | "expiresAt">
 >;
 
 export class CouponEntity extends Entity<CouponProps> {
@@ -55,20 +54,18 @@ export class CouponEntity extends Entity<CouponProps> {
   }
 
   public static create(props: CreateCouponProps): CouponEntity {
-    if (!props.code) {
-      throw new BadRequestError("Coupon code is required");
-    }
-    if (props.amount < 0) {
-      throw new BadRequestError("Coupon amount cannot be negative");
-    }
+    if (!props.code) throw new CouponCodeRequiredError();
+
+    if (props.amount < 0) throw new InvalidCouponAmountError();
+
     if (props.type === "percentage" && props.amount > 100) {
-      throw new BadRequestError("Percentage discount cannot exceed 100%");
+      throw new InvalidCouponAmountError(
+        "Percentage discount cannot exceed 100%",
+      );
     }
 
     if (props.type === "fixed_amount" && !props.currency) {
-      throw new BadRequestError(
-        "Currency is required for fixed amount coupons",
-      );
+      throw new CouponCurrencyRequiredError();
     }
 
     const coupon = new CouponEntity({
@@ -76,14 +73,10 @@ export class CouponEntity extends Entity<CouponProps> {
       id: generateId("cou"),
       status: "active",
       redemptionsCount: 0,
-      createdAt: new Date(),
-      durationInMonths: props.durationInMonths ?? undefined,
-      maxRedemptions: props.maxRedemptions ?? undefined,
-      expiresAt: props.expiresAt ?? undefined,
-      currency: props.currency ?? undefined,
+      metadata: props.metadata ?? {},
       restrictedPlanIds: props.restrictedPlanIds ?? [],
       isFirstTimeOnly: props.isFirstTimeOnly ?? false,
-      metadata: props.metadata ?? {},
+      createdAt: new Date(),
       updatedAt: new Date(),
     });
 
@@ -98,39 +91,54 @@ export class CouponEntity extends Entity<CouponProps> {
     return coupon;
   }
 
-  public update(props: UpdateCouponProps): void {
-    if (props.status !== undefined) {
+  public update(
+    props: Partial<
+      Pick<CouponProps, "status" | "metadata" | "maxRedemptions" | "expiresAt">
+    >,
+  ): void {
+    const changes: string[] = [];
+
+    if (props.status !== undefined && props.status !== this.props.status) {
       this.props.status = props.status;
+      changes.push("status");
     }
 
     if (props.metadata !== undefined) {
       this.props.metadata = { ...this.props.metadata, ...props.metadata };
+      changes.push("metadata");
     }
 
-    if (props.maxRedemptions !== undefined) {
+    if (
+      props.maxRedemptions !== undefined &&
+      props.maxRedemptions !== this.props.maxRedemptions
+    ) {
       this.props.maxRedemptions = props.maxRedemptions;
+      changes.push("maxRedemptions");
     }
 
-    if (props.expiresAt !== undefined) {
+    if (
+      props.expiresAt !== undefined &&
+      props.expiresAt !== this.props.expiresAt
+    ) {
       this.props.expiresAt = props.expiresAt;
+      changes.push("expiresAt");
     }
 
-    this.props.updatedAt = new Date();
-
-    this.addEvent(
-      new CouponUpdatedEvent({
-        id: this.val.id,
-        environmentId: this.val.environmentId,
-      }),
-    );
+    if (changes.length > 0) {
+      this.props.updatedAt = new Date();
+      this.addEvent(
+        new CouponUpdatedEvent({
+          id: this.val.id,
+          environmentId: this.val.environmentId,
+          changes,
+        }),
+      );
+    }
   }
 
   public archive(): void {
     if (this.props.status === "archived") {
-      throw new BadRequestError(
-        "Coupon is already archived",
-        "ALREADY_ARCHIVED",
-      );
+      throw new CouponAlreadyArchivedError(this.val.id);
     }
 
     this.props.status = "archived";
@@ -146,11 +154,12 @@ export class CouponEntity extends Entity<CouponProps> {
 
   public incrementRedemption(): void {
     if (
-      this.props.maxRedemptions !== undefined &&
+      this.props.maxRedemptions &&
       this.props.redemptionsCount >= this.props.maxRedemptions
     ) {
       throw new CouponLimitReachedError(this.props.code);
     }
+
     this.props.redemptionsCount += 1;
     this.props.updatedAt = new Date();
   }
@@ -160,7 +169,7 @@ export class CouponEntity extends Entity<CouponProps> {
     isFirstTime: boolean = false,
   ): void {
     if (this.props.status !== "active") {
-      throw new IneligibleCouponError(this.props.code);
+      throw new IneligibleCouponError(this.props.code, "Coupon is not active");
     }
 
     if (this.props.expiresAt && this.props.expiresAt < new Date()) {
@@ -168,19 +177,25 @@ export class CouponEntity extends Entity<CouponProps> {
     }
 
     if (
-      this.props.maxRedemptions !== undefined &&
+      this.props.maxRedemptions &&
       this.props.redemptionsCount >= this.props.maxRedemptions
     ) {
       throw new CouponLimitReachedError(this.props.code);
     }
 
     if (this.props.isFirstTimeOnly && !isFirstTime) {
-      throw new IneligibleCouponError(this.props.code);
+      throw new IneligibleCouponError(
+        this.props.code,
+        "Coupon only valid for first-time customers",
+      );
     }
 
     if (this.props.restrictedPlanIds.length > 0) {
       if (!planId || !this.props.restrictedPlanIds.includes(planId)) {
-        throw new IneligibleCouponError(this.props.code);
+        throw new IneligibleCouponError(
+          this.props.code,
+          "Coupon not valid for this plan",
+        );
       }
     }
   }

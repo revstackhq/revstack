@@ -2,8 +2,15 @@ import type { EnvironmentEntity } from "@/domain/aggregates/environments/Environ
 
 export interface EnvironmentRepository {
   save(environment: EnvironmentEntity): Promise<string>;
-  findById(id: string): Promise<EnvironmentEntity | null>;
-  findByProjectId(projectId: string): Promise<EnvironmentEntity[]>;
-  delete(id: string): Promise<boolean>;
-  findAll(params?: { projectId?: string }): Promise<EnvironmentEntity[]>;
+
+  findById(params: { id: string }): Promise<EnvironmentEntity | null>;
+
+  listByProjectId(params: { projectId: string }): Promise<EnvironmentEntity[]>;
+
+  findBySlug(params: {
+    projectId: string;
+    slug: string;
+  }): Promise<EnvironmentEntity | null>;
+
+  list(params: { projectId: string }): Promise<EnvironmentEntity[]>;
 }

@@ -1,12 +1,25 @@
-import type { UserEntity } from "@/domain/aggregates/users/UserEntity";
+import { UserEntity } from "./UserEntity";
+import { PaginatedCursorResult } from "@/types/pagination";
 
 export interface UserRepository {
-  save(user: UserEntity): Promise<string>;
-  findById(id: string): Promise<UserEntity | null>;
-  findByEmail(environmentId: string, email: string): Promise<UserEntity | null>;
-  find(filters: {
-    environmentId?: string;
+  save(user: UserEntity): Promise<void>;
+
+  findById(params: {
+    id: string;
+    environmentId: string;
+  }): Promise<UserEntity | null>;
+
+  findByEmail(params: {
+    email: string;
+    environmentId: string;
+  }): Promise<UserEntity | null>;
+
+  list(params: {
+    environmentId: string;
+    limit?: number;
+    cursor?: string;
     role?: string;
-    isActive?: boolean;
-  }): Promise<UserEntity[]>;
+  }): Promise<PaginatedCursorResult<UserEntity>>;
+
+  saveMany(users: UserEntity[]): Promise<void>;
 }

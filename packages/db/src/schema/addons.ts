@@ -1,16 +1,32 @@
-import { text, timestamp, integer, jsonb, unique } from "drizzle-orm/pg-core";
+import {
+  text,
+  timestamp,
+  integer,
+  jsonb,
+  unique,
+  index,
+} from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { revstack } from "@/schema/namespace";
 import { environments } from "@/schema/core";
-import {
-  addonTypeEnum,
-  billingIntervalEnum,
-  addonEntitlementTypeEnum,
-  statusEnum,
-} from "@/schema/enums";
 import { entitlements } from "@/schema/entitlements";
 import { subscriptionAddons } from "@/schema/subscriptions";
-import { generateId } from "@revstackhq/core";
+import {
+  ADDON_ENTITLEMENT_TYPES,
+  PRICING_TYPES,
+  STATUSES,
+  generateId,
+} from "@revstackhq/core";
+import { billingIntervalEnum } from "./enums";
+
+export const addonTypeEnum = revstack.enum("addon_type", PRICING_TYPES);
+
+export const addonStatusEnum = revstack.enum("addon_status", STATUSES);
+
+export const addonEntitlementTypeEnum = revstack.enum(
+  "addon_entitlement_type",
+  ADDON_ENTITLEMENT_TYPES,
+);
 
 /**
  * Represents additional features or limits a user can purchase on top of their plan.
@@ -35,7 +51,7 @@ export const addons = revstack.table(
     metadata: jsonb("metadata")
       .$type<Record<string, unknown>>()
       .$defaultFn(() => ({})),
-    status: statusEnum("status").notNull().default("active"),
+    status: addonStatusEnum("status").notNull().default("active"),
     createdAt: timestamp("created_at", { withTimezone: true })
       .defaultNow()
       .notNull(),
@@ -43,7 +59,10 @@ export const addons = revstack.table(
       .defaultNow()
       .notNull(),
   },
-  (t) => [unique("unq_addon_slug_env_idx").on(t.environmentId, t.slug)],
+  (t) => [
+    unique("unq_addon_slug_env_idx").on(t.environmentId, t.slug),
+    index("addon_env_status_idx").on(t.environmentId, t.status),
+  ],
 );
 
 /**

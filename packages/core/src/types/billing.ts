@@ -5,9 +5,7 @@ import {
   BILLING_INTERVALS,
   PLAN_TYPES,
   STATUSES,
-  SUBSCRIPTION_STATUSES,
   PRICING_TYPES,
-  ADDON_ENTITLEMENT_TYPES,
   CHECK_RESULT_REASONS,
 } from "@/constants";
 import { AddonEntitlementType } from "@/domain/aggregates";
@@ -22,7 +20,6 @@ export type ResetPeriod = (typeof RESET_PERIODS)[number];
 export type BillingInterval = (typeof BILLING_INTERVALS)[number];
 export type PlanType = (typeof PLAN_TYPES)[number];
 export type PlanStatus = (typeof STATUSES)[number];
-export type SubscriptionStatus = (typeof SUBSCRIPTION_STATUSES)[number];
 export type PricingType = (typeof PRICING_TYPES)[number];
 export type CheckResultReason = (typeof CHECK_RESULT_REASONS)[number];
 
@@ -167,3 +164,63 @@ export interface RevstackConfig {
   addons?: Record<string, AddonDefInput>;
   coupons?: DiscountDef[];
 }
+
+export const PROVIDER_EVENT_TYPES = [
+  // ── Payments
+  "PAYMENT_CREATED",
+  "PAYMENT_AUTHORIZED",
+  "PAYMENT_CAPTURED",
+  "PAYMENT_PROCESSING",
+  "PAYMENT_SUCCEEDED",
+  "PAYMENT_FAILED",
+  "PAYMENT_CANCELED",
+  // ── Refunds
+  "REFUND_CREATED",
+  "REFUND_PROCESSED",
+  "REFUND_FAILED",
+  // ── Disputes
+  "DISPUTE_CREATED",
+  "DISPUTE_UPDATED",
+  "DISPUTE_WON",
+  "DISPUTE_LOST",
+  // ── Checkouts
+  "CHECKOUT_CREATED",
+  "CHECKOUT_COMPLETED",
+  "CHECKOUT_EXPIRED",
+  "CHECKOUT_CANCELED",
+  // ── Subscriptions
+  "SUBSCRIPTION_CREATED",
+  "SUBSCRIPTION_UPDATED",
+  "SUBSCRIPTION_RENEWED",
+  "SUBSCRIPTION_PAST_DUE",
+  "SUBSCRIPTION_CANCELED",
+  "SUBSCRIPTION_REVOKED",
+  "SUBSCRIPTION_PAUSED",
+  "SUBSCRIPTION_RESUMED",
+  "SUBSCRIPTION_TRIAL_WILL_END",
+  // ── Invoices
+  "INVOICE_CREATED",
+  "INVOICE_FINALIZED",
+  "INVOICE_PAID",
+  "INVOICE_PAYMENT_FAILED",
+  "INVOICE_VOIDED",
+  "INVOICE_UNCOLLECTIBLE",
+  // ── Customers & Instruments
+  "CUSTOMER_CREATED",
+  "CUSTOMER_UPDATED",
+  "CUSTOMER_DELETED",
+  "PAYMENT_METHOD_ATTACHED",
+  "PAYMENT_METHOD_UPDATED",
+  "PAYMENT_METHOD_DETACHED",
+  "MANDATE_CREATED",
+  "MANDATE_REVOKED",
+  // ── Catalog
+  "PRODUCT_CREATED",
+  "PRODUCT_UPDATED",
+  "PRODUCT_DELETED",
+  "PRICE_CREATED",
+  "PRICE_UPDATED",
+  "PRICE_DELETED",
+] as const;
+
+export type ProviderEventType = (typeof PROVIDER_EVENT_TYPES)[number];

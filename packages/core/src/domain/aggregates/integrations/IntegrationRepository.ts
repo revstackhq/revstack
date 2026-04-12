@@ -1,7 +1,16 @@
-import type { IntegrationEntity } from "@/domain/aggregates/integrations/IntegrationEntity";
+import { IntegrationEntity, IntegrationStatus } from "./IntegrationEntity";
 
 export interface IntegrationRepository {
   save(integration: IntegrationEntity): Promise<void>;
-  findById(id: string): Promise<IntegrationEntity | null>;
-  find(filters?: { status?: string; providerId?: string }): Promise<IntegrationEntity[]>;
+
+  findById(params: {
+    id: string;
+    environmentId: string;
+  }): Promise<IntegrationEntity | null>;
+
+  list(params: {
+    environmentId: string;
+    includeArchived?: boolean;
+    status?: IntegrationStatus;
+  }): Promise<IntegrationEntity[]>;
 }

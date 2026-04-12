@@ -1,4 +1,0 @@
-ALTER TABLE "revstack"."subscriptions" ADD COLUMN "customer_id" text;--> statement-breakpoint
-ALTER TABLE "revstack"."invoices" ADD COLUMN "customer_id" text NOT NULL;--> statement-breakpoint
-ALTER TABLE "revstack"."subscriptions" ADD CONSTRAINT "subscriptions_customer_id_customers_id_fk" FOREIGN KEY ("customer_id") REFERENCES "revstack"."customers"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "revstack"."invoices" ADD CONSTRAINT "invoices_customer_id_customers_id_fk" FOREIGN KEY ("customer_id") REFERENCES "revstack"."customers"("id") ON DELETE cascade ON UPDATE no action;

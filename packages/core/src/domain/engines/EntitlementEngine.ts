@@ -1,9 +1,5 @@
-import type {
-  CheckResult,
-  PlanDef,
-  AddonDef,
-  SubscriptionStatus,
-} from "@/types";
+import type { CheckResult, PlanDef, AddonDef } from "@/types";
+import { SubscriptionStatus } from "../aggregates";
 
 // ─── Constants ───────────────────────────────────────────────
 

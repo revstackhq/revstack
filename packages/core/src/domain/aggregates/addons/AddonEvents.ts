@@ -1,8 +1,6 @@
 import { DomainEvent } from "@/domain/base/DomainEvent";
 import { DOMAIN_EVENTS } from "@/constants/index";
 
-// --- Addon Events ---
-
 export interface AddonCreatedPayload {
   id: string;
   slug: string;
@@ -27,8 +25,6 @@ export class AddonArchivedEvent extends DomainEvent<AddonArchivedPayload> {
     super(payload);
   }
 }
-
-// --- Addon Entitlement Events ---
 
 export interface AddonEntitlementCreatedPayload {
   addonId: string;

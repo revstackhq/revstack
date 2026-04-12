@@ -1,6 +1,6 @@
 {
   "name": "@revstackhq/core",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "private": false,
   "license": "FSL-1.1-MIT",
   "type": "module",
@@ -42,6 +42,7 @@
   },
   "dependencies": {
     "nanoid": "^5.1.7",
+    "oslo": "^1.2.1",
     "zod": "^3.23.8"
   }
 }

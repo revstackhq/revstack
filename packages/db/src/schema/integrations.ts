@@ -1,25 +1,44 @@
 import { text, timestamp, jsonb, index, unique } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { revstack } from "@/schema/namespace";
-import { generateId } from "@revstackhq/core";
+import { generateId, STATUSES } from "@revstackhq/core";
 import { environments } from "@/schema/core";
-import { integrationModeEnum, statusEnum } from "@/schema/enums";
 
-export const integrations = revstack.table("integrations", {
-  id: text("id")
-    .$defaultFn(() => generateId("int"))
-    .primaryKey(),
-  environmentId: text("environment_id")
-    .references(() => environments.id, { onDelete: "cascade" })
-    .notNull(),
-  provider: text("provider").notNull(),
-  config: jsonb("config").notNull().default({}),
-  status: statusEnum("status").notNull().default("active"),
-  mode: integrationModeEnum("mode").notNull(),
-  createdAt: timestamp("created_at", { withTimezone: true })
-    .defaultNow()
-    .notNull(),
-});
+export const integrationModeEnum = revstack.enum("integration_mode", [
+  "sandbox",
+  "production",
+]);
+
+export const integrationStatusEnum = revstack.enum(
+  "integration_status",
+  STATUSES,
+);
+
+export const integrations = revstack.table(
+  "integrations",
+  {
+    id: text("id")
+      .$defaultFn(() => generateId("int"))
+      .primaryKey(),
+    environmentId: text("environment_id")
+      .references(() => environments.id, { onDelete: "cascade" })
+      .notNull(),
+    provider: text("provider").notNull(),
+    config: jsonb("config").notNull().default({}),
+    status: integrationStatusEnum("status").notNull().default("active"),
+    mode: integrationModeEnum("mode").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    index("int_env_idx").on(t.environmentId),
+    index("int_env_status_idx").on(t.environmentId, t.status),
+  ],
+);
 
 export const integrationsRelations = relations(integrations, ({ one }) => ({
   environment: one(environments, {

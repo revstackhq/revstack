@@ -1,6 +1,10 @@
 import { Entity } from "@/domain/base/Entity";
 import { generateId } from "@/utils/id";
-import { CustomerAlreadyArchivedError } from "@/domain/aggregates/customers/CustomerErrors";
+import {
+  CustomerAlreadyArchivedError,
+  InvalidCurrencyError,
+  InvalidCustomerEmailError,
+} from "@/domain/aggregates/customers/CustomerErrors";
 import {
   CustomerCreatedEvent,
   CustomerUpdatedEvent,
@@ -63,6 +67,14 @@ export class CustomerEntity extends Entity<CustomerProps> {
   }
 
   public static create(props: CreateCustomerProps): CustomerEntity {
+    if (!props.email.includes("@")) {
+      throw new InvalidCustomerEmailError(props.email);
+    }
+
+    if (props.currency.length !== 3) {
+      throw new InvalidCurrencyError(props.currency);
+    }
+
     const entity = new CustomerEntity({
       ...props,
       id: generateId("cus"),
@@ -71,12 +83,15 @@ export class CustomerEntity extends Entity<CustomerProps> {
       updatedAt: new Date(),
       phone: props.phone ?? undefined,
       metadata: props.metadata ?? {},
+      taxIds: props.taxIds ?? [],
     });
 
     entity.addEvent(
       new CustomerCreatedEvent({
         id: entity.val.id,
         environmentId: entity.val.environmentId,
+        externalId: entity.val.externalId,
+        email: entity.val.email,
       }),
     );
 
@@ -84,38 +99,42 @@ export class CustomerEntity extends Entity<CustomerProps> {
   }
 
   public update(props: UpdateCustomerProps): void {
-    if (props.name !== undefined) {
-      this.props.name = props.name;
-    }
+    const changes: string[] = [];
 
-    if (props.email !== undefined) {
-      this.props.email = props.email;
-    }
+    const updateField = <K extends keyof UpdateCustomerProps>(
+      key: K,
+      value: UpdateCustomerProps[K],
+    ) => {
+      if (
+        value !== undefined &&
+        JSON.stringify(this.props[key]) !== JSON.stringify(value)
+      ) {
+        (this.props as any)[key] = value;
+        changes.push(key);
+      }
+    };
 
-    if (props.phone !== undefined) {
-      this.props.phone = props.phone;
-    }
+    updateField("name", props.name);
+    updateField("email", props.email);
+    updateField("phone", props.phone);
+    updateField("billingAddress", props.billingAddress);
+    updateField("taxIds", props.taxIds);
 
-    if (props.billingAddress !== undefined) {
-      this.props.billingAddress = props.billingAddress;
-    }
-
-    if (props.taxIds !== undefined) {
-      this.props.taxIds = props.taxIds;
-    }
-
-    if (props.metadata !== undefined) {
+    if (props.metadata) {
       this.props.metadata = { ...this.props.metadata, ...props.metadata };
+      changes.push("metadata");
     }
 
-    this.props.updatedAt = new Date();
-
-    this.addEvent(
-      new CustomerUpdatedEvent({
-        id: this.val.id,
-        environmentId: this.val.environmentId,
-      }),
-    );
+    if (changes.length > 0) {
+      this.props.updatedAt = new Date();
+      this.addEvent(
+        new CustomerUpdatedEvent({
+          id: this.val.id,
+          environmentId: this.val.environmentId,
+          changes,
+        }),
+      );
+    }
   }
 
   public archive(): void {
@@ -132,5 +151,9 @@ export class CustomerEntity extends Entity<CustomerProps> {
         environmentId: this.val.environmentId,
       }),
     );
+  }
+
+  public isLinkedToProvider(): boolean {
+    return !!this.props.providerId && this.props.providerId !== "";
   }
 }

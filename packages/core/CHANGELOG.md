@@ -1,5 +1,11 @@
 # @revstackhq/core
 
+## 0.7.0
+
+### Minor Changes
+
+- dev release
+
 ## 0.6.0
 
 ### Minor Changes

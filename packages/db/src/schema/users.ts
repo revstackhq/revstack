@@ -1,4 +1,4 @@
-import { text, timestamp, boolean, jsonb } from "drizzle-orm/pg-core";
+import { text, timestamp, boolean, jsonb, index } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { revstack } from "@/schema/namespace";
 import { generateId } from "@revstackhq/core";
@@ -13,26 +13,37 @@ import { customers } from "@/schema/customers";
  * End-users and organizations utilizing the billed tenant.
  * Supports "Guests" (anonymous users) who can later be merged into authenticated users.
  */
-export const users = revstack.table("users", {
-  id: text("id")
-    .$defaultFn(() => generateId("usr"))
-    .primaryKey(),
-  environmentId: text("environment_id")
-    .references(() => environments.id, { onDelete: "cascade" })
-    .notNull(),
+export const users = revstack.table(
+  "users",
+  {
+    id: text("id")
+      .$defaultFn(() => generateId("usr"))
+      .primaryKey(),
+    environmentId: text("environment_id")
+      .references(() => environments.id, { onDelete: "cascade" })
+      .notNull(),
 
-  /** * Origin application's unique ID for the customer (e.g., Supabase Auth UUID).
-   * Nullable to allow Guest sessions to consume metered events before signing up.
-   */
-  externalId: text("external_id"),
-  isGuest: boolean("is_guest").default(false).notNull(),
+    /** * Origin application's unique ID for the customer (e.g., Supabase Auth UUID).
+     * Nullable to allow Guest sessions to consume metered events before signing up.
+     */
+    externalId: text("external_id"),
+    isGuest: boolean("is_guest").default(false).notNull(),
 
-  email: text("email"),
-  metadata: jsonb("metadata").default({}),
-  createdAt: timestamp("created_at", { withTimezone: true })
-    .defaultNow()
-    .notNull(),
-});
+    email: text("email"),
+    metadata: jsonb("metadata").default({}),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    index("usr_env_idx").on(t.environmentId),
+    index("usr_env_email_idx").on(t.environmentId, t.email),
+    index("usr_env_external_idx").on(t.environmentId, t.externalId),
+  ],
+);
 
 export const usersRelations = relations(users, ({ many, one }) => ({
   customers: many(customers),

@@ -1,7 +1,20 @@
-import type { ProviderEventEntity } from "@/domain/aggregates/provider_events/ProviderEventEntity";
+import { ProviderEventEntity } from "./ProviderEventEntity";
 
 export interface ProviderEventRepository {
   save(event: ProviderEventEntity): Promise<void>;
-  findById(id: string): Promise<ProviderEventEntity | null>;
-  find(filters?: { providerId?: string; status?: string; eventType?: string }): Promise<ProviderEventEntity[]>;
+
+  findById(params: {
+    id: string;
+    environmentId: string;
+  }): Promise<ProviderEventEntity | null>;
+
+  findByExternalId(params: {
+    externalEventId: string;
+    environmentId: string;
+  }): Promise<ProviderEventEntity | null>;
+
+  listByResource(params: {
+    resourceId: string;
+    environmentId: string;
+  }): Promise<ProviderEventEntity[]>;
 }

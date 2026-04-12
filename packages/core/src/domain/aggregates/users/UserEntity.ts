@@ -1,17 +1,36 @@
 import { Entity } from "@/domain/base/Entity";
-import { BadRequestError } from "@/domain/base/DomainError";
+import { generateId } from "@/utils/id";
+import {
+  InvalidUserEmailError,
+  UserAlreadyInactiveError,
+  UserEnvironmentRequiredError,
+} from "./UserErrors";
+import {
+  UserCreatedEvent,
+  UserDeactivatedEvent,
+  UserUpdatedEvent,
+} from "./UserEvents";
 
 export interface UserProps {
-  id?: string;
+  id: string;
   environmentId: string;
   email: string;
-  name?: string;
+  name: string | null;
   role: string;
   isActive: boolean;
-  metadata?: Record<string, any>;
+  metadata: Record<string, any>;
   createdAt: Date;
   updatedAt: Date;
 }
+
+export type CreateUserProps = Omit<
+  UserProps,
+  "id" | "isActive" | "createdAt" | "updatedAt"
+>;
+
+export type UpdateUserProps = Partial<
+  Pick<UserProps, "name" | "role" | "isActive" | "metadata">
+>;
 
 export class UserEntity extends Entity<UserProps> {
   private constructor(props: UserProps) {
@@ -22,38 +41,90 @@ export class UserEntity extends Entity<UserProps> {
     return new UserEntity(props);
   }
 
-  public static create(
-    props: Omit<UserProps, "id" | "isActive" | "createdAt" | "updatedAt">,
-  ): UserEntity {
+  public static create(props: CreateUserProps): UserEntity {
     if (!props.email.includes("@")) {
-      throw new BadRequestError("Invalid email format", "INVALID_EMAIL");
+      throw new InvalidUserEmailError(props.email);
     }
 
     if (!props.environmentId) {
-      throw new BadRequestError("Environment ID is required", "MISSING_ENV_ID");
+      throw new UserEnvironmentRequiredError();
     }
 
-    return new UserEntity({
+    const user = new UserEntity({
       ...props,
+      id: generateId("usr"),
+      name: props.name ?? null,
       isActive: true,
+      metadata: props.metadata ?? {},
       createdAt: new Date(),
       updatedAt: new Date(),
     });
+
+    user.addEvent(
+      new UserCreatedEvent({
+        userId: user.val.id,
+        email: user.val.email,
+        environmentId: user.val.environmentId,
+        role: user.val.role,
+      }),
+    );
+
+    return user;
   }
 
-  public update(
-    props: Partial<Pick<UserProps, "name" | "role" | "isActive" | "metadata">>,
-  ): void {
-    if (props.name !== undefined) this.props.name = props.name;
-    if (props.role !== undefined) this.props.role = props.role;
-    if (props.isActive !== undefined) this.props.isActive = props.isActive;
-    if (props.metadata !== undefined)
+  public update(props: UpdateUserProps): void {
+    const changes: string[] = [];
+
+    if (props.name !== undefined && props.name !== this.props.name) {
+      this.props.name = props.name;
+      changes.push("name");
+    }
+
+    if (props.role !== undefined && props.role !== this.props.role) {
+      this.props.role = props.role;
+      changes.push("role");
+    }
+
+    if (
+      props.isActive !== undefined &&
+      props.isActive !== this.props.isActive
+    ) {
+      this.props.isActive = props.isActive;
+      changes.push("isActive");
+    }
+
+    if (props.metadata !== undefined) {
       this.props.metadata = { ...this.props.metadata, ...props.metadata };
-    this.props.updatedAt = new Date();
+      changes.push("metadata");
+    }
+
+    if (changes.length > 0) {
+      this.props.updatedAt = new Date();
+      this.addEvent(
+        new UserUpdatedEvent({
+          userId: this.val.id,
+          environmentId: this.val.environmentId,
+          changes,
+        }),
+      );
+    }
   }
 
-  public deactivate(): void {
+  public deactivate(reason?: string): void {
+    if (!this.props.isActive) {
+      throw new UserAlreadyInactiveError(this.val.id);
+    }
+
     this.props.isActive = false;
     this.props.updatedAt = new Date();
+
+    this.addEvent(
+      new UserDeactivatedEvent({
+        userId: this.val.id,
+        environmentId: this.val.environmentId,
+        email: this.val.email,
+        reason: reason ?? "Manual deactivation",
+      }),
+    );
   }
 }
